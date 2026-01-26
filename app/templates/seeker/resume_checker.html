@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    /* 1. GLOBAL RESET & FONT */
+    body {
+        font-family: 'Inter', sans-serif;
+        color: #1e293b; /* Dark Slate for text */
+    }
+
+    /* 2. ANIMATED BACKGROUND (From Partner's Code) */
+    .animated-bg {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(135deg, #1e40af 0%, #2563EB 50%, #3b82f6 100%);
+        z-index: -2;
+    }
+    .floating-shapes {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        z-index: -1; overflow: hidden;
+    }
+    .shape {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 20s infinite ease-in-out;
+    }
+    .shape:nth-child(1) { width: 80px; height: 80px; top: 10%; left: 10%; }
+    .shape:nth-child(2) { width: 120px; height: 120px; top: 70%; left: 80%; animation-delay: 2s; }
+    .shape:nth-child(3) { width: 60px; height: 60px; top: 40%; left: 70%; animation-delay: 4s; }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0) translateX(0); }
+        50% { transform: translateY(-60px) translateX(-20px); }
+    }
+
+    /* 3. CARD STYLE (The "Role Card" Look) */
+    .pro-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        border: none;
+    }
+    .pro-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(37, 99, 235, 0.2);
+    }
+
+    /* 4. FORM ELEMENTS */
+    .form-control {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        font-family: 'Inter', sans-serif;
+    }
+    .form-control:focus {
+        background: #fff;
+        border-color: #2563EB;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .form-label {
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* 5. BUTTONS */
+    .btn-pro {
+        background: #2563EB;
+        color: white;
+        font-weight: 600;
+        padding: 1rem;
+        border-radius: 8px;
+        border: none;
+        transition: all 0.3s;
+        width: 100%;
+    }
+    .btn-pro:hover {
+        background: #1d4ed8;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        color: white;
+    }
+
+    /* 6. SCORE CIRCLE (Updated Colors) */
+    .score-circle {
+        width: 150px; height: 150px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto;
+        box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
+    }
+    .score-inner {
+        width: 130px; height: 130px;
+        background: white;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #1e293b;
+    }
+</style>
+
+<div class="animated-bg"></div>
+<div class="floating-shapes">
+    <div class="shape"></div>
+    <div class="shape"></div>
+    <div class="shape"></div>
+</div>
+
+<div class="container mt-5 pb-5">
+    
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8 text-center text-white">
+            <h1 class="display-4 fw-bold mb-2">Resume Analyst</h1>
+            <p class="opacity-75 fs-5">Optimize your profile for the Applicant Tracking Systems (ATS)</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-5 mb-4">
+            <div class="pro-card h-100">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label class="form-label">1. Job Description</label>
+                        <textarea name="job_description" class="form-control" rows="8" placeholder="Paste the target job description here..." required></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">2. Your Resume</label>
+                        <div class="p-3 bg-light rounded border border-dashed text-center">
+                            <input type="file" name="resume" class="form-control" accept=".pdf" required>
+                            <small class="text-muted d-block mt-2">Supports PDF files only</small>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-pro mt-2">
+                        Analyze Match →
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            {% if results %}
+            <div class="pro-card h-100">
+                
+                <div class="text-center mb-4">
+                    <h5 class="text-muted text-uppercase fw-bold fs-6 mb-3">Match Score</h5>
+                    <div class="score-circle" style="background: {{ score_gradient }};">
+                        <div class="score-inner">
+                            {{ results.match_score }}%
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5 class="fw-bold text-dark mb-3">AI Analysis</h5>
+                    <div class="p-4 bg-light rounded-3">
+                        <ul class="list-unstyled mb-0">
+                            {% for point in results.explanation %}
+                            <li class="mb-3 d-flex align-items-start">
+                                <span class="text-primary me-2">●</span>
+                                <span class="text-secondary">{{ point }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                {% if results.missing_required_skills %}
+                <div>
+                    <h5 class="fw-bold text-danger mb-3">Missing Keywords</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for skill in results.missing_required_skills %}
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 rounded-pill fw-normal">
+                            {{ skill }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success fw-bold">
+                    ✓ Perfect Match! All required skills detected.
+                </div>
+                {% endif %}
+
+            </div>
+            {% else %}
+            <div class="pro-card h-100 d-flex flex-column align-items-center justify-content-center text-center">
+                <div style="width: 80px; height: 80px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <h4 class="fw-bold text-dark">Ready to Analyze</h4>
+                <p class="text-muted">Upload your resume and a job description to get AI-powered insights.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
