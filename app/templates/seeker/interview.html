@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    
+    .interview-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(37, 99, 235, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        overflow: hidden;
+        transition: transform 0.3s;
+    }
+
+    .ai-avatar {
+        width: 100px; height: 100px;
+        background: #eff6ff;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1.5rem auto;
+        border: 2px solid #2563EB;
+        position: relative;
+    }
+    
+    /* Animation for when AI is speaking */
+    .ai-speaking {
+        animation: pulseSpeak 1.5s infinite ease-in-out;
+        border-color: #00cec9;
+    }
+
+    @keyframes pulseSpeak {
+        0% { box-shadow: 0 0 0 0 rgba(0, 206, 201, 0.4); transform: scale(1); }
+        50% { box-shadow: 0 0 0 20px rgba(0, 206, 201, 0); transform: scale(1.05); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 206, 201, 0); transform: scale(1); }
+    }
+
+    /* Mic Button Animation */
+    .btn-mic {
+        width: 60px; height: 60px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem;
+        transition: all 0.3s;
+    }
+    .btn-mic.listening {
+        background-color: #e11d48 !important; /* Red when recording */
+        animation: pulseRed 1s infinite;
+    }
+    @keyframes pulseRed {
+        0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); }
+        70% { box-shadow: 0 0 0 15px rgba(225, 29, 72, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+    }
+</style>
+
+<div class="container mt-5 pb-5">
+
+    {% if not question or (feedback and not request.form.get('submit_answer') and not question) %}
+    
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="text-center mb-4">
+                <h1 class="fw-bold text-dark">AI Interview Coach</h1>
+                <p class="text-secondary">Practice with a context-aware AI agent. Now with Voice Mode.</p>
+            </div>
+
+            <div class="interview-card p-4 p-md-5">
+                <form method="POST">
+                    <input type="hidden" name="start_new" value="true">
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-secondary">Target Role</label>
+                        <input type="text" name="role" class="form-control form-control-lg" placeholder="e.g. Frontend Developer" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-secondary">Focus Topic</label>
+                        <select name="topic" class="form-select form-select-lg">
+                            <option value="Core Skills">General / Core Skills</option>
+                            <option value="Behavioral">Behavioral (STAR Method)</option>
+                            <option value="System Design">System Design</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-secondary">Resume Context</label>
+                        <textarea name="resume_context" class="form-control" rows="3" placeholder="Summary of your resume..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill">
+                        Start Voice Interview <i class="bi bi-mic-fill ms-2"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <div class="interview-card p-5 mb-4 text-center position-relative">
+                
+                <a href="{{ url_for('main.interview', reset=true) }}" class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-3 rounded-pill" title="End Session">
+                    <i class="bi bi-x-lg"></i> End
+                </a>
+
+                <span class="badge bg-light text-secondary border position-absolute top-0 start-50 translate-middle-x mt-3">
+                    Role: {{ role }}
+                </span>
+                
+                <div id="ai-avatar" class="ai-avatar">
+                    <i class="bi bi-robot fs-1 text-primary"></i>
+                </div>
+                
+                <h5 class="text-muted text-uppercase small fw-bold mb-3">Interviewer Asks:</h5>
+                <h2 id="question-text" class="fw-bold text-dark mb-0">"{{ question }}"</h2>
+                
+                <button onclick="speakQuestion()" class="btn btn-sm btn-link text-decoration-none mt-3">
+                    <i class="bi bi-volume-up-fill"></i> Replay Audio
+                </button>
+            </div>
+
+            {% if feedback %}
+            <div class="interview-card p-4 mb-4 border-start border-5 border-{% if feedback.score >= 7 %}success{% else %}warning{% endif %}">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold mb-0">Analysis</h4>
+                    <span class="badge bg-dark fs-5">{{ feedback.score }}/10</span>
+                </div>
+                <p id="feedback-text" class="text-secondary mb-3">{{ feedback.feedback }}</p>
+                <div class="p-3 bg-light rounded border border-dashed">
+                    <strong class="text-success"><i class="bi bi-lightbulb-fill me-2"></i>Tip:</strong>
+                    <span id="tip-text" class="text-dark">{{ feedback.improvement_tip }}</span>
+                </div>
+
+                <div class="text-center mt-4">
+                    <form method="POST">
+                        <input type="hidden" name="start_new" value="true">
+                        <input type="hidden" name="role" value="{{ role }}">
+                        <button class="btn btn-primary rounded-pill px-5 py-2">Next Question <i class="bi bi-arrow-right"></i></button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+
+            <div class="interview-card p-4">
+                <form method="POST" id="answer-form">
+                    <input type="hidden" name="submit_answer" value="true">
+                    
+                    <div class="mb-3">
+                        <textarea id="user-answer" name="user_answer" class="form-control border-0 bg-light" rows="4" placeholder="Type or click the mic to speak..." required></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <button type="button" id="mic-btn" class="btn btn-light border btn-mic text-primary shadow-sm" onclick="toggleRecording()">
+                            <i class="bi bi-mic-fill"></i>
+                        </button>
+
+                        <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill fw-bold">
+                            Submit Answer
+                        </button>
+                    </div>
+                    <div class="text-center mt-2">
+                        <small id="mic-status" class="text-muted">Click mic to speak</small>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+    let preferredVoice = null;
+
+    // 1. Initialize & Find the Best Voice
+    function loadVoices() {
+        const voices = window.speechSynthesis.getVoices();
+        
+        // Priority List: Try to find these specific high-quality voices first
+        const priorityNames = [
+            "Google US English",       // Chrome (Human-like)
+            "Samantha",                // Mac (Siri-like)
+            "Microsoft Zira",          // Windows (Good)
+            "Microsoft David"          // Windows (Standard)
+        ];
+
+        for (let name of priorityNames) {
+            preferredVoice = voices.find(voice => voice.name.includes(name));
+            if (preferredVoice) break;
+        }
+
+        // Fallback: Just get any English voice
+        if (!preferredVoice) {
+            preferredVoice = voices.find(voice => voice.lang.startsWith('en'));
+        }
+    }
+
+    // Load voices immediately (and wait for async load)
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    // 2. The Smart Speaker (Fixes the Bug)
+    function speakText() {
+        // CANCEL any previous speech so they don't overlap
+        window.speechSynthesis.cancel();
+
+        let textToRead = "";
+        const feedbackElement = document.getElementById('feedback-text');
+        const tipElement = document.getElementById('tip-text');
+        const questionElement = document.getElementById('question-text');
+
+        // LOGIC: If Feedback exists, read that. Otherwise, read Question.
+        if (feedbackElement && tipElement) {
+            // Read Feedback + Tip
+            textToRead = "Here is my analysis. " + feedbackElement.innerText + ". Pro tip: " + tipElement.innerText;
+        } else if (questionElement) {
+            // Read Question
+            textToRead = questionElement.innerText.replace(/"/g, '');
+        } else {
+            return; // Nothing to read
+        }
+
+        const utterance = new SpeechSynthesisUtterance(textToRead);
+        
+        // Apply the Better Voice
+        if (preferredVoice) {
+            utterance.voice = preferredVoice;
+        }
+
+        // Make it sound more human (slightly faster, varied pitch)
+        utterance.rate = 1.1;  
+        utterance.pitch = 1.0; 
+
+        // Animation Triggers
+        const avatar = document.getElementById('ai-avatar');
+        utterance.onstart = function() {
+            if(avatar) avatar.classList.add('ai-speaking');
+        };
+        utterance.onend = function() {
+            if(avatar) avatar.classList.remove('ai-speaking');
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // 3. Auto-Start on Page Load
+    window.onload = function() {
+        // Wait 500ms for voices to load, then speak
+        setTimeout(speakText, 500);
+    };
+
+    // 4. Speech-to-Text (Microphone Logic)
+    let recognition;
+    let isRecording = false;
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function() {
+            isRecording = true;
+            const btn = document.getElementById('mic-btn');
+            if(btn) btn.classList.add('listening');
+            const status = document.getElementById('mic-status');
+            if(status) status.innerText = "Listening... (Speak now)";
+        };
+
+        recognition.onend = function() {
+            isRecording = false;
+            const btn = document.getElementById('mic-btn');
+            if(btn) btn.classList.remove('listening');
+            const status = document.getElementById('mic-status');
+            if(status) status.innerText = "Click mic to speak";
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = Array.from(event.results)
+                .map(result => result[0])
+                .map(result => result.transcript)
+                .join('');
+            
+            const input = document.getElementById('user-answer');
+            if(input) input.value = transcript;
+        };
+    }
+
+    function toggleRecording() {
+        if (!recognition) {
+            alert("Voice input not supported in this browser.");
+            return;
+        }
+        if (isRecording) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+    }
+</script>
+{% endblock %}
