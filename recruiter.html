@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recruiter Profile Setup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            /* color: #333; */
+            line-height: 1.6;
+            padding: 20px;
+            /* min-height: 100vh; */
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            /* background: white; */
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #2563EB 50%, #3b82f6 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .recruiter-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            padding: 30px 40px 10px;
+            background: white;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #e0e0e0;
+            z-index: 1;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 25px;
+            left: 0;
+            height: 3px;
+            background: #4CAF50;
+            transition: width 0.4s ease;
+            z-index: 2;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 3;
+            width: 16.66%;
+        }
+
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 10px;
+            border: 4px solid white;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-circle {
+            background: #4CAF50;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .step-label {
+            font-size: 13px;
+            color: #666;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .form-container {
+            padding: 0 40px 40px;
+        }
+
+        .form-step {
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .form-step h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .form-description {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 15px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6 ;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        .radio-group,
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 5px;
+        }
+
+        .radio-option,
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .radio-option:hover,
+        .checkbox-option:hover {
+            background: #e9ecef;
+        }
+
+        .radio-option input,
+        .checkbox-option input {
+            width: 18px;
+            height: 18px;
+        }
+
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .skill-chip {
+            padding: 10px 20px;
+            background: #e8f4fd;
+            color: #2c3e50;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .skill-chip:hover {
+            background: #d1e7ff;
+        }
+
+        .skill-chip.selected {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+
+        .skill-chip .remove {
+            font-size: 12px;
+            opacity: 0.7;
+            cursor: pointer;
+        }
+
+        .skill-chip .remove:hover {
+            opacity: 1;
+        }
+
+        .skills-input-container {
+            position: relative;
+            margin-top: 15px;
+        }
+
+        .skills-input {
+            width: 100%;
+            padding: 14px;
+            padding-right: 120px;
+        }
+
+        .add-skill-btn {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            padding: 9px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .add-skill-btn:hover {
+            background: #5a67d8;
+        }
+
+        .slider-container {
+            padding: 20px 0;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #e0e0e0;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .salary-display {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .notice-period {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .notice-option {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .notice-option:hover {
+            background: #e9ecef;
+        }
+
+        .notice-option.selected {
+            background: #e8f4fd;
+            border-color: #3498db;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .btn {
+            padding: 14px 35px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg,  #1e40af 0%, #2563EB 50%, #3b82f6 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            text-align: center;
+            padding: 60px 40px;
+            display: none;
+        }
+
+        .success-icon {
+            font-size: 80px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .save-draft {
+            color: #667eea;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 15px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .save-draft:hover {
+            background: #f8f9fa;
+        }
+
+        .skills-section {
+            margin: 25px 0;
+        }
+
+        .skills-section h4 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .must-have h4 {
+            color: #e74c3c;
+        }
+
+        .good-to-have h4 {
+            color: #2ecc71;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .progress-steps {
+                margin-bottom: 20px;
+            }
+            
+            .step-circle {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            
+            .step-label {
+                font-size: 11px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                padding: 12px 25px;
+                font-size: 15px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            
+            .form-actions > * {
+                width: 100%;
+            }
+            
+            .notice-period {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="recruiter-icon">👔</div>
+            <h1>Recruiter Profile Setup</h1>
+            <p>Tell us about your company and hiring needs</p>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-steps">
+                <div class="progress-bar" id="progressBar" style="width: 16.66%;"></div>
+                <div class="step active">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Company Details</div>
+                </div>
+                <div class="step">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Recruiter Info</div>
+                </div>
+                <div class="step">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Hiring Needs</div>
+                </div>
+                <div class="step">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Job Details</div>
+                </div>
+                <div class="step">
+                    <div class="step-circle">5</div>
+                    <div class="step-label">Preferences</div>
+                </div>
+                <div class="step">
+                    <div class="step-circle">6</div>
+                    <div class="step-label">Timeline</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <form id="recruiterForm">
+                <!-- Step 1: Company Details -->
+                <div class="form-step active" id="step1">
+                    <h2>Company Details</h2>
+                    <p class="form-description">Tell us about your company</p>
+                    
+                    <div class="form-group">
+                        <label for="companyName" class="required">Company Name</label>
+                        <input type="text" id="companyName" name="companyName" placeholder="Enter company name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="required">Company Size</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="companySize" value="1-10" required>
+                                <span>1–10 employees</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="companySize" value="11-50">
+                                <span>11–50 employees</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="companySize" value="51-200">
+                                <span>51–200 employees</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="companySize" value="200+">
+                                <span>200+ employees</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="industry" class="required">Industry</label>
+                        <select id="industry" name="industry" required>
+                            <option value="">Select industry</option>
+                            <option value="tech">Technology</option>
+                            <option value="finance">Finance</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="education">Education</option>
+                            <option value="ecommerce">E-commerce</option>
+                            <option value="manufacturing">Manufacturing</option>
+                            <option value="consulting">Consulting</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="companyWebsite">Company Website (optional)</label>
+                        <input type="url" id="companyWebsite" name="companyWebsite" placeholder="https://">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="companyLocation" class="required">Company Location</label>
+                        <input type="text" id="companyLocation" name="companyLocation" placeholder="City, Country" required>
+                    </div>
+                </div>
+
+                <!-- Step 2: Recruiter Info -->
+                <div class="form-step" id="step2">
+                    <h2>Recruiter Information</h2>
+                    <p class="form-description">Tell us about yourself</p>
+                    
+                    <div class="form-group">
+                        <label for="recruiterName" class="required">Your Name</label>
+                        <input type="text" id="recruiterName" name="recruiterName" placeholder="Enter your full name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="recruiterRole" class="required">Your Role</label>
+                        <select id="recruiterRole" name="recruiterRole" required>
+                            <option value="">Select your role</option>
+                            <option value="hr">HR Manager</option>
+                            <option value="founder">Founder/CEO</option>
+                            <option value="manager">Department Manager</option>
+                            <option value="recruiter">Recruiter</option>
+                            <option value="talent-acquisition">Talent Acquisition</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="recruiterEmail" class="required">Contact Email</label>
+                        <input type="email" id="recruiterEmail" name="recruiterEmail" placeholder="your.email@company.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="recruiterPhone" class="required">Phone Number</label>
+                        <input type="tel" id="recruiterPhone" name="recruiterPhone" placeholder="Enter your phone number" required>
+                    </div>
+                </div>
+
+                <!-- Step 3: Hiring Needs -->
+                <div class="form-step" id="step3">
+                    <h2>Hiring Needs</h2>
+                    <p class="form-description">What type of candidates are you looking for?</p>
+                    
+                    <div class="form-group">
+                        <label for="candidateDescription" class="required">Describe your ideal candidate</label>
+                        <textarea id="candidateDescription" name="candidateDescription" rows="4" placeholder="Describe the type of candidates you're looking for..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobRoles" class="required">Job Role(s)</label>
+                        <input type="text" id="jobRoles" name="jobRoles" placeholder="e.g., Software Developer, Data Scientist, UX Designer" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="required">Required Skills</label>
+                        <div class="skills-input-container">
+                            <input type="text" id="skillInput" class="skills-input" placeholder="Add skills (e.g., Python, React, AWS)">
+                            <button type="button" class="add-skill-btn" id="addSkillBtn">Add Skill</button>
+                        </div>
+                        <div class="skills-container" id="skillsContainer">
+                            <!-- Skills chips will be added here -->
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="required">Experience Level</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="experienceLevel" value="fresher" required>
+                                <span>Fresher</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="experienceLevel" value="1-3">
+                                <span>1–3 years</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="experienceLevel" value="3-5">
+                                <span>3–5 years</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="experienceLevel" value="5+">
+                                <span>5+ years</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Job Details -->
+                <div class="form-step" id="step4">
+                    <h2>Job Details</h2>
+                    <p class="form-description">Details about the position</p>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="required">Employment Type</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="employmentType" value="full-time" required>
+                                    <span>Full-time</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="employmentType" value="internship">
+                                    <span>Internship</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="employmentType" value="contract">
+                                    <span>Contract</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="required">Work Mode</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="workMode" value="remote" required>
+                                    <span>Remote</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="workMode" value="hybrid">
+                                    <span>Hybrid</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="workMode" value="onsite">
+                                    <span>On-site</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="required">Salary Range (₹ per annum)</label>
+                        <div class="slider-container">
+                            <input type="range" id="salaryRange" min="300000" max="5000000" step="50000" value="1000000">
+                            <div class="slider-labels">
+                                <span>₹3L</span>
+                                <span>₹25L</span>
+                                <span>₹50L+</span>
+                            </div>
+                            <div class="salary-display" id="salaryDisplay">₹10,00,000</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="openings" class="required">Number of Openings</label>
+                            <input type="number" id="openings" name="openings" min="1" max="100" value="1" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Candidate Preferences -->
+                <div class="form-step" id="step5">
+                    <h2>Candidate Preferences</h2>
+                    <p class="form-description">Your preferences for candidates</p>
+                    
+                    <div class="form-group">
+                        <label for="educationRequirement">Education Requirement</label>
+                        <select id="educationRequirement" name="educationRequirement">
+                            <option value="">Not required</option>
+                            <option value="diploma">Diploma</option>
+                            <option value="bachelors">Bachelor's Degree</option>
+                            <option value="masters">Master's Degree</option>
+                            <option value="phd">PhD</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="preferredLocation">Preferred Location (optional)</label>
+                        <input type="text" id="preferredLocation" name="preferredLocation" placeholder="Cities or countries">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="required">Notice Period Allowed</label>
+                        <div class="notice-period">
+                            <div class="notice-option selected" data-value="immediate">
+                                <div>Immediate</div>
+                                <small>0-15 days</small>
+                            </div>
+                            <div class="notice-option" data-value="1month">
+                                <div>1 Month</div>
+                                <small>30 days</small>
+                            </div>
+                            <div class="notice-option" data-value="2months">
+                                <div>2 Months</div>
+                                <small>60 days</small>
+                            </div>
+                            <div class="notice-option" data-value="3months">
+                                <div>3 Months</div>
+                                <small>90 days</small>
+                            </div>
+                        </div>
+                        <input type="hidden" id="noticePeriod" name="noticePeriod" value="immediate">
+                    </div>
+                    
+                    <div class="skills-section">
+                        <h4>Skills Classification</h4>
+                        
+                        <div class="must-have">
+                            <h4>Must-have Skills</h4>
+                            <div class="skills-input-container">
+                                <input type="text" id="mustHaveInput" class="skills-input" placeholder="Add must-have skills">
+                                <button type="button" class="add-skill-btn" id="addMustHaveBtn">Add</button>
+                            </div>
+                            <div class="skills-container" id="mustHaveContainer"></div>
+                        </div>
+                        
+                        <div class="good-to-have">
+                            <h4>Good-to-have Skills</h4>
+                            <div class="skills-input-container">
+                                <input type="text" id="goodToHaveInput" class="skills-input" placeholder="Add good-to-have skills">
+                                <button type="button" class="add-skill-btn" id="addGoodToHaveBtn">Add</button>
+                            </div>
+                            <div class="skills-container" id="goodToHaveContainer"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 6: Hiring Timeline -->
+                <div class="form-step" id="step6">
+                    <h2>Hiring Timeline</h2>
+                    <p class="form-description">Your hiring schedule and process</p>
+                    
+                    <div class="form-group">
+                        <label class="required">Urgent hiring?</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="urgentHiring" value="yes" required>
+                                <span>Yes, need to fill ASAP</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="urgentHiring" value="no" checked>
+                                <span>No, regular hiring</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expectedJoining" class="required">Expected joining time</label>
+                        <select id="expectedJoining" name="expectedJoining" required>
+                            <option value="">Select timeframe</option>
+                            <option value="immediate">Immediately</option>
+                            <option value="1month">Within 1 month</option>
+                            <option value="2months">Within 2 months</option>
+                            <option value="3months">Within 3 months</option>
+                            <option value="flexible">Flexible</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="required">Interview process</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="interviewOnline" value="yes">
+                                <span>Online</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="interviewOffline" value="yes">
+                                <span>Offline</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="interviewBoth" value="yes">
+                                <span>Both</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="interviewRounds">Number of interview rounds</label>
+                        <input type="number" id="interviewRounds" name="interviewRounds" min="1" max="10" value="3">
+                    </div>
+                </div>
+
+                <!-- Success Message -->
+                <div class="success-message" id="successMessage">
+                    <div class="success-icon">✅</div>
+                    <h2>Profile Completed Successfully!</h2>
+                    <p>Your recruiter profile has been created. You can now post jobs and find candidates.</p>
+                    <button type="button" class="btn btn-primary" id="dashboardBtn">Go to Dashboard</button>
+                    <button type="button" class="btn btn-outline" id="postJobBtn" style="margin-top: 15px;">Post Your First Job</button>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions" id="formActions">
+                    <button type="button" class="btn btn-secondary" id="prevBtn">← Previous</button>
+                    <div>
+                        <span class="save-draft" id="saveDraftBtn">
+                            💾 Save & Continue Later
+                        </span>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="nextBtn">Next →</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // COMPLETE JAVASCRIPT CODE
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Recruiter Profile Setup - Initializing');
+            
+            // Track current step
+            let currentStep = 1;
+            const totalSteps = 6;
+            
+            // Track skills
+            const requiredSkills = new Set();
+            const mustHaveSkills = new Set();
+            const goodToHaveSkills = new Set();
+            
+            // Get DOM elements
+            const progressBar = document.getElementById('progressBar');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const steps = document.querySelectorAll('.step');
+            const formSteps = document.querySelectorAll('.form-step');
+            const form = document.getElementById('recruiterForm');
+            const successMessage = document.getElementById('successMessage');
+            
+            // Initialize form
+            initializeForm();
+            
+            function initializeForm() {
+                console.log('Setting up form...');
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+                // Initialize components
+                initializeSalarySlider();
+                initializeNoticePeriod();
+                
+                // Update UI
+                updateUI();
+            }
+            
+            function setupEventListeners() {
+                // Next button
+                nextBtn.addEventListener('click', function() {
+                    console.log('Next button clicked');
+                    
+                    if (validateStep(currentStep)) {
+                        if (currentStep < totalSteps) {
+                            goToStep(currentStep + 1);
+                        } else {
+                            submitForm();
+                        }
+                    }
+                });
+                
+                // Previous button
+                prevBtn.addEventListener('click', function() {
+                    if (currentStep > 1) {
+                        goToStep(currentStep - 1);
+                    }
+                });
+                
+                // Save draft button
+                document.getElementById('saveDraftBtn').addEventListener('click', function() {
+                    saveDraft();
+                    alert('Draft saved successfully! You can continue later.');
+                });
+                
+                // Dashboard button
+                document.getElementById('dashboardBtn').addEventListener('click', function() {
+                    alert('Going to dashboard...');
+                });
+                
+                // Post job button
+                document.getElementById('postJobBtn').addEventListener('click', function() {
+                    alert('Opening job posting form...');
+                });
+                
+                // Skills management
+                document.getElementById('addSkillBtn').addEventListener('click', addRequiredSkill);
+                document.getElementById('skillInput').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addRequiredSkill();
+                    }
+                });
+                
+                // Must-have skills
+                document.getElementById('addMustHaveBtn').addEventListener('click', function() {
+                    addSkillToCategory('mustHave');
+                });
+                document.getElementById('mustHaveInput').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addSkillToCategory('mustHave');
+                    }
+                });
+                
+                // Good-to-have skills
+                document.getElementById('addGoodToHaveBtn').addEventListener('click', function() {
+                    addSkillToCategory('goodToHave');
+                });
+                document.getElementById('goodToHaveInput').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addSkillToCategory('goodToHave');
+                    }
+                });
+                
+                // Salary slider
+                document.getElementById('salaryRange').addEventListener('input', updateSalaryDisplay);
+                
+                // Form submission
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    submitForm();
+                });
+            }
+            
+            function validateStep(stepNumber) {
+                const stepElement = document.getElementById(`step${stepNumber}`);
+                let isValid = true;
+                
+                // Clear previous errors
+                clearErrors(stepElement);
+                
+                // Get required fields in this step
+                const requiredFields = stepElement.querySelectorAll('[required]');
+                
+                for (const field of requiredFields) {
+                    if (field.type === 'radio' || field.type === 'checkbox') {
+                        const name = field.name;
+                        const checked = stepElement.querySelectorAll(`input[name="${name}"]:checked`);
+                        if (checked.length === 0) {
+                            showError(field, 'Please select an option');
+                            isValid = false;
+                        }
+                    } else if (field.type === 'select-one') {
+                        if (!field.value) {
+                            showError(field, 'Please select an option');
+                            isValid = false;
+                        }
+                    } else {
+                        if (!field.value.trim()) {
+                            showError(field, 'This field is required');
+                            isValid = false;
+                        } else if (field.type === 'email') {
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (!emailRegex.test(field.value)) {
+                                showError(field, 'Please enter a valid email address');
+                                isValid = false;
+                            }
+                        } else if (field.type === 'tel') {
+                            const digitsOnly = field.value.replace(/\D/g, '');
+                            if (digitsOnly.length < 10) {
+                                showError(field, 'Please enter a valid phone number (at least 10 digits)');
+                                isValid = false;
+                            }
+                        }
+                    }
+                }
+                
+                // Special validation for Step 3 (skills)
+                if (stepNumber === 3 && requiredSkills.size === 0) {
+                    showError(document.getElementById('skillInput'), 'Please add at least one required skill');
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            function showError(field, message) {
+                let parent = field;
+                while (parent && !parent.classList.contains('form-group')) {
+                    parent = parent.parentElement;
+                }
+                
+                if (parent) {
+                    const errorElement = document.createElement('div');
+                    errorElement.className = 'error-message';
+                    errorElement.textContent = message;
+                    errorElement.style.display = 'block';
+                    parent.appendChild(errorElement);
+                    
+                                        // Highlight the field
+                    if (field.style) {
+                        field.style.borderColor = '#e74c3c';
+                    }
+                }
+            }
+            
+            function clearErrors(stepElement) {
+                // Remove all error messages in this step
+                const errors = stepElement.querySelectorAll('.error-message');
+                errors.forEach(error => error.remove());
+                
+                // Reset border colors
+                const fields = stepElement.querySelectorAll('input, select, textarea');
+                fields.forEach(field => {
+                    if (field.style) {
+                        field.style.borderColor = '';
+                    }
+                });
+            }
+            
+            function goToStep(stepNumber) {
+                // Hide current step
+                formSteps[currentStep - 1].classList.remove('active');
+                steps[currentStep - 1].classList.remove('active');
+                
+                // Update current step
+                currentStep = stepNumber;
+                
+                // Show new step
+                formSteps[currentStep - 1].classList.add('active');
+                steps[currentStep - 1].classList.add('active');
+                
+                // Update UI
+                updateUI();
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            
+            function updateUI() {
+                // Update progress bar
+                const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+                progressBar.style.width = `${progressPercentage}%`;
+                
+                // Update buttons
+                if (currentStep === 1) {
+                    prevBtn.style.display = 'none';
+                } else {
+                    prevBtn.style.display = 'flex';
+                }
+                
+                if (currentStep === totalSteps) {
+                    nextBtn.textContent = 'Post Job / Complete Profile';
+                } else {
+                    nextBtn.textContent = 'Next';
+                }
+            }
+            
+            function initializeSalarySlider() {
+                const salarySlider = document.getElementById('salaryRange');
+                const salaryDisplay = document.getElementById('salaryDisplay');
+                
+                // Update display when slider changes
+                salarySlider.addEventListener('input', updateSalaryDisplay);
+                
+                // Initial update
+                updateSalaryDisplay();
+            }
+            
+            function updateSalaryDisplay() {
+                const salarySlider = document.getElementById('salaryRange');
+                const salaryDisplay = document.getElementById('salaryDisplay');
+                const salaryValue = parseInt(salarySlider.value);
+                
+                // Format salary with commas (Indian format)
+                const formattedSalary = new Intl.NumberFormat('en-IN', {
+                    maximumFractionDigits: 0
+                }).format(salaryValue);
+                
+                salaryDisplay.textContent = `₹${formattedSalary}`;
+            }
+            
+            function initializeNoticePeriod() {
+                const noticeOptions = document.querySelectorAll('.notice-option');
+                const noticePeriodInput = document.getElementById('noticePeriod');
+                
+                // Set initial selected option
+                noticeOptions[0].classList.add('selected');
+                
+                noticeOptions.forEach(option => {
+                    option.addEventListener('click', function() {
+                        // Remove selected class from all options
+                        noticeOptions.forEach(opt => opt.classList.remove('selected'));
+                        
+                        // Add selected class to clicked option
+                        this.classList.add('selected');
+                        
+                        // Update hidden input value
+                        noticePeriodInput.value = this.getAttribute('data-value');
+                    });
+                });
+            }
+            
+            function addRequiredSkill() {
+                const skillInput = document.getElementById('skillInput');
+                const skillValue = skillInput.value.trim();
+                
+                if (skillValue && skillValue.length > 0) {
+                    if (!requiredSkills.has(skillValue)) {
+                        requiredSkills.add(skillValue);
+                        renderSkillChip(skillValue, 'skillsContainer', requiredSkills);
+                        skillInput.value = '';
+                    } else {
+                        alert('This skill is already added');
+                    }
+                } else {
+                    alert('Please enter a skill');
+                }
+            }
+            
+            function addSkillToCategory(category) {
+                let inputElement, containerId, skillsSet;
+                
+                if (category === 'mustHave') {
+                    inputElement = document.getElementById('mustHaveInput');
+                    containerId = 'mustHaveContainer';
+                    skillsSet = mustHaveSkills;
+                } else if (category === 'goodToHave') {
+                    inputElement = document.getElementById('goodToHaveInput');
+                    containerId = 'goodToHaveContainer';
+                    skillsSet = goodToHaveSkills;
+                }
+                
+                const skillValue = inputElement.value.trim();
+                
+                if (skillValue && skillValue.length > 0) {
+                    if (!skillsSet.has(skillValue)) {
+                        skillsSet.add(skillValue);
+                        renderSkillChip(skillValue, containerId, skillsSet);
+                        inputElement.value = '';
+                    } else {
+                        alert('This skill is already added');
+                    }
+                } else {
+                    alert('Please enter a skill');
+                }
+            }
+            
+            function renderSkillChip(skill, containerId, skillsSet) {
+                const container = document.getElementById(containerId);
+                
+                // Create skill chip element
+                const chip = document.createElement('div');
+                chip.className = 'skill-chip';
+                chip.innerHTML = `
+                    ${skill}
+                    <span class="remove" data-skill="${skill}">×</span>
+                `;
+                
+                // Add click event to remove skill
+                const removeBtn = chip.querySelector('.remove');
+                removeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const skillToRemove = this.getAttribute('data-skill');
+                    skillsSet.delete(skillToRemove);
+                    chip.remove();
+                });
+                
+                container.appendChild(chip);
+            }
+            
+            function saveDraft() {
+                // Collect form data
+                const formData = new FormData(form);
+                const draftData = {};
+                
+                // Add form values
+                for (let [key, value] of formData.entries()) {
+                    draftData[key] = value;
+                }
+                
+                // Add skills arrays
+                draftData.requiredSkills = Array.from(requiredSkills);
+                draftData.mustHaveSkills = Array.from(mustHaveSkills);
+                draftData.goodToHaveSkills = Array.from(goodToHaveSkills);
+                
+                // Save to localStorage
+                localStorage.setItem('recruiterProfileDraft', JSON.stringify(draftData));
+                
+                console.log('Draft saved:', draftData);
+            }
+            
+            function loadDraft() {
+                // Try to load saved draft from localStorage
+                const savedDraft = localStorage.getItem('recruiterProfileDraft');
+                
+                if (savedDraft) {
+                    try {
+                        const draftData = JSON.parse(savedDraft);
+                        
+                        // Load basic form fields
+                        for (const key in draftData) {
+                            const element = document.querySelector(`[name="${key}"]`);
+                            if (element) {
+                                if (element.type === 'radio' || element.type === 'checkbox') {
+                                    if (element.value === draftData[key]) {
+                                        element.checked = true;
+                                    }
+                                } else {
+                                    element.value = draftData[key];
+                                }
+                            }
+                        }
+                        
+                        // Load skills if they exist in draft
+                        if (draftData.requiredSkills) {
+                            draftData.requiredSkills.forEach(skill => {
+                                requiredSkills.add(skill);
+                                renderSkillChip(skill, 'skillsContainer', requiredSkills);
+                            });
+                        }
+                        
+                        if (draftData.mustHaveSkills) {
+                            draftData.mustHaveSkills.forEach(skill => {
+                                mustHaveSkills.add(skill);
+                                renderSkillChip(skill, 'mustHaveContainer', mustHaveSkills);
+                            });
+                        }
+                        
+                        if (draftData.goodToHaveSkills) {
+                            draftData.goodToHaveSkills.forEach(skill => {
+                                goodToHaveSkills.add(skill);
+                                renderSkillChip(skill, 'goodToHaveContainer', goodToHaveSkills);
+                            });
+                        }
+                        
+                        console.log('Loaded saved draft');
+                    } catch (error) {
+                        console.error('Error loading draft:', error);
+                    }
+                }
+            }
+            
+            function submitForm() {
+                console.log('Submitting recruiter profile...');
+                
+                // Validate final step
+                if (!validateStep(currentStep)) {
+                    alert('Please fix errors before submitting.');
+                    return;
+                }
+                
+                // Collect all form data
+                const formData = new FormData(form);
+                const profileData = {};
+                
+                // Convert FormData to object
+                for (let [key, value] of formData.entries()) {
+                    profileData[key] = value;
+                }
+                
+                // Add skills arrays
+                profileData.requiredSkills = Array.from(requiredSkills);
+                profileData.mustHaveSkills = Array.from(mustHaveSkills);
+                profileData.goodToHaveSkills = Array.from(goodToHaveSkills);
+                
+                // Add additional metadata
+                profileData.submissionDate = new Date().toISOString();
+                profileData.profileType = 'recruiter';
+                
+                // Show data in console (in real app, send to server)
+                console.log('Profile Data:', profileData);
+                
+                // Show success message
+                showSuccessMessage();
+                
+                // Clear saved draft
+                localStorage.removeItem('recruiterProfileDraft');
+                
+                
+            }
+            
+            function showSuccessMessage() {
+                // Hide the form and show success message
+                document.getElementById('recruiterForm').style.display = 'none';
+                document.getElementById('formActions').style.display = 'none';
+                successMessage.style.display = 'block';
+                
+                // Show alert
+                alert('Profile submitted successfully! Your recruiter profile has been created.');
+            }
+            
+            // Initialize form on load
+            updateUI();
+        });
+    </script>
+</body>
+</html>
