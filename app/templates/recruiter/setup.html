@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- THEME OVERRIDES --- */
+    body {
+        background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);
+        min-height: 100vh;
+        color: white;
+    }
+
+    /* Floating Shapes */
+    .bg-shape {
+        position: fixed;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        backdrop-filter: blur(5px);
+        z-index: -1;
+        animation: float 20s infinite ease-in-out;
+    }
+    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; }
+    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -5%; animation-delay: -5s; }
+
+    /* --- GLASS CONTAINER --- */
+    .glass-container {
+        max-width: 800px;
+        margin: 40px auto;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+        overflow: hidden;
+        color: #1e293b;
+        position: relative;
+        z-index: 10;
+    }
+
+    .header-section {
+        background: #2563EB;
+        padding: 40px;
+        text-align: center;
+        color: white;
+    }
+
+    .progress-wrapper {
+        padding: 20px 40px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .progress {
+        height: 6px;
+        border-radius: 10px;
+        background: #e2e8f0;
+    }
+    .progress-bar {
+        background: #2563EB;
+        transition: width 0.4s ease;
+    }
+
+    .form-section {
+        padding: 40px;
+        display: none;
+        animation: slideIn 0.5s ease;
+    }
+    .form-section.active {
+        display: block;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    label { font-weight: 600; color: #475569; margin-bottom: 8px; }
+
+    .form-control, .form-select {
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+    }
+    .form-control:focus {
+        border-color: #2563EB;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Recruiter Specific Chips */
+    .option-chip {
+        display: inline-flex;
+        padding: 10px 20px;
+        margin: 5px;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+    }
+    .option-chip input { display: none; }
+    .option-chip.selected {
+        background: #eff6ff;
+        border-color: #2563EB;
+        color: #2563EB;
+        font-weight: 700;
+        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.1);
+    }
+
+    .btn-nav { padding: 12px 30px; border-radius: 50px; font-weight: 600; }
+</style>
+
+<div class="bg-shape shape-1"></div>
+<div class="bg-shape shape-2"></div>
+
+<div class="glass-container">
+    
+    <div class="header-section">
+        <h1 class="fw-bold mb-2">Company Setup</h1>
+        <p class="opacity-75 mb-0">Let's set up your hiring profile.</p>
+    </div>
+
+    <div class="progress-wrapper">
+        <div class="d-flex justify-content-between text-muted small mb-2 fw-bold">
+            <span>Company Info</span>
+            <span>Recruiter Info</span>
+            <span>Finish</span>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" id="progressBar" style="width: 33%"></div>
+        </div>
+    </div>
+
+    <form id="recruiterForm" method="POST" action="{{ url_for('main.save_recruiter_profile') }}">
+        
+        <div class="form-section active" id="step1">
+            <h4 class="mb-4 text-primary fw-bold">1. Company Details</h4>
+            
+            <div class="mb-3">
+                <label>Company Name</label>
+                <input type="text" name="company_name" class="form-control" placeholder="e.g. Acme Corp" required>
+            </div>
+
+            <div class="mb-3">
+                <label>Industry</label>
+                <select name="industry" class="form-select">
+                    <option value="Tech">Technology</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Education">Education</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label>Company Size</label>
+                <div class="d-flex flex-wrap">
+                    <label class="option-chip"><input type="radio" name="size" value="1-10"> 1-10</label>
+                    <label class="option-chip"><input type="radio" name="size" value="11-50"> 11-50</label>
+                    <label class="option-chip"><input type="radio" name="size" value="50-200"> 50-200</label>
+                    <label class="option-chip"><input type="radio" name="size" value="200+"> 200+</label>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label>Location (HQ)</label>
+                <input type="text" name="location" class="form-control" placeholder="City, Country" required>
+            </div>
+
+            <div class="mt-4 text-end">
+                <button type="button" class="btn btn-primary btn-nav" onclick="nextStep(2)">Next <i class="bi bi-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <div class="form-section" id="step2">
+            <h4 class="mb-4 text-primary fw-bold">2. Your Details</h4>
+            
+            <div class="mb-3">
+                <label>Your Name</label>
+                <input type="text" name="recruiter_name" class="form-control" value="{{ current_user.name }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label>Your Role</label>
+                <select name="role_title" class="form-select">
+                    <option value="HR Manager">HR Manager</option>
+                    <option value="Founder">Founder / CEO</option>
+                    <option value="Recruiter">Recruiter</option>
+                    <option value="Hiring Manager">Hiring Manager</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label>Work Email</label>
+                <input type="email" name="work_email" class="form-control" value="{{ current_user.email }}" readonly>
+                <small class="text-muted">Linked to your account.</small>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-between">
+                <button type="button" class="btn btn-light btn-nav" onclick="nextStep(1)">Back</button>
+                <button type="submit" class="btn btn-success btn-nav px-5 shadow">Finish Setup <i class="bi bi-check-lg"></i></button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    function nextStep(step) {
+        document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+        document.getElementById('step' + step).classList.add('active');
+        const percent = (step / 2) * 100;
+        document.getElementById('progressBar').style.width = percent + '%';
+    }
+
+    // Auto-select radio buttons
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            this.closest('div').querySelectorAll('.option-chip').forEach(l => l.classList.remove('selected'));
+            this.parentElement.classList.add('selected');
+        });
+    });
+</script>
+{% endblock %}
