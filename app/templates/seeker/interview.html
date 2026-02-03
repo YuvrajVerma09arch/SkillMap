@@ -1,180 +1,235 @@
 {% extends "base.html" %}
 
 {% block content %}
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
 <style>
-    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-    
-    .interview-card {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(37, 99, 235, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.5);
+    /* --- 1. THEME BACKGROUND (Matches Login) --- */
+    body {
+        background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);
+        min-height: 100vh;
+        color: #fff;
+    }
+
+    /* Floating Shapes */
+    .bg-shape {
+        position: fixed;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        backdrop-filter: blur(5px);
+        z-index: -1;
+        animation: float 20s infinite ease-in-out;
+    }
+    .shape-1 { width: 300px; height: 300px; top: -10%; left: -10%; }
+    .shape-2 { width: 200px; height: 200px; bottom: 10%; right: -5%; animation-delay: -5s; }
+    .shape-3 { width: 150px; height: 150px; top: 40%; right: 10%; animation-delay: -10s; opacity: 0.4; }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(20px, -20px); }
+    }
+
+    /* --- 2. GLASS CONSOLE (The Main Card) --- */
+    .glass-console {
+        background: rgba(255, 255, 255, 0.95); /* High opacity for readability */
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        color: #1e293b; /* Dark text inside the white card */
         overflow: hidden;
-        transition: transform 0.3s;
+        min-height: 600px;
+    }
+
+    /* --- 3. AI AVATAR STYLING --- */
+    .avatar-container {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 1.5rem;
     }
 
     .ai-avatar {
-        width: 100px; height: 100px;
-        background: #eff6ff;
+        width: 100%;
+        height: 100%;
         border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        margin: 0 auto 1.5rem auto;
-        border: 2px solid #2563EB;
-        position: relative;
+        object-fit: cover;
+        border: 4px solid #fff;
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    /* Speaking Animation (Pulsing Glow) */
+    .ai-speaking {
+        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7);
+        transform: scale(1.05);
+        animation: pulse-blue 1.5s infinite;
+        border-color: #3b82f6;
+    }
+
+    @keyframes pulse-blue {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+        70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(37, 99, 235, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+    }
+
+    /* --- 4. BUTTONS & INPUTS --- */
+    .btn-action {
+        border-radius: 50px;
+        padding: 0.8rem 2rem;
+        font-weight: 600;
+        transition: all 0.2s;
     }
     
-    /* Animation for when AI is speaking */
-    .ai-speaking {
-        animation: pulseSpeak 1.5s infinite ease-in-out;
-        border-color: #00cec9;
-    }
-
-    @keyframes pulseSpeak {
-        0% { box-shadow: 0 0 0 0 rgba(0, 206, 201, 0.4); transform: scale(1); }
-        50% { box-shadow: 0 0 0 20px rgba(0, 206, 201, 0); transform: scale(1.05); }
-        100% { box-shadow: 0 0 0 0 rgba(0, 206, 201, 0); transform: scale(1); }
-    }
-
-    /* Mic Button Animation */
-    .btn-mic {
+    .mic-btn {
         width: 60px; height: 60px;
         border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         font-size: 1.5rem;
         transition: all 0.3s;
     }
-    .btn-mic.listening {
-        background-color: #e11d48 !important; /* Red when recording */
-        animation: pulseRed 1s infinite;
+    
+    .mic-btn.listening {
+        background-color: #dc2626 !important; /* Red when recording */
+        animation: pulse-red 1.5s infinite;
     }
-    @keyframes pulseRed {
-        0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); }
-        70% { box-shadow: 0 0 0 15px rgba(225, 29, 72, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+
+    @keyframes pulse-red {
+        0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+        70% { box-shadow: 0 0 0 15px rgba(220, 38, 38, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    }
+
+    .topic-badge {
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 1rem;
     }
 </style>
 
-<div class="container mt-5 pb-5">
+<div class="bg-shape shape-1"></div>
+<div class="bg-shape shape-2"></div>
+<div class="bg-shape shape-3"></div>
 
-    {% if not question or (feedback and not request.form.get('submit_answer') and not question) %}
-    
+<div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-7">
-            <div class="text-center mb-4">
-                <h1 class="fw-bold text-dark">AI Interview Coach</h1>
-                <p class="text-secondary">Practice with a context-aware AI agent. Now with Voice Mode.</p>
-            </div>
-
-            <div class="interview-card p-4 p-md-5">
-                <form method="POST">
-                    <input type="hidden" name="start_new" value="true">
-                    
-                    <div class="mb-4">
-                        <label class="form-label fw-bold small text-uppercase text-secondary">Target Role</label>
-                        <input type="text" name="role" class="form-control form-control-lg" placeholder="e.g. Frontend Developer" required>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label fw-bold small text-uppercase text-secondary">Focus Topic</label>
-                        <select name="topic" class="form-select form-select-lg">
-                            <option value="Core Skills">General / Core Skills</option>
-                            <option value="Behavioral">Behavioral (STAR Method)</option>
-                            <option value="System Design">System Design</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label fw-bold small text-uppercase text-secondary">Resume Context</label>
-                        <textarea name="resume_context" class="form-control" rows="3" placeholder="Summary of your resume..."></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill">
-                        Start Voice Interview <i class="bi bi-mic-fill ms-2"></i>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    {% else %}
-
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-lg-8">
             
-            <div class="interview-card p-5 mb-4 text-center position-relative">
-                
-                <a href="{{ url_for('main.interview', reset=true) }}" class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-3 rounded-pill" title="End Session">
-                    <i class="bi bi-x-lg"></i> End
-                </a>
-
-                <span class="badge bg-light text-secondary border position-absolute top-0 start-50 translate-middle-x mt-3">
-                    Role: {{ role }}
-                </span>
-                
-                <div id="ai-avatar" class="ai-avatar">
-                    <i class="bi bi-robot fs-1 text-primary"></i>
-                </div>
-                
-                <h5 class="text-muted text-uppercase small fw-bold mb-3">Interviewer Asks:</h5>
-                <h2 id="question-text" class="fw-bold text-dark mb-0">"{{ question }}"</h2>
-                
-                <button onclick="speakQuestion()" class="btn btn-sm btn-link text-decoration-none mt-3">
-                    <i class="bi bi-volume-up-fill"></i> Replay Audio
-                </button>
+            <div class="text-center mb-4 text-white">
+                <h1 class="fw-bold display-5">Mock Interview</h1>
+                <p class="opacity-75">Practice with our AI Recruiter. Speak naturally.</p>
             </div>
 
-            {% if feedback %}
-            <div class="interview-card p-4 mb-4 border-start border-5 border-{% if feedback.score >= 7 %}success{% else %}warning{% endif %}">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="fw-bold mb-0">Analysis</h4>
-                    <span class="badge bg-dark fs-5">{{ feedback.score }}/10</span>
-                </div>
-                <p id="feedback-text" class="text-secondary mb-3">{{ feedback.feedback }}</p>
-                <div class="p-3 bg-light rounded border border-dashed">
-                    <strong class="text-success"><i class="bi bi-lightbulb-fill me-2"></i>Tip:</strong>
-                    <span id="tip-text" class="text-dark">{{ feedback.improvement_tip }}</span>
-                </div>
+            <div class="glass-console p-5">
+                
+                {% if not question %}
+                <div class="text-center py-4">
+                    <div class="avatar-container">
+                        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="AI" class="ai-avatar">
+                    </div>
+                    
+                    <h2 class="mb-3">Ready to begin?</h2>
+                    <p class="text-secondary mb-4">I will analyze your resume and ask role-specific questions.</p>
+                    
+                    <form method="POST" class="d-grid gap-3 col-md-8 mx-auto">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" name="role" id="roleInput" placeholder="Target Role" value="{{ role }}" required>
+                            <label for="roleInput">Target Role (e.g., Python Dev)</label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            <select class="form-select" name="topic" id="topicSelect">
+                                <option value="Core Skills">Technical Skills</option>
+                                <option value="Behavioral">Behavioral / HR</option>
+                                <option value="System Design">System Design</option>
+                            </select>
+                            <label for="topicSelect">Focus Area</label>
+                        </div>
 
-                <div class="text-center mt-4">
-                    <form method="POST">
-                        <input type="hidden" name="start_new" value="true">
-                        <input type="hidden" name="role" value="{{ role }}">
-                        <button class="btn btn-primary rounded-pill px-5 py-2">Next Question <i class="bi bi-arrow-right"></i></button>
+                        <textarea name="resume_context" style="display:none;">{{ session.get('resume_context', '') }}</textarea>
+
+                        <button type="submit" name="start_new" class="btn btn-primary btn-action btn-lg mt-2 shadow">
+                            <i class="bi bi-play-circle-fill me-2"></i>Start Interview
+                        </button>
                     </form>
                 </div>
-            </div>
-            {% else %}
 
-            <div class="interview-card p-4">
-                <form method="POST" id="answer-form">
-                    <input type="hidden" name="submit_answer" value="true">
+                {% else %}
+                <div class="d-flex flex-column h-100">
                     
-                    <div class="mb-3">
-                        <textarea id="user-answer" name="user_answer" class="form-control border-0 bg-light" rows="4" placeholder="Type or click the mic to speak..." required></textarea>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="topic-badge">{{ role }}</span>
+                        <a href="{{ url_for('main.interview', reset=1) }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">End Session</a>
                     </div>
-                    
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <button type="button" id="mic-btn" class="btn btn-light border btn-mic text-primary shadow-sm" onclick="toggleRecording()">
-                            <i class="bi bi-mic-fill"></i>
-                        </button>
 
-                        <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill fw-bold">
-                            Submit Answer
+                    <div class="text-center mb-5">
+                        <div class="avatar-container">
+                            <img id="ai-avatar" src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="AI" class="ai-avatar">
+                        </div>
+                        
+                        <h4 class="fw-bold mb-3">AI Recruiter asks:</h4>
+                        <p id="question-text" class="fs-5 text-dark" style="line-height: 1.6;">
+                            "{{ question }}"
+                        </p>
+                        <button onclick="speakText()" class="btn btn-sm btn-light text-primary rounded-pill mt-2">
+                            <i class="bi bi-volume-up-fill me-1"></i> Repeat Question
                         </button>
                     </div>
-                    <div class="text-center mt-2">
-                        <small id="mic-status" class="text-muted">Click mic to speak</small>
+
+                    {% if feedback %}
+                    <div class="alert alert-success border-0 bg-success bg-opacity-10 rounded-4 p-4 mb-4">
+                        <h5 class="alert-heading fw-bold text-success mb-3">
+                            <i class="bi bi-check-circle-fill me-2"></i>Analysis
+                        </h5>
+                        <p id="feedback-text" class="text-dark mb-3">{{ feedback.feedback }}</p>
+                        <div class="bg-white p-3 rounded-3 border border-success border-opacity-25">
+                            <strong class="text-success">Pro Tip:</strong> 
+                            <span id="tip-text" class="text-dark">{{ feedback.improvement_tip }}</span>
+                        </div>
+                        
+                        <form method="POST" class="mt-3 text-end">
+                            <input type="hidden" name="role" value="{{ role }}">
+                            <textarea name="resume_context" style="display:none;">{{ session.get('resume_context', '') }}</textarea>
+                            <button type="submit" name="start_new" class="btn btn-success btn-action shadow-sm">
+                                Next Question <i class="bi bi-arrow-right ms-2"></i>
+                            </button>
+                        </form>
                     </div>
-                </form>
+
+                    {% else %}
+                    <form method="POST" class="mt-auto">
+                        <div class="mb-3 position-relative">
+                            <label class="form-label text-secondary fw-bold small">YOUR ANSWER</label>
+                            <textarea name="user_answer" id="user-answer" class="form-control form-control-lg bg-light border-0" rows="3" placeholder="Type or speak your answer..." required></textarea>
+                            
+                            <div id="mic-status" class="position-absolute end-0 top-0 mt-1 me-2 small text-muted fst-italic">
+                                Click mic to speak
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" id="mic-btn" onclick="toggleRecording()" class="btn btn-light text-primary mic-btn shadow-sm border">
+                                <i class="bi bi-mic-fill"></i>
+                            </button>
+                            
+                            <button type="submit" name="submit_answer" class="btn btn-primary btn-action flex-grow-1 shadow">
+                                Submit Answer
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+
+                </div>
+                {% endif %}
+
             </div>
-            {% endif %}
-
         </div>
     </div>
-    {% endif %}
-
 </div>
 
 <script>
@@ -184,60 +239,44 @@
     function loadVoices() {
         const voices = window.speechSynthesis.getVoices();
         
-        // Priority List: Try to find these specific high-quality voices first
-        const priorityNames = [
-            "Google US English",       // Chrome (Human-like)
-            "Samantha",                // Mac (Siri-like)
-            "Microsoft Zira",          // Windows (Good)
-            "Microsoft David"          // Windows (Standard)
-        ];
+        // Priority List: Human-like voices
+        const priorityNames = ["Google US English", "Samantha", "Microsoft Zira", "Microsoft David"];
 
         for (let name of priorityNames) {
             preferredVoice = voices.find(voice => voice.name.includes(name));
             if (preferredVoice) break;
         }
-
-        // Fallback: Just get any English voice
         if (!preferredVoice) {
             preferredVoice = voices.find(voice => voice.lang.startsWith('en'));
         }
     }
 
-    // Load voices immediately (and wait for async load)
     loadVoices();
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
         window.speechSynthesis.onvoiceschanged = loadVoices;
     }
 
-    // 2. The Smart Speaker (Fixes the Bug)
+    // 2. The Smart Speaker
     function speakText() {
-        // CANCEL any previous speech so they don't overlap
-        window.speechSynthesis.cancel();
+        window.speechSynthesis.cancel(); // Stop previous speech
 
         let textToRead = "";
         const feedbackElement = document.getElementById('feedback-text');
         const tipElement = document.getElementById('tip-text');
         const questionElement = document.getElementById('question-text');
 
-        // LOGIC: If Feedback exists, read that. Otherwise, read Question.
+        // Logic: Prioritize Feedback if visible
         if (feedbackElement && tipElement) {
-            // Read Feedback + Tip
             textToRead = "Here is my analysis. " + feedbackElement.innerText + ". Pro tip: " + tipElement.innerText;
         } else if (questionElement) {
-            // Read Question
             textToRead = questionElement.innerText.replace(/"/g, '');
         } else {
-            return; // Nothing to read
+            return;
         }
 
         const utterance = new SpeechSynthesisUtterance(textToRead);
-        
-        // Apply the Better Voice
-        if (preferredVoice) {
-            utterance.voice = preferredVoice;
-        }
+        if (preferredVoice) utterance.voice = preferredVoice;
 
-        // Make it sound more human (slightly faster, varied pitch)
         utterance.rate = 1.1;  
         utterance.pitch = 1.0; 
 
@@ -255,11 +294,10 @@
 
     // 3. Auto-Start on Page Load
     window.onload = function() {
-        // Wait 500ms for voices to load, then speak
         setTimeout(speakText, 500);
     };
 
-    // 4. Speech-to-Text (Microphone Logic)
+    // 4. Speech-to-Text (Microphone)
     let recognition;
     let isRecording = false;
 

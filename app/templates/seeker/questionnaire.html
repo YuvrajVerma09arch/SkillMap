@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- THEME OVERRIDES --- */
+    body {
+        background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);
+        min-height: 100vh;
+        color: white;
+    }
+
+    /* Floating Shapes */
+    .bg-shape {
+        position: fixed;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        backdrop-filter: blur(5px);
+        z-index: -1;
+        animation: float 20s infinite ease-in-out;
+    }
+    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; }
+    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -5%; animation-delay: -5s; }
+    
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(20px, -20px); }
+    }
+
+    /* --- GLASS CONTAINER --- */
+    .glass-container {
+        max-width: 800px;
+        margin: 40px auto;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+        overflow: hidden;
+        color: #1e293b; 
+        position: relative;
+        z-index: 10;
+    }
+
+    .header-section {
+        background: #2563EB;
+        padding: 40px;
+        text-align: center;
+        color: white;
+    }
+
+    /* --- PROGRESS BAR --- */
+    .progress-wrapper {
+        padding: 20px 40px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .progress {
+        height: 6px;
+        border-radius: 10px;
+        background: #e2e8f0;
+    }
+    .progress-bar {
+        background: #2563EB;
+        transition: width 0.4s ease;
+    }
+
+    /* --- FORM STYLES --- */
+    .form-section {
+        padding: 40px;
+        display: none; 
+        animation: slideIn 0.5s ease;
+    }
+    .form-section.active {
+        display: block;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    label { font-weight: 600; color: #475569; margin-bottom: 8px; }
+
+    .form-control, .form-select {
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+    }
+    .form-control:focus {
+        border-color: #2563EB;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    /* --- SKILL CHIPS (Fixed) --- */
+    .skill-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        margin: 4px;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+        user-select: none; /* Prevents text selection on click */
+    }
+    
+    .skill-chip input { 
+        display: none; /* Hide the actual checkbox */
+    }
+    
+    /* State: Selected */
+    .skill-chip.selected {
+        background: #eff6ff;
+        border-color: #2563EB;
+        color: #2563EB;
+        font-weight: 700;
+        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.1);
+    }
+
+    .btn-nav { padding: 12px 30px; border-radius: 50px; font-weight: 600; }
+</style>
+
+<div class="bg-shape shape-1"></div>
+<div class="bg-shape shape-2"></div>
+
+<div class="glass-container">
+    
+    <div class="header-section">
+        <h2 class="fw-bold mb-2">Build Your Profile</h2>
+        <p class="opacity-75 mb-0">Help us personalize your career roadmap.</p>
+    </div>
+
+    <div class="progress-wrapper">
+        <div class="d-flex justify-content-between text-muted small mb-2 fw-bold">
+            <span>Basic Info</span>
+            <span>Education</span>
+            <span>Skills</span>
+            <span>Experience</span>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" id="progressBar" style="width: 25%"></div>
+        </div>
+    </div>
+
+    <form id="mainForm" method="POST" action="{{ url_for('main.save_seeker_profile') }}" enctype="multipart/form-data">
+        
+        <div class="form-section active" id="step1">
+            <h4 class="mb-4 text-primary fw-bold">1. Basic Information</h4>
+            <div class="mb-3">
+                <label>Full Name</label>
+                <input type="text" name="full_name" class="form-control" value="{{ current_user.username }}" required>
+            </div>
+            <div class="mb-3">
+                <label>Phone Number</label>
+                <input type="tel" name="phone" class="form-control" placeholder="+91..." required>
+            </div>
+            <div class="mb-3">
+                <label>Current Location</label>
+                <input type="text" name="location" class="form-control" placeholder="City, Country" required>
+            </div>
+            <label class="mb-2">Current Status</label>
+            <div class="d-flex gap-2 flex-wrap">
+                <label class="skill-chip selected"><input type="radio" name="status" value="Student" checked> 🎓 Student</label>
+                <label class="skill-chip"><input type="radio" name="status" value="Fresher"> 🌱 Fresher</label>
+                <label class="skill-chip"><input type="radio" name="status" value="Experienced"> 💼 Experienced</label>
+            </div>
+            <div class="mt-4 text-end">
+                <button type="button" class="btn btn-primary btn-nav" onclick="nextStep(2)">Next <i class="bi bi-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <div class="form-section" id="step2">
+            <h4 class="mb-4 text-primary fw-bold">2. Education</h4>
+            <div class="mb-3">
+                <label>Highest Qualification</label>
+                <select name="qualification" class="form-select">
+                    <option value="B.Tech">B.Tech / B.E.</option>
+                    <option value="BCA">BCA / MCA</option>
+                    <option value="B.Sc">B.Sc / M.Sc</option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="MBA">MBA</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label>College / University</label>
+                <input type="text" name="college" class="form-control" placeholder="University Name">
+            </div>
+            <div class="mb-3">
+                <label>Graduation Year</label>
+                <input type="number" name="grad_year" class="form-control" placeholder="2026">
+            </div>
+            <div class="mt-4 d-flex justify-content-between">
+                <button type="button" class="btn btn-light btn-nav" onclick="nextStep(1)">Back</button>
+                <button type="button" class="btn btn-primary btn-nav" onclick="nextStep(3)">Next <i class="bi bi-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <div class="form-section" id="step3">
+            <h4 class="mb-4 text-primary fw-bold">3. Your Skills</h4>
+            <p class="text-muted small">Select at least 3 skills to continue.</p>
+
+            <div class="mb-4">
+                <label class="d-block mb-2 text-dark">💻 Technical Skills</label>
+                <div class="skill-container">
+                    {% for skill in ['Python', 'Java', 'C++', 'JavaScript', 'SQL', 'Go', 'Swift', 'React', 'Node.js', 'HTML/CSS', 'Django', 'Flask'] %}
+                    <label class="skill-chip" onclick="toggleSkill(this)">
+                        <input type="checkbox" name="skills" value="{{ skill }}"> {{ skill }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="d-block mb-2 text-dark">🛠️ Tools & Platforms</label>
+                <div class="skill-container">
+                    {% for tool in ['Git', 'Docker', 'AWS', 'Figma', 'Linux', 'Jira', 'Postman', 'VS Code'] %}
+                    <label class="skill-chip" onclick="toggleSkill(this)">
+                        <input type="checkbox" name="skills" value="{{ tool }}"> {{ tool }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="d-block mb-2 text-dark">🗣️ Soft Skills</label>
+                <div class="skill-container">
+                    {% for soft in ['Communication', 'Teamwork', 'Leadership', 'Problem Solving', 'Time Management', 'Critical Thinking'] %}
+                    <label class="skill-chip" onclick="toggleSkill(this)">
+                        <input type="checkbox" name="skills" value="{{ soft }}"> {{ soft }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-between">
+                <button type="button" class="btn btn-light btn-nav" onclick="nextStep(2)">Back</button>
+                <button type="button" class="btn btn-primary btn-nav" onclick="nextStep(4)">Next <i class="bi bi-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <div class="form-section" id="step4">
+            <h4 class="mb-4 text-primary fw-bold">4. Final Details</h4>
+            
+            <div class="mb-3">
+                <label>Years of Experience</label>
+                <select name="experience_years" class="form-select">
+                    <option value="0">0 (Fresher)</option>
+                    <option value="1-2">1-2 Years</option>
+                    <option value="3-5">3-5 Years</option>
+                    <option value="5+">5+ Years</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label>Upload Resume (Optional)</label>
+                <input type="file" name="resume" class="form-control" accept=".pdf">
+                <small class="text-muted">We will extract more data from this.</small>
+            </div>
+
+            <div class="mb-3">
+                <label>Portfolio / LinkedIn</label>
+                <input type="url" name="linkedin" class="form-control" placeholder="https://">
+            </div>
+
+            <div class="mt-5 d-flex justify-content-between">
+                <button type="button" class="btn btn-light btn-nav" onclick="nextStep(3)">Back</button>
+                <button type="submit" class="btn btn-success btn-nav px-5 shadow">Complete Profile <i class="bi bi-check-lg"></i></button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    // 1. Navigation Logic
+    function nextStep(step) {
+        document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+        document.getElementById('step' + step).classList.add('active');
+        const percent = (step / 4) * 100;
+        document.getElementById('progressBar').style.width = percent + '%';
+    }
+
+    // 2. Fixed Toggle Logic (Works for Checkboxes)
+    function toggleSkill(labelElement) {
+        // Find the checkbox inside the clicked label
+        const checkbox = labelElement.querySelector('input[type="checkbox"]');
+        
+        // Toggle the visual class
+        if (checkbox.checked) {
+            // It was checked, now uncheck it
+            checkbox.checked = false;
+            labelElement.classList.remove('selected');
+        } else {
+            // It was unchecked, now check it
+            checkbox.checked = true;
+            labelElement.classList.add('selected');
+        }
+    }
+
+    // 3. Logic for Radio Buttons (Only one selected at a time)
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Remove 'selected' from all radio labels in this group
+            const name = this.name;
+            document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+                r.parentElement.classList.remove('selected');
+            });
+            // Add to current
+            this.parentElement.classList.add('selected');
+        });
+    });
+</script>
+{% endblock %}

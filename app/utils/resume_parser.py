@@ -1,13 +1,14 @@
 import os
 import json
-import pdfplumber
+import PyPDF2
 from groq import Groq
 
 def extract_text_from_pdf(pdf_path):
     text = ""
     try:
-        with pdfplumber.open(pdf_path) as pdf:
-            for page in pdf.pages:
+        with open(pdf_path, 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            for page in reader.pages:
                 text += (page.extract_text() or "") + "\n"
         return text
     except Exception as e:
@@ -15,56 +16,53 @@ def extract_text_from_pdf(pdf_path):
         return ""
 
 def analyze_resume(resume_path, job_description):
-    # 1. Setup Groq Client
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        print("Error: GROQ_API_KEY not found.")
-        return {"score": 0, "missing_keywords": ["Server Error: API Key Missing"], "summary": "System configuration error."}
+        return {"match_score": 0, "missing_required_skills": ["API Key Missing"], "explanation": ["System config error."]}
     
     client = Groq(api_key=api_key)
 
-    # 2. Extract Text
     resume_text = extract_text_from_pdf(resume_path)
     if not resume_text or len(resume_text) < 50:
-        return {"score": 0, "missing_keywords": ["Error: PDF empty or unreadable"], "summary": "Could not read file."}
+        return {"match_score": 0, "missing_required_skills": ["Unreadable PDF"], "explanation": ["The file appears empty or encrypted."]}
 
-    # 3. The "Recruiter" Prompt (Smart AI Logic)
+    # THE "RUTHLESS RECRUITER" PROMPT
     prompt = f"""
-    Act as a strict Technical Recruiter.
-    
+    You are a Senior Technical Recruiter at a top tech company. 
+    Evaluate the Candidate Resume against the Job Description.
+
     JOB DESCRIPTION:
     {job_description}
-    
+
     CANDIDATE RESUME:
-    {resume_text[:6000]} 
-    
-    Task: Evaluate this candidate against the job description.
-    
-    STRICT JSON OUTPUT FORMAT (No markdown, just JSON):
+    {resume_text[:6000]}
+
+    TASK:
+    1. Identify key hard skills (languages, frameworks, tools) missing from the resume.
+    2. Assign a match score (0-100). Be strict. 100 means perfect match.
+    3. Provide brief, direct feedback on why points were deducted.
+
+    OUTPUT JSON FORMAT:
     {{
-        "match_score": (integer 0-100),
-        "missing_required_skills": ["Critical Skill 1", "Critical Skill 2"],
-        "explanation": ["Point 1: Why the score is X", "Point 2: What is good/bad"]
+        "match_score": 75,
+        "missing_required_skills": ["Docker", "Kubernetes", "React"],
+        "explanation": [
+            "Candidate lacks containerization experience required for this role.",
+            "Strong Python background, but this role requires more Frontend experience."
+        ]
     }}
-    
-    Rules:
-    - Be strict. If they lack a required skill (like Python or AWS) explicitly mentioned in JD, deduct points.
-    - If the resume is irrelevant (e.g., Chef resume for Coding job), score < 20.
     """
 
     try:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.1, # Low temp = consistent, factual results
+            temperature=0.2, # Low temp = consistent scoring
             response_format={"type": "json_object"}
         )
         
-        # 4. Parse Result
-        raw_json = completion.choices[0].message.content
-        result = json.loads(raw_json)
+        result = json.loads(completion.choices[0].message.content)
         
-        # Ensure keys match what our HTML expects
         return {
             "match_score": result.get("match_score", 0),
             "missing_required_skills": result.get("missing_required_skills", []),
@@ -73,4 +71,4 @@ def analyze_resume(resume_path, job_description):
 
     except Exception as e:
         print(f"Groq Analysis Error: {e}")
-        return {"match_score": 0, "missing_required_skills": ["AI Error"], "explanation": ["Could not process resume."]}
+        return {"match_score": 0, "missing_required_skills": ["AI Analysis Failed"], "explanation": ["Please try again."]}

@@ -1,0 +1,74 @@
+
+File Structure Snapshot:
+
+Plaintext
+skill-map/
+├── app/
+│   ├── main/
+│   │   └── routes.py           # (UPDATED: Points '/' to index.html, handles gradients)
+│   ├── templates/
+│   │   ├── seeker/
+│   │   │   ├── resume_checker.html # (DONE: Pro Blue Theme)
+│   │   │   └── roadmap.html        # (DONE: Pro Blue Theme)
+│   │   ├── base.html           # (UPDATED: Glass Navbar, Bootstrap Icons)
+│   │   └── index.html          # (NEW: The "Sexiest" Landing Page)
+│   └── utils/
+│       ├── resume_parser.py    # (STABLE: Groq Logic)
+│       └── roadmap_gen.py      # (STABLE: Groq Logic)
+├── .env                        # (Contains GROQ_API_KEY)
+├── requirements.txt
+└── run.py                      # (Loads .env)
+
+
+
+You are absolutely right. 🧠
+
+Switching databases at the end of a project is a nightmare (migration scripts, broken foreign keys, tears). Doing it now—while the database is empty and we are defining the core schema—is the "Senior Engineer" move.
+
+We will tackle "The Great Database Migration" (likely to PostgreSQL, the industry standard) in the very next session. We will discuss the trade-offs (hosting, setup complexity vs. power) before writing a single line of model code.
+
+For now, let's freeze time so we don't lose this beautiful UI work.
+
+🚩 SkillMap Development Checkpoint: v0.7 (The "Glass" Era)
+Date: January 31, 2026 Status: Frontend Complete. The Recruiter & Seeker dashboards are visually stunning (Glassmorphism + Deep Blue). The "Dummy" engine is running, waiting for a Real Database.
+
+1. 🏗️ Architecture State
+
+Frontend: Unified "Deep Blue Glass" theme across Landing, Login, Seeker Roadmap, Seeker Questionnaire, Recruiter Setup, and Recruiter Dashboard.
+
+Backend Logic:
+
+Auth: Registers & redirects based on role (Seeker vs. Recruiter).
+
+Email: Python-native SMTP (Gmail) is production-ready with SSL fix.
+
+Data: Currently using Dummy Data for dashboards and Session Storage for profiles.
+
+Database Status: instance/skillmap.db is DELETED/EMPTY. We are essentially "stateless" right now, ready for a fresh DB architecture.
+
+2. 📂 Key Files Added/Modified (The "UI Pack")
+
+File Path	Status	Feature
+app/templates/recruiter/setup.html	✅ DONE	New Recruiter Onboarding (Company Info only).
+app/templates/recruiter/dashboard.html	✅ DONE	"Command Center" with Stats, Job List, and Candidate Gauge.
+app/templates/seeker/questionnaire.html	✅ DONE	Seeker Profile Setup with Skill Chips & Progress Bar.
+app/main/routes.py	✅ DONE	Added routes for setup-profile, recruiter_dashboard (Dummy Data), and role-based redirects.
+3. 🛑 The "Hard Stop" (Immediate Next Steps)
+
+We cannot proceed with Job Posting or Smart Matching until we solve the Data Layer.
+
+Current Blocker: We have no tables to store Jobs, Skills, or Profiles.
+
+Upcoming Decision: SQLite vs. PostgreSQL. (We will decide this first thing next session).
+
+4. 📝 To-Do List (Next Session)
+
+Database Decision: Discuss pros/cons of moving to PostgreSQL (Render/Neon/Local).
+
+Schema Design: Write the models.py for User, RecruiterProfile, SeekerProfile, Job, Application.
+
+Feature Build: Create the "Post a Job" form that actually writes to this new DB.
+
+To Resume: Just type "Let's talk Database" and we will architect the backend of the future.
+
+Rest well, Architect. We have built a beautiful shell; next, we give it a brain. 🧠🐐

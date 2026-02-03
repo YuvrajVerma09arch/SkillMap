@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillMap - Access Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        /* --- 1. SETTINGS & COLORS --- */
+        :root {
+            /* We keep the Blue Theme as requested */
+            --bg-gradient: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);
+            --card-glass: rgba(255, 255, 255, 0.1);
+            --card-border: rgba(255, 255, 255, 0.2);
+            --primary: #ffffff; 
+            --accent: #2563EB;
+            --text: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-gradient);
+            overflow: hidden;
+            perspective: 1200px; /* Crucial for 3D Flip */
+        }
+
+        /* --- BACKGROUND SHAPES (The "SkillMap" Look) --- */
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            backdrop-filter: blur(5px);
+            z-index: -1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        /* Top Left - Small */
+        .shape-1 { 
+            width: 100px; height: 100px; 
+            top: 15%; left: 15%; 
+            animation-delay: 0s; 
+        }
+        
+        /* Bottom Right - Medium */
+        .shape-2 { 
+            width: 150px; height: 150px; 
+            bottom: 15%; right: 15%; 
+            animation-delay: -5s; 
+        }
+        
+        /* Bottom Left - Large Faint */
+        .shape-3 { 
+            width: 300px; height: 300px; 
+            bottom: -50px; left: -50px; 
+            opacity: 0.4; 
+            animation-delay: -10s; 
+        }
+        
+        /* Top Right - Large Faint */
+        .shape-4 { 
+            width: 250px; height: 250px; 
+            top: -50px; right: -50px; 
+            opacity: 0.4; 
+            animation-delay: -15s; 
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -50px) rotate(10deg); }
+            66% { transform: translate(-20px, 20px) rotate(-5deg); }
+        }
+
+        /* --- 2. THE 3D SCENE --- */
+        .scene {
+            width: 420px;
+            height: 550px;
+            position: relative;
+            /* No perspective here, it's on body */
+        }
+
+        /* The Card Object that Rotates */
+        .card-3d {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d; /* Allows Front/Back faces */
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy Flip */
+        }
+
+        /* FLIP STATE */
+        .card-3d.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* --- 3. FACES (Front & Back) --- */
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            
+            /* Glassmorphism Styling */
+            background: var(--card-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            
+            backface-visibility: hidden; /* Hides the back when facing away */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 3rem;
+            color: white;
+            overflow: hidden; /* Keeps the glow inside */
+        }
+
+        /* Back Face needs to be pre-rotated so it faces "out" when flipped */
+        .card-face.face-back {
+            transform: rotateY(180deg);
+        }
+
+        /* --- 4. SPOTLIGHT GLOW EFFECT (From Option 3) --- */
+        .card-face::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(
+                600px circle at var(--mouse-x) var(--mouse-y),
+                rgba(255, 255, 255, 0.15),
+                transparent 40%
+            );
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        
+        /* Show glow on hover */
+        .scene:hover .card-face::before {
+            opacity: 1;
+        }
+
+        /* --- 5. CONTENT STYLING --- */
+        .content-wrapper {
+            position: relative;
+            z-index: 5; /* Above the glow */
+            transform: translateZ(30px); /* 3D Depth popping out */
+        }
+
+        h2 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+        p { font-size: 0.9rem; opacity: 0.8; margin-bottom: 2rem; line-height: 1.5; }
+
+        /* Inputs */
+        .input-group {
+            position: relative;
+            margin-bottom: 1.2rem;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 1rem 1rem 3rem;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        /* Input Focus Glow */
+        input:focus {
+            outline: none;
+            background: rgba(0, 0, 0, 0.3);
+            border-color: white;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Buttons */
+        .btn-main {
+            width: 100%;
+            padding: 1rem;
+            background: white;
+            color: var(--accent);
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-main:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: white;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 1.5rem;
+            opacity: 0.9;
+        }
+        .btn-link:hover { opacity: 1; }
+
+        /* Flash Messages (Floating) */
+        .flash-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            width: 90%;
+            max-width: 400px;
+        }
+        .alert {
+            background: rgba(255, 255, 255, 0.9);
+            color: #1e3a8a;
+            padding: 12px 20px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 10px;
+            animation: slideDown 0.5s ease-out;
+        }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    </style>
+</head>
+<body>
+
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+    <div class="shape shape-4"></div>
+
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="scene" id="scene">
+        <div class="card-3d" id="card">
+            
+            <div class="card-face face-front">
+                <div class="content-wrapper">
+                    <h2>Welcome Back</h2>
+                    <p>Enter your credentials to access your Career Roadmap.</p>
+                    
+                    <form action="{{ url_for('auth.login') }}" method="POST">
+                        <div class="input-group">
+                            <i class="bi bi-envelope input-icon"></i>
+                            <input type="email" name="email" placeholder="Email Address" required>
+                        </div>
+                        <div class="input-group">
+                            <i class="bi bi-key input-icon"></i>
+                            <input type="password" name="password" placeholder="Password" required>
+                        </div>
+                        
+                        <button type="submit" class="btn-main">Sign In</button>
+                    </form>
+
+                    <div style="text-align: center;">
+                        <button class="btn-link" onclick="flipCard()">New here? Create Account</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-face face-back">
+                <div class="content-wrapper">
+                    <h2>Join SkillMap</h2>
+                    <p>Start your AI-powered journey today.</p>
+                    
+                    <form action="{{ url_for('auth.register') }}" method="POST">
+                        <input type="hidden" name="role" value="{{ request.args.get('role', 'seeker') }}">
+                        
+                        <div class="input-group">
+                            <i class="bi bi-person input-icon"></i>
+                            <input type="text" name="username" placeholder="Full Name" required>
+                        </div>
+                        <div class="input-group">
+                            <i class="bi bi-envelope input-icon"></i>
+                            <input type="email" name="email" placeholder="Email Address" required>
+                        </div>
+                        <div class="input-group">
+                            <i class="bi bi-key input-icon"></i>
+                            <input type="password" name="password" placeholder="Create Password" required>
+                        </div>
+
+                        <button type="submit" class="btn-main">Create Account</button>
+                    </form>
+
+                    <div style="text-align: center;">
+                        <button class="btn-link" onclick="flipCard()">Already have an account? Sign In</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const scene = document.getElementById('scene');
+        const card = document.getElementById('card');
+        const faces = document.querySelectorAll('.card-face');
+
+        // 1. FLIP LOGIC
+        function flipCard() {
+            card.classList.toggle('is-flipped');
+        }
+
+        // Check URL to auto-flip if on Register mode
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.get('mode') === 'signup') {
+            card.classList.add('is-flipped');
+        }
+
+        // 2. TILT & SPOTLIGHT LOGIC (Combined)
+        document.addEventListener('mousemove', (e) => {
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            // --- A. TILT CALCULATION ---
+            // Calculate mouse position as a percentage (-1 to 1) from center
+            const xVal = (e.clientX - windowWidth / 2) / (windowWidth / 2);
+            const yVal = (e.clientY - windowHeight / 2) / (windowHeight / 2);
+
+            // Rotate slightly (max 10 degrees)
+            // Note: We apply this to the SCENE wrapper, not the card itself,
+            // to avoid conflict with the Flip transform.
+            scene.style.transform = `rotateY(${xVal * 10}deg) rotateX(${-yVal * 10}deg)`;
+
+            // --- B. SPOTLIGHT CALCULATION ---
+            // We need to update the CSS variable on the faces relative to the card's position
+            const rect = scene.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            faces.forEach(face => {
+                face.style.setProperty('--mouse-x', `${mouseX}px`);
+                face.style.setProperty('--mouse-y', `${mouseY}px`);
+            });
+        });
+
+    </script>
+</body>
+</html>

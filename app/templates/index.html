@@ -1,234 +1,517 @@
 {% extends "base.html" %}
 
 {% block content %}
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 
 <style>
-    /* 1. OVERRIDES & LAYOUT */
+    /* --- 1. CORE LAYOUT & ANIMATIONS --- */
+    :root {
+        --primary-blue: #2563EB;
+        --dark-blue: #1e40af;
+        --text-dark: #0f172a;
+        --text-grey: #64748b;
+    }
+
     body {
         font-family: 'Inter', sans-serif;
         overflow-x: hidden;
-        color: #fff;
+        background-color: #fff;
+        scroll-behavior: smooth;
     }
     
-    .container { max-width: 1400px; }
+    .container-custom {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
 
-    /* 2. THE HERO BACKGROUND */
+    /* Scroll Reveal Animation */
+    .reveal {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: all 1s cubic-bezier(0.5, 0, 0, 1);
+    }
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* --- 2. HERO SECTION --- */
     .hero-section {
         position: relative;
         min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
+        /* Deep Blue Gradient */
+        background: radial-gradient(circle at top right, #3b82f6 0%, #1d4ed8 40%, #1e3a8a 100%);
+        color: white;
+        padding-top: 80px;
         overflow: hidden;
-        background: linear-gradient(135deg, #1e40af 0%, #2563EB 50%, #3b82f6 100%);
-        padding: 4rem 1rem; /* Added padding for smaller screens */
     }
 
-    /* Floating Shapes */
-    .floating-shapes { position: absolute; width: 100%; height: 100%; overflow: hidden; top: 0; left: 0; z-index: 1; }
-    .shape {
+    /* Background Shapes */
+    .hero-bg-shapes .shape {
         position: absolute;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.03);
         border-radius: 50%;
-        backdrop-filter: blur(5px);
-        animation: float 25s infinite ease-in-out;
+        backdrop-filter: blur(3px);
+        animation: float 20s infinite ease-in-out;
     }
-    .shape:nth-child(1) { width: 300px; height: 300px; top: -50px; left: -100px; animation-delay: 0s; }
-    .shape:nth-child(2) { width: 400px; height: 400px; bottom: -100px; right: -50px; animation-delay: 5s; }
-    .shape:nth-child(3) { width: 150px; height: 150px; top: 20%; right: 20%; animation-delay: 2s; background: rgba(255,255,255,0.08); }
-
+    .shape-1 { width: 500px; height: 500px; top: -150px; left: -100px; }
+    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -50px; animation-delay: -5s; }
+    
     @keyframes float {
-        0%, 100% { transform: translate(0, 0) rotate(0deg); }
-        33% { transform: translate(30px, -50px) rotate(10deg); }
-        66% { transform: translate(-20px, 20px) rotate(-5deg); }
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(40px, -40px); }
     }
 
-    /* 3. HERO CONTENT */
     .hero-content {
         position: relative;
         z-index: 10;
         text-align: center;
-        max-width: 1200px; /* Wider to fit 4 cards */
-        width: 100%;
+        max-width: 900px;
+    }
+
+    .hero-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 8px 16px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+        backdrop-filter: blur(5px);
+        animation: fadeInDown 0.8s ease-out;
     }
 
     .hero-title {
         font-size: 4rem;
         font-weight: 800;
+        letter-spacing: -2px;
         line-height: 1.1;
         margin-bottom: 1.5rem;
-        letter-spacing: -2px;
-        text-shadow: 0 4px 20px rgba(0,0,0,0.2); 
+        animation: fadeInUp 0.8s ease-out 0.2s forwards;
+        opacity: 0;
     }
 
-    .highlight-text {
-        color: #93c5fd;
-        display: inline-block;
-    }
-    
     .hero-subtitle {
         font-size: 1.2rem;
         font-weight: 300;
-        opacity: 0.9;
-        margin-bottom: 4rem;
-        max-width: 700px;
-        margin-left: auto;
-        margin-right: auto;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 650px;
+        margin: 0 auto 3rem auto;
         line-height: 1.6;
+        animation: fadeInUp 0.8s ease-out 0.4s forwards;
+        opacity: 0;
     }
 
-    /* 4. THE FEATURE GATES (Grid of 4) */
+    .hero-btns {
+        animation: fadeInUp 0.8s ease-out 0.6s forwards;
+        opacity: 0;
+    }
+
+    /* --- 3. ABOUT / PROBLEM SECTION --- */
+    .section-about {
+        padding: 7rem 0;
+        background: white;
+    }
+
+    .about-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 5rem;
+        align-items: center;
+    }
+
+    .about-text h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 1.5rem;
+        letter-spacing: -1px;
+    }
+
+    .about-text p {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: var(--text-grey);
+        margin-bottom: 1.5rem;
+    }
+
+    /* Card visual */
+    .about-visual {
+        position: relative;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-radius: 24px;
+        padding: 2rem;
+        border: 1px solid #bfdbfe;
+    }
+
+    .floating-badge {
+        position: absolute;
+        background: white;
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 2;
+        transition: transform 0.3s ease;
+    }
+    .floating-badge:hover { transform: scale(1.05); }
+
+    /* --- 4. SERVICES GRID --- */
+    .section-services {
+        padding: 6rem 0;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .section-header { text-align: center; max-width: 700px; margin: 0 auto 4rem auto; }
+    .section-header h2 { font-size: 2.5rem; font-weight: 700; color: var(--text-dark); margin-bottom: 1rem; }
+    .section-header p { font-size: 1.1rem; color: var(--text-grey); }
+
     .feature-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
-        margin-top: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
     }
 
-    .glass-gate {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+    .service-card {
+        background: white;
         border-radius: 20px;
-        padding: 2rem;
-        text-align: left;
+        padding: 2.5rem;
+        border: 1px solid #e2e8f0;
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        cursor: pointer;
         text-decoration: none;
         display: block;
-        color: white;
         position: relative;
         overflow: hidden;
-        height: 100%; /* Make them equal height */
     }
 
-    /* Hover Effects for Active Cards */
-    .glass-gate.active:hover {
-        transform: translateY(-10px) scale(1.02);
-        background: rgba(255, 255, 255, 0.2);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        border-color: rgba(255, 255, 255, 0.4);
+    .service-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary-blue);
+        box-shadow: 0 20px 30px -10px rgba(37, 99, 235, 0.15);
     }
 
-    /* Styles for "Coming Soon" Cards */
-    .glass-gate.locked {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(255, 255, 255, 0.1);
-        cursor: default;
-    }
-
-    .gate-icon {
-        width: 50px; height: 50px;
-        background: white;
-        border-radius: 12px;
+    .service-icon {
+        width: 56px; height: 56px;
+        background: #eff6ff;
+        color: var(--primary-blue);
+        border-radius: 14px;
         display: flex; align-items: center; justify-content: center;
-        margin-bottom: 1.5rem;
         font-size: 1.5rem;
-        color: #2563EB;
-        transition: transform 0.4s;
-    }
-    
-    .glass-gate.active:hover .gate-icon {
-        transform: rotateY(180deg);
+        margin-bottom: 1.5rem;
+        transition: background 0.3s, color 0.3s;
     }
 
-    .gate-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .gate-desc { opacity: 0.8; font-size: 0.9rem; line-height: 1.5; }
-    
-    .gate-arrow {
-        position: absolute; bottom: 2rem; right: 2rem;
-        font-size: 1.2rem; opacity: 0;
-        transform: translateX(-20px); transition: all 0.3s;
-    }
-    .glass-gate.active:hover .gate-arrow { opacity: 1; transform: translateX(0); }
+    .service-card:hover .service-icon { background: var(--primary-blue); color: white; }
 
-    /* BADGE for Coming Soon */
+    .service-title { font-size: 1.35rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem; }
+    .service-desc { color: var(--text-grey); line-height: 1.6; font-size: 0.95rem; }
+
+    .badge-live {
+        position: absolute; top: 20px; right: 20px;
+        background: #dcfce7; color: #166534;
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+        padding: 4px 10px; border-radius: 20px;
+    }
     .badge-soon {
-        position: absolute; top: 1.5rem; right: 1.5rem;
-        background: rgba(255, 215, 0, 0.15);
-        color: #ffd700;
-        border: 1px solid rgba(255, 215, 0, 0.3);
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
+        position: absolute; top: 20px; right: 20px;
+        background: #f1f5f9; color: #64748b;
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+        padding: 4px 10px; border-radius: 20px;
     }
 
+    /* --- 5. CTA SECTION --- */
+    .cta-section {
+        background: var(--primary-blue);
+        padding: 6rem 0;
+        text-align: center;
+        color: white;
+        background-image: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+    }
+
+    .cta-btn {
+        background: white;
+        color: var(--primary-blue);
+        padding: 1rem 3rem;
+        font-weight: 700;
+        border-radius: 50px;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 2.5rem;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        transition: transform 0.2s;
+    }
+    .cta-btn:hover { transform: scale(1.05); }
+
+    /* --- 6. FOOTER --- */
+    .footer { background: #0f172a; color: #94a3b8; padding: 5rem 0 2rem 0; font-size: 0.95rem; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem; margin-bottom: 4rem; }
+    .footer h3 { color: white; font-weight: 700; margin-bottom: 1rem; }
+    .footer a { color: #94a3b8; text-decoration: none; transition: color 0.2s; }
+    .footer a:hover { color: white; }
+    .footer-bottom { border-top: 1px solid #334155; padding-top: 2rem; display: flex; justify-content: space-between; }
+
+    /* Animations */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Mobile Responsive */
     @media (max-width: 768px) {
-        .hero-title { font-size: 2.5rem; }
-        .feature-grid { grid-template-columns: 1fr; }
+        .hero-title { font-size: 2.8rem; }
+        .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+        .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+        .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
     }
 </style>
 
 <div class="hero-section">
-    <div class="floating-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
+    <div class="hero-bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
     </div>
-
-    <div class="hero-content">
+    
+    <div class="hero-content container-custom">
+        <div class="hero-badge">✨ AI-Powered Career Guidance</div>
+        
         <h1 class="hero-title">
-            Your Career,<br>
-            <span class="highlight-text">Intelligently Architected.</span>
+            Architect Your <br>
+            <span style="color: #93c5fd;">Ideal Career Path.</span>
         </h1>
         
         <p class="hero-subtitle">
-            The all-in-one platform connecting ambition with opportunity. Optimize your resume, master new skills, and get matched with top recruiters.
+            Don't just guess your next move. SkillMap uses AI to analyze your resume, build personalized roadmaps, and simulate real interviews.
         </p>
-
-        <div class="feature-grid">
-            
-            <a href="{{ url_for('main.resume_checker') }}" class="glass-gate active">
-                <div class="gate-icon">
-                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                </div>
-                <h3 class="gate-title">Resume Analyst</h3>
-                <p class="gate-desc">
-                    Beat the ATS. Get AI-powered scoring, keyword gap analysis, and recruiter insights instantly.
-                </p>
-                <i class="bi bi-arrow-right gate-arrow"></i>
-            </a>
-
-            <a href="{{ url_for('main.roadmap') }}" class="glass-gate active">
-                <div class="gate-icon">
-                    <i class="bi bi-map-fill"></i>
-                </div>
-                <h3 class="gate-title">Career Architect</h3>
-                <p class="gate-desc">
-                    Don't know what to learn next? Generate a custom step-by-step roadmap for your dream role.
-                </p>
-                <i class="bi bi-arrow-right gate-arrow"></i>
-            </a>
-
-            <div class="glass-gate locked">
-                <span class="badge-soon">Coming Soon</span>
-                <div class="gate-icon" style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5);">
-                    <i class="bi bi-briefcase-fill"></i>
-                </div>
-                <h3 class="gate-title" style="opacity: 0.7;">Smart Match</h3>
-                <p class="gate-desc">
-                    Stop searching. Our algorithm matches your verified skills directly to active job listings.
-                </p>
-            </div>
-
-            <div class="glass-gate locked">
-                <span class="badge-soon">Coming Soon</span>
-                <div class="gate-icon" style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5);">
-                    <i class="bi bi-building-fill"></i>
-                </div>
-                <h3 class="gate-title" style="opacity: 0.7;">Recruiter Hub</h3>
-                <p class="gate-desc">
-                    Post jobs and find candidates based on skills, not just keywords. The future of hiring.
-                </p>
-            </div>
-
+        
+        <div class="hero-btns d-flex justify-content-center gap-3 flex-wrap">
+            <a href="#services" class="btn btn-light text-primary fw-bold px-4 py-3 rounded-pill shadow-lg">Explore Tools</a>
+            <a href="{{ url_for('main.roadmap') }}" class="btn btn-outline-light fw-bold px-4 py-3 rounded-pill">Start Roadmap</a>
         </div>
     </div>
 </div>
+
+<section class="section-about">
+    <div class="container-custom">
+        <div class="about-grid">
+            <div class="about-text reveal">
+                <h2>Stop guessing.<br>Start strategizing.</h2>
+                <p>
+                    Navigating the job market is overwhelming. Generic advice doesn't work, and skill gaps are hard to identify until it's too late.
+                </p>
+                <p>
+                    <strong>SkillMap is your personal Career Architect.</strong> We don't just list jobs; we reverse-engineer the requirements and give you a turn-by-turn navigation system to get hired.
+                </p>
+                
+                <div class="d-flex flex-column gap-3 mt-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary"><i class="bi bi-check-lg"></i></div>
+                        <span class="fw-semibold text-secondary">ATS-Friendly Resume Optimization</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary"><i class="bi bi-check-lg"></i></div>
+                        <span class="fw-semibold text-secondary">Step-by-Step Skill Roadmaps</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary"><i class="bi bi-check-lg"></i></div>
+                        <span class="fw-semibold text-secondary">Voice-Interactive Mock Interviews</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="about-image reveal">
+                <div class="about-visual text-center">
+                    <lottie-player 
+                        src="https://lottie.host/25f42891-037e-448b-8e01-7032134a207c/FAUrnjuwjv.json" 
+                        background="transparent" 
+                        speed="1" 
+                        style="width: 100%; max-width: 380px; margin: 0 auto;" 
+                        loop 
+                        autoplay>
+                    </lottie-player>
+
+                    <div class="floating-badge" style="top: 15%; right: -10px; animation: float 6s ease-in-out infinite;">
+                        <i class="bi bi-bullseye text-danger fs-5"></i>
+                        <div>
+                            <div style="font-size: 0.7rem; color: #94a3b8;">Target Role</div>
+                            <div id="dynamic-role" style="font-weight: 600; min-width: 120px; transition: opacity 0.5s ease;">Software Engineer</div>
+                        </div>
+                    </div>
+
+                    <div class="floating-badge" style="bottom: 20%; left: -10px; animation: float 7s ease-in-out infinite reverse;">
+                        <i class="bi bi-graph-up-arrow text-success fs-5"></i>
+                        <div>
+                            <div style="font-size: 0.7rem; color: #94a3b8;">Progress</div>
+                            <div>Top 5% Candidate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="services" class="section-services">
+    <div class="container-custom">
+        <div class="section-header reveal">
+            <h2>Your Career Toolkit</h2>
+            <p>Everything you need to go from "Applicant" to "Hired".</p>
+        </div>
+
+        <div class="feature-grid">
+            
+            <a href="{{ url_for('main.resume_checker') }}" class="service-card reveal">
+                <span class="badge-live">Live</span>
+                <div class="service-icon">
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+                </div>
+                <h3 class="service-title">Resume Analyst</h3>
+                <p class="service-desc">
+                    Don't let an ATS reject you. Get a detailed score and keyword analysis against your target job description.
+                </p>
+            </a>
+
+            <a href="{{ url_for('main.roadmap') }}" class="service-card reveal">
+                <span class="badge-live">Live</span>
+                <div class="service-icon">
+                    <i class="bi bi-map"></i>
+                </div>
+                <h3 class="service-title">Career Architect</h3>
+                <p class="service-desc">
+                    Tell us where you are and where you want to go. We generate a month-by-month learning plan to bridge the gap.
+                </p>
+            </a>
+
+            <a href="{{ url_for('main.interview') }}" class="service-card reveal">
+                <span class="badge-live">New</span>
+                <div class="service-icon" style="background: #eef2ff; color: #4f46e5;">
+                    <i class="bi bi-mic-fill"></i>
+                </div>
+                <h3 class="service-title">Mock Interviewer</h3>
+                <p class="service-desc">
+                    Speak to our AI Agent. It asks role-specific questions, listens to your voice, and gives instant feedback on your answers.
+                </p>
+            </a>
+
+            <div class="service-card reveal" style="cursor: default; opacity: 0.8;">
+                <span class="badge-soon">Soon</span>
+                <div class="service-icon" style="background: #f1f5f9; color: #94a3b8;">
+                    <i class="bi bi-briefcase"></i>
+                </div>
+                <h3 class="service-title" style="color: #64748b;">Smart Match</h3>
+                <p class="service-desc">
+                    Skip the job boards. Our algorithm matches your verified skills directly to active listings from partner companies.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container-custom reveal">
+        <h2 class="fw-bold display-6 mb-3">Ready to upgrade your career?</h2>
+        <p class="opacity-90 fs-5 mb-4">Join the students using AI to land their dream roles.</p>
+        <a href="{{ url_for('auth.role_select') }}" class="cta-btn">Get Started for Free</a>
+    </div>
+</section>
+
+<footer class="footer">
+    <div class="container-custom">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <h3>SkillMap</h3>
+                <p>
+                    Building the next generation of career tools. <br>Based in Ahmedabad, India.
+                </p>
+            </div>
+            
+            <div class="footer-col">
+                <h4 class="text-white mb-3 fw-bold">Platform</h4>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="{{ url_for('main.resume_checker') }}">Resume Analyst</a></li>
+                    <li class="mb-2"><a href="{{ url_for('main.roadmap') }}">Roadmap Gen</a></li>
+                    <li class="mb-2"><a href="{{ url_for('main.interview') }}">Mock Interview</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4 class="text-white mb-3 fw-bold">Legal</h4>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="#">Privacy Policy</a></li>
+                    <li class="mb-2"><a href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4 class="text-white mb-3 fw-bold">Social</h4>
+                <div class="d-flex gap-3">
+                    <a href="#" class="fs-5"><i class="bi bi-linkedin"></i></a>
+                    <a href="#" class="fs-5"><i class="bi bi-github"></i></a>
+                    <a href="#" class="fs-5"><i class="bi bi-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© 2026 SkillMap. All rights reserved.</span>
+            <span>Designed with Precision.</span>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // 1. Scroll Reveal Logic
+    function reveal() {
+        var reveals = document.querySelectorAll(".reveal");
+        for (var i = 0; i < reveals.length; i++) {
+            var windowHeight = window.innerHeight;
+            var elementTop = reveals[i].getBoundingClientRect().top;
+            var elementVisible = 100;
+            if (elementTop < windowHeight - elementVisible) {
+                reveals[i].classList.add("active");
+            }
+        }
+    }
+    window.addEventListener("scroll", reveal);
+    reveal(); // Trigger on load
+
+    // 2. DYNAMIC ROLE SWITCHER (The Upgrade)
+    const roles = [
+        "Software Engineer", 
+        "Product Manager", 
+        "Data Scientist", 
+        "Digital Marketer", 
+        "UX Designer",
+        "Financial Analyst"
+    ];
+    let roleIndex = 0;
+    const roleElement = document.getElementById('dynamic-role');
+
+    if(roleElement) {
+        setInterval(() => {
+            // Fade Out
+            roleElement.style.opacity = '0';
+            
+            setTimeout(() => {
+                // Change Text
+                roleIndex = (roleIndex + 1) % roles.length;
+                roleElement.innerText = roles[roleIndex];
+                
+                // Fade In
+                roleElement.style.opacity = '1';
+            }, 800); 
+            
+        }, 1500); 
+    }
+</script>
 
 {% endblock %}

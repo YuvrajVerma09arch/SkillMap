@@ -1,64 +1,56 @@
 import os
-import json
 from groq import Groq
 
-# 1. GENERATE QUESTION (Now Context-Aware)
-def generate_interview_question(role, topic, resume_text=None, difficulty="Medium"):
+def get_client():
     api_key = os.environ.get("GROQ_API_KEY")
-    client = Groq(api_key=api_key)
+    return Groq(api_key=api_key) if api_key else None
 
-    # If we have a resume, we tell the AI to ask about IT.
-    context_instruction = ""
-    if resume_text:
-        context_instruction = f"""
-        CONTEXT: The candidate has this experience on their resume:
-        "{resume_text[:1000]}..." (truncated)
-        
-        INSTRUCTION: Ask a specific question related to a project or skill found in the resume snippet above, 
-        but connect it to the role of {role}.
-        """
-    else:
-        context_instruction = f"INSTRUCTION: Ask a standard behavioral or technical question for a {role}."
+def generate_interview_question(role, topic, resume_text=""):
+    client = get_client()
+    if not client: return "Error: AI not connected."
 
     prompt = f"""
-    Act as a Senior Technical Recruiter.
-    Role: {role}
-    Topic: {topic}
-    Difficulty: {difficulty}
+    You are an expert Technical Interviewer conducting a mock interview for a {role} position.
+    Focus Area: {topic}.
     
-    {context_instruction}
+    Candidate Context (Resume Snippet):
+    {resume_text[:2000]}
     
-    Output ONLY the question text. No intro, no quotes.
+    Task: Generate ONE specific, challenging interview question.
+    
+    Rules:
+    1. Address the candidate directly as "you". (e.g., "Tell me about a time you...")
+    2. Do NOT ask generic questions like "Tell me about yourself" unless it's the very first turn.
+    3. Make it relevant to their resume if possible.
+    4. Output ONLY the question text. No intro/outro.
     """
 
     try:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.8 # Higher temp = more creative questions
+            temperature=0.7
         )
         return completion.choices[0].message.content.strip()
     except Exception as e:
-        print(f"Gen Error: {e}")
-        return "Tell me about a time you solved a difficult technical problem."
+        return f"Tell me about your experience with {topic}."
 
-# 2. EVALUATE ANSWER (The Grader)
 def evaluate_answer(question, user_answer):
-    api_key = os.environ.get("GROQ_API_KEY")
-    client = Groq(api_key=api_key)
+    client = get_client()
+    if not client: return {"feedback": "Error", "improvement_tip": "Check API Key"}
 
     prompt = f"""
-    You are a Hiring Manager.
-    Question: "{question}"
-    Candidate Answer: "{user_answer}"
+    You are a Senior Interview Coach.
     
-    Task: Grade this answer.
+    Question Asked: "{question}"
+    Candidate's Answer: "{user_answer}"
     
-    STRICT JSON OUTPUT FORMAT:
+    Task: Evaluate the answer.
+    
+    OUTPUT JSON FORMAT:
     {{
-        "score": (integer 1-10),
-        "feedback": "2 sentences on what was good/bad.",
-        "improvement_tip": "One specific tip to make it a 10/10."
+        "feedback": "Direct feedback addressing the user as 'You'. Be constructive but critical. Mention what they missed.",
+        "improvement_tip": "One specific actionable tip to improve this answer (e.g. 'Use the STAR method' or 'Mention X specific tool')."
     }}
     """
 
@@ -66,10 +58,13 @@ def evaluate_answer(question, user_answer):
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.2, # Low temp = strict grading
+            temperature=0.5,
             response_format={"type": "json_object"}
         )
+        import json
         return json.loads(completion.choices[0].message.content)
-    except Exception as e:
-        print(f"Eval Error: {e}")
-        return {"score": 0, "feedback": "Could not grade.", "improvement_tip": "Try again."}
+    except Exception:
+        return {
+            "feedback": "Your answer was recorded, but I couldn't generate detailed feedback right now.", 
+            "improvement_tip": "Try to provide more specific examples next time."
+        }

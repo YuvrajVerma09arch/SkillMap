@@ -503,20 +503,18 @@
     <script>
         function selectRole(role) {
             // Visual feedback
-            const card = event.currentTarget; // Safer than event.target
+            const card = event.currentTarget; 
             card.style.transform = 'scale(0.95)';
             setTimeout(() => {
                 card.style.transform = 'scale(1)';
             }, 100);
 
-            // LOGIC: Redirect to Flask Register Route with a query parameter
-            // e.g. /register?role=seeker OR /register?role=recruiter
-            
+            // LOGIC: Send to Login Page, but in "Sign Up" mode
             const roleParam = role === 'Job Seeker' ? 'seeker' : 'recruiter';
             
             setTimeout(() => {
-                // This links to the Python route we created earlier
-                window.location.href = "{{ url_for('auth.register') }}?role=" + roleParam;
+                // Redirect to: /login?mode=signup&role=seeker
+                window.location.href = "{{ url_for('auth.login') }}?mode=signup&role=" + roleParam;
             }, 300);
         }
     </script>
