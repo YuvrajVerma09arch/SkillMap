@@ -50,8 +50,21 @@
         .recruiter-icon {
             font-size: 60px;
             margin-bottom: 20px;
+            /* animation: bounce 0.6s; */
+            animation: floatIcon 2s ease-in-out infinite;
         }
 
+        @keyframes floatIcon {
+             0% {
+                transform: translateY(0);
+            }
+             50% {
+                    transform: translateY(-8px);
+            }
+             100% {
+                transform: translateY(0);
+            }
+        }
         .progress-container {
             padding: 30px 40px 10px;
             background: white;
@@ -103,7 +116,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+      
+      font-weight: bold;
             font-size: 20px;
             margin-bottom: 10px;
             border: 4px solid white;
@@ -535,7 +549,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="recruiter-icon">👔</div>
+            <div class="recruiter-icon"><svg height="74" width="114" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="#ffffff"><path d="M216,64H176a48,48,0,0,0-96,0H40A16,16,0,0,0,24,80V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V80A16,16,0,0,0,216,64ZM96,104a8,8,0,0,1-16,0V88a8,8,0,0,1,16,0Zm32-72a32,32,0,0,1,32,32H96A32,32,0,0,1,128,32Zm48,72a8,8,0,0,1-16,0V88a8,8,0,0,1,16,0Z"/></svg></div>
             <h1>Recruiter Profile Setup</h1>
             <p>Tell us about your company and hiring needs</p>
         </div>
