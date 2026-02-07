@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | Heer Thakkar</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #2563EB;
+            --light-blue: #3B82F6;
+            --sky-blue: #60A5FA;
+            --blue-bg: #EFF6FF;
+            --white: #FFFFFF;
+            --off-white: #F8FAFC;
+            --light-gray: #F1F5F9;
+            --medium-gray: #CBD5E1;
+            --text-dark: #1E293B;
+            --text-gray: #64748B;
+            --success-green: #10B981;
+            --border-radius: 12px;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        
+        body {
+            background-color: var(--off-white);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        /* HEADER */
+        .main-header {
+            background-color: var(--white);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-blue);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        .brand-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+        
+        .search-container {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 40px;
+            position: relative;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            background-color: var(--light-gray);
+            border: 1px solid transparent;
+            border-radius: 25px;
+            font-size: 15px;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            background-color: var(--white);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gray);
+        }
+        
+        .header-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-gray);
+            padding: 8px 12px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-blue);
+            background-color: var(--blue-bg);
+        }
+        
+        .nav-link.active {
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-text {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #EF4444;
+            color: white;
+            font-size: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background-color: var(--blue-bg);
+            border: 1px solid var(--medium-gray);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+
+        
+        .profile-btn:hover {
+            background-color: var(--light-gray);
+            border-color: var(--primary-blue);
+        }
+        
+        .profile-initials {
+            width: 32px;
+            height: 32px;
+            background-color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        /* MAIN CONTENT */
+        .main-container {
+            max-width: 1200px;
+            margin: 24px auto;
+            padding: 0 24px;
+        }
+        
+        /* PROFILE HERO */
+        .profile-hero {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .cover-section {
+            height: 240px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--sky-blue));
+            position: relative;
+        }
+        
+        .profile-main {
+            padding: 0 32px;
+            position: relative;
+        }
+        
+        .profile-avatar-container {
+            position: relative;
+            display: inline-block;
+            margin-top: -60px;
+            margin-bottom: 20px;
+        }
+        
+        .profile-avatar {
+            width: 160px;
+            height: 160px;
+            border-radius: 20px;
+            background-color: var(--white);
+            border: 6px solid var(--white);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 70px;
+            color: var(--primary-blue);
+            overflow: hidden;
+        }
+        
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .avatar-upload-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: var(--primary-blue);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 3px solid var(--white);
+            transition: all 0.3s ease;
+        }
+        
+        .avatar-upload-btn:hover {
+            background-color: var(--light-blue);
+            transform: scale(1.1);
+        }
+        
+        .profile-info {
+            padding: 0 0 32px;
+        }
+        
+        .profile-name {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+        
+        .profile-tagline {
+            font-size: 18px;
+            color: var(--text-gray);
+            margin-bottom: 16px;
+            max-width: 600px;
+        }
+        
+        .profile-details {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-gray);
+        }
+        
+        .detail-icon {
+            color: var(--primary-blue);
+        }
+        
+        .detail-text {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        .profile-tags {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .profile-tag {
+            background-color: var(--blue-bg);
+            color: var(--primary-blue);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid rgba(37, 99, 235, 0.2);
+        }
+        
+        /* CONTENT GRID */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        
+        /* CARDS */
+        .profile-card {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 28px;
+            margin-bottom: 20px;
+            border: 1px solid var(--light-gray);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .profile-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--blue-bg);
+        }
+        
+        .card-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-icon {
+            color: var(--primary-blue);
+            font-size: 20px;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #skillInput {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            color: #2d3748;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #skillInput:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        #skillInput::placeholder {
+            color: #94a3b8;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--light-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.2);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--blue-bg);
+            transform: translateY(-2px);
+        }
+        
+        .btn-small {
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+        
+        /* ABOUT SECTION */
+        .about-content {
+            line-height: 1.8;
+            color: var(--text-gray);
+        }
+        
+        .highlight-box {
+            background-color: var(--blue-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 4px solid var(--primary-blue);
+        }
+        
+        .highlight-title {
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        /* SKILLS SECTION */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        
+        .skill-item {
+            background-color: var(--off-white);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--light-gray);
+            position: relative;
+        }
+        
+        .skill-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--sky-blue));
+            border-radius: 4px 4px 0 0;
+        }
+        
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .skill-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .skill-rating {
+            color: var(--success-green);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .skill-bar {
+            height: 8px;
+            background-color: var(--light-gray);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .skill-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-blue), var(--sky-blue));
+            border-radius: 4px;
+            width: 0;
+            transition: width 1.5s ease;
+        }
+        
+        /* PROFILE PROGRESS */
+        .progress-card {
+            text-align: center;
+        }
+        
+        .progress-circle {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+        
+        .progress-svg {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-bg {
+            fill: none;
+            stroke: var(--light-gray);
+            stroke-width: 8;
+        }
+        
+        .progress-fill {
+            fill: none;
+            stroke: var(--primary-blue);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            transition: stroke-dashoffset 1.5s ease;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+        
+        .progress-label {
+            color: var(--text-gray);
+            margin-bottom: 20px;
+        }
+        
+        /* RESUME UPLOADER */
+        .upload-container {
+            text-align: center;
+            padding: 40px 20px;
+            border: 2px dashed var(--medium-gray);
+            border-radius: var(--border-radius);
+            background-color: var(--off-white);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-container:hover {
+            border-color: var(--primary-blue);
+            background-color: var(--blue-bg);
+        }
+        
+        .upload-icon {
+            width: 70px;
+            height: 70px;
+            background-color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 28px;
+        }
+        
+        .upload-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+        
+        .upload-subtitle {
+            color: var(--text-gray);
+            margin-bottom: 20px;
+        }
+        
+        .file-display {
+            background-color: var(--light-gray);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .file-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .file-name {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        /* QUICK ACTIONS */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 10px;
+            background-color: var(--off-white);
+            border: 1px solid var(--light-gray);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background-color: var(--blue-bg);
+            border-color: var(--primary-blue);
+            transform: translateY(-4px);
+        }
+        
+        .action-icon {
+            font-size: 24px;
+            color: var(--primary-blue);
+            margin-bottom: 12px;
+        }
+        
+        .action-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        /* ENHANCE PANEL */
+        .enhance-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+        
+        .enhance-panel {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: panelSlide 0.3s ease;
+        }
+        
+        @keyframes panelSlide {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .panel-header {
+            padding: 28px 32px;
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-gray);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            background-color: var(--light-gray);
+            color: var(--text-dark);
+        }
+        
+        .panel-content {
+            padding: 32px;
+        }
+        
+        .enhance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .enhance-card {
+            background-color: var(--off-white);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--light-gray);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .enhance-card:hover {
+            border-color: var(--primary-blue);
+            background-color: var(--blue-bg);
+            transform: translateY(-4px);
+        }
+
+        #addSkillBtn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 16px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        #addSkillBtn {
+                justify-content: center;
+        }
+
+        #addSkillBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(59, 130, 246, 0.3);
+        }
+
+        #addSkillBtn:active {
+            transform: translateY(0);
+        }
+
+        
+        .card-icon-large {
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary-blue);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .enhance-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+        
+        .enhance-desc {
+            color: var(--text-gray);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-nav {
+                gap: 15px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 0 16px;
+                height: auto;
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-container {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+            }
+            
+            .profile-main {
+                padding: 0 20px;
+            }
+            
+            .profile-avatar {
+                width: 120px;
+                height: 120px;
+                font-size: 50px;
+            }
+            
+            .profile-name {
+                font-size: 28px;
+            }
+            
+            .profile-details {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .skills-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* UTILITIES */
+        .text-blue {
+            color: var(--primary-blue);
+        }
+        
+        .bg-blue-light {
+            background-color: var(--blue-bg);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="#" class="logo">
+                <div class="logo-icon"><svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="45"
+        height="45"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#2563EB"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+>
+        <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        <path d="M12 7a5 5 0 1 0 5 5" />
+        <path d="M13 3.055a9 9 0 1 0 7.941 7.945" />
+        <path d="M15 6v3h3l3 -3h-3v-3z" />
+        <path d="M15 9l-3 3" />
+        </svg></div>
+                
+            </a>
+            
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-box" placeholder="Search profiles, jobs, skills...">
+            </div>
+            
+            <div class="header-nav">
+                <a href="#" class="nav-link active">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span class="nav-text">Home</span>
+                </a>
+
+                <a href="#" class="nav-link">
+                    <i class="fas fa-briefcase nav-icon"></i>
+                    <span class="nav-text">Jobs</span>
+                </a>
+                
+                <a href="#" class="nav-link">
+                    <i class="fas fa-bell nav-icon"></i>
+                    <span class="nav-text">Notifications</span>
+                    <span class="notification-badge">3</span>
+                </a>
+                
+                <button class="profile-btn" onclick="openEnhancePanel()">
+                    <div class="profile-initials">H</div>
+                    <span>Heer</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ENHANCE PROFILE PANEL -->
+    <div class="enhance-overlay" id="enhancePanel">
+        <div class="enhance-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Enhance Your Profile</h2>
+                <button class="close-btn" onclick="closeEnhancePanel()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="panel-content">
+                <!-- AI Assistant Section -->
+                <div class="enhance-grid">
+                    <div class="enhance-card" onclick="openAIEnhance()">
+                        <div class="card-icon-large">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h3 class="enhance-title">AI Profile Assistant</h3>
+                        <p class="enhance-desc">Get personalized suggestions to improve your profile visibility and impact.</p>
+                    </div>
+                    
+                    <div class="enhance-card" onclick="openResumeUpload()">
+                        <div class="card-icon-large">
+                            <i class="fas fa-file-import"></i>
+                        </div>
+                        <h3 class="enhance-title">Import Resume</h3>
+                        <p class="enhance-desc">Upload your resume and we'll automatically fill your profile sections.</p>
+                    </div>
+                </div>
+                
+                <!-- Profile Sections -->
+                <h3 style="margin-bottom: 24px; color: var(--text-dark); font-size: 20px;">Add Profile Sections</h3>
+                
+                <div class="enhance-grid">
+                    <div class="enhance-card" onclick="addSection('education')">
+                        <div class="card-icon-large">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h3 class="enhance-title">Education</h3>
+                        <p class="enhance-desc">Add your academic background, degrees, and achievements.</p>
+                    </div>
+                    
+                    <div class="enhance-card" onclick="addSection('experience')">
+                        <div class="card-icon-large">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <h3 class="enhance-title">Experience</h3>
+                        <p class="enhance-desc">Showcase your work history and professional journey.</p>
+                    </div>
+                    
+                    <div class="enhance-card" onclick="addSection('projects')">
+                        <div class="card-icon-large">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h3 class="enhance-title">Projects</h3>
+                        <p class="enhance-desc">Display your technical projects with descriptions and links.</p>
+                    </div>
+                    
+                    <div class="enhance-card" onclick="addSection('certifications')">
+                        <div class="card-icon-large">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <h3 class="enhance-title">Certifications</h3>
+                        <p class="enhance-desc">Add professional certifications and courses completed.</p>
+                    </div>
+                    
+                    <div class="enhance-card" onclick="addSection('skills')">
+                        <div class="card-icon-large">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h3 class="enhance-title">Skills</h3>
+                        <p class="enhance-desc">Highlight your skills with proficiency levels and endorsements.</p>
+                    </div>
+                    
+                    <div class="enhance-card" onclick="addSection('languages')">
+                        <div class="card-icon-large">
+                            <i class="fas fa-language"></i>
+                        </div>
+                        <h3 class="enhance-title">Languages</h3>
+                        <p class="enhance-desc">List languages you speak and your proficiency level.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-container">
+        <!-- PROFILE HERO -->
+        <section class="profile-hero">
+            <div class="cover-section"></div>
+            <div class="profile-main">
+                <div class="profile-avatar-container">
+                    <div class="profile-avatar" id="profileAvatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="avatar-upload-btn" onclick="uploadAvatar()">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="updateAvatar(event)">
+                </div>
+                
+                <div class="profile-info">
+                    <h1 class="profile-name">HEER THAKKAR</h1>
+                    <p class="profile-tagline">AI/ML Student | Tech Innovator | Future Problem Solver</p>
+                    
+                    <div class="profile-details">
+                        <div class="detail-item">
+                            <i class="fas fa-map-marker-alt detail-icon"></i>
+                            <span class="detail-text">Ahmedabad, Gujarat, India</span>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <i class="fas fa-eye detail-icon"></i>
+                            <span class="detail-text">850 Profile Views</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-calendar-alt detail-icon"></i>
+                            <span class="detail-text">Member since 2023</span>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-tags">
+                        <span class="profile-tag">Machine Learning</span>
+                        <span class="profile-tag">Artificial Intelligence</span>
+                        <span class="profile-tag">Data Science</span>
+                        <span class="profile-tag">Python</span>
+                        <span class="profile-tag">Deep Learning</span>
+                        <span class="profile-tag">Computer Vision</span>
+                        <div class="input-group">
+                        <input type="text" id="skillInput" placeholder="Enter a skill (e.g., JavaScript, React, AWS)">
+                        <button id="addSkillBtn">
+                            <i class="fas fa-plus"></i> Add Skill
+                        </button>
+                        </div>
+                        <div id="message" class="message"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTENT GRID -->
+        <div class="content-grid">
+            <!-- LEFT COLUMN -->
+            <div class="left-column">
+                <!-- ABOUT SECTION -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-user-circle card-icon"></i>
+                            About
+                        </h2>
+                        <div class="card-actions">
+                            <button class="btn btn-outline btn-small" onclick="editAbout()">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                    </div>
+                    <div class="about-content" id="aboutContent">
+                        <p>
+                            Passionate second-year B.Tech student specializing in Artificial Intelligence and Machine Learning. 
+                            Currently exploring the fascinating world of deep learning, computer vision, and natural language 
+                            processing with a goal to create innovative solutions that make a difference.
+                        </p>
+                        
+                        <div class="highlight-box">
+                            <div class="highlight-title">Current Focus</div>
+                            <p>
+                                Building expertise in TensorFlow and PyTorch while working on AI projects that solve 
+                                real-world problems. Actively participating in hackathons and contributing to open-source 
+                                AI projects.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SKILLS SECTION -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-star card-icon"></i>
+                            Skills & Expertise
+                        </h2>
+                        <div class="card-actions">
+                            <button class="btn btn-outline btn-small" onclick="manageSkills()">
+                                <i class="fas fa-plus"></i> Add Skill
+                            </button>
+                        </div>
+                    </div>
+                    <div class="skills-grid" id="skillsContainer">
+                        <!-- Skills loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="right-column">
+                <!-- PROFILE PROGRESS -->
+                <div class="profile-card progress-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-line card-icon"></i>
+                            Profile Strength
+                        </h2>
+                    </div>
+                    <div class="progress-circle">
+                        <svg class="progress-svg" width="140" height="140" viewBox="0 0 140 140">
+                            <circle class="progress-bg" cx="70" cy="70" r="45" />
+                            <circle class="progress-fill" id="progressFill" cx="70" cy="70" r="45" />
+                        </svg>
+                        <div class="progress-text" id="progressText">72%</div>
+                    </div>
+                    <p class="progress-label">Complete your profile to increase visibility</p>
+                    <button class="btn btn-primary" onclick="openEnhancePanel()">
+                        <i class="fas fa-magic"></i> Enhance Profile
+                    </button>
+                </div>
+
+                <!-- RESUME UPLOAD -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-file-alt card-icon"></i>
+                            Resume
+                        </h2>
+                    </div>
+                    <div class="upload-container" onclick="openResumeUpload()">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3 class="upload-title">Upload Your Resume</h3>
+                        <p class="upload-subtitle">PDF, DOC, DOCX up to 5MB</p>
+                        <button class="btn btn-outline">
+                            <i class="fas fa-upload"></i> Choose File
+                        </button>
+                        <input type="file" id="resumeInput" accept=".pdf,.doc,.docx" style="display: none;" onchange="handleResumeUpload(event)">
+                        
+                        <div class="file-display" id="resumeFileDisplay">
+                            <div class="file-info">
+                                <span class="file-name" id="resumeFileName">resume.pdf</span>
+                                <button class="btn btn-outline btn-small" onclick="removeResume(event)">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QUICK ACTIONS -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-bolt card-icon"></i>
+                            Quick Actions
+                        </h2>
+                    </div>
+                    <div class="actions-grid">
+                        <button class="action-btn" onclick="shareProfile()">
+                            <i class="fas fa-share-alt action-icon"></i>
+                            <span class="action-text">Share Profile</span>
+                        </button>
+                        
+                        <button class="action-btn" onclick="exportProfile()">
+                            <i class="fas fa-download action-icon"></i>
+                            <span class="action-text">Export PDF</span>
+                        </button>
+                        
+                        <button class="action-btn" onclick="viewAnalytics()">
+                            <i class="fas fa-chart-bar action-icon"></i>
+                            <span class="action-text">Analytics</span>
+                        </button>
+                        
+                        <button class="action-btn" onclick="openSettings()">
+                            <i class="fas fa-cog action-icon"></i>
+                            <span class="action-text">Settings</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // ENHANCE PANEL
+        function openEnhancePanel() {
+            document.getElementById('enhancePanel').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeEnhancePanel() {
+            document.getElementById('enhancePanel').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close panel when clicking outside
+        document.getElementById('enhancePanel').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEnhancePanel();
+            }
+        });
+
+        // SKILLS DATA
+        const skillsData = [
+            { name: 'Machine Learning', rating: 85 },
+            { name: 'Python Programming', rating: 90 },
+            { name: 'Deep Learning', rating: 75 },
+            { name: 'TensorFlow', rating: 70 },
+            { name: 'Data Science', rating: 80 },
+            { name: 'Computer Vision', rating: 65 },
+            { name: 'Artificial Intelligence', rating: 85 },
+            { name: 'Natural Language Processing', rating: 60 }
+        ];
+
+        // LOAD SKILLS
+        function loadSkills() {
+            const container = document.getElementById('skillsContainer');
+            container.innerHTML = '';
+            
+            skillsData.forEach(skill => {
+                const skillElement = document.createElement('div');
+                skillElement.className = 'skill-item';
+                skillElement.innerHTML = `
+                    <div class="skill-header">
+                        <div class="skill-name">${skill.name}</div>
+                        <div class="skill-rating">${skill.rating}%</div>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-progress" style="width: ${skill.rating}%"></div>
+                    </div>
+                `;
+                container.appendChild(skillElement);
+            });
+            
+            // Animate progress bars
+            setTimeout(() => {
+                document.querySelectorAll('.skill-progress').forEach(bar => {
+                    bar.style.transition = 'width 1.5s ease';
+                });
+            }, 100);
+        }
+
+        // AVATAR FUNCTIONS
+        function uploadAvatar() {
+            document.getElementById('avatarInput').click();
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSkills();
+            skillInput.focus();
+        });
+
+        function updateAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const avatar = document.getElementById('profileAvatar');
+                    avatar.innerHTML = `<img src="${e.target.result}" alt="Profile Avatar">`;
+                    updateProfileStrength();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // RESUME FUNCTIONS
+        function openResumeUpload() {
+            closeEnhancePanel();
+            document.getElementById('resumeInput').click();
+        }
+
+        function handleResumeUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File must be less than 5MB');
+                    return;
+                }
+                
+                const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Please upload PDF, DOC, or DOCX files only');
+                    return;
+                }
+                
+                localStorage.setItem('resumeName', file.name);
+                displayResume(file.name);
+                updateProfileStrength();
+            }
+        }
+
+        function displayResume(fileName) {
+            const display = document.getElementById('resumeFileDisplay');
+            document.getElementById('resumeFileName').textContent = fileName;
+            display.style.display = 'block';
+        }
+
+        function removeResume(event) {
+            event.stopPropagation();
+            if (confirm('Remove resume from your profile?')) {
+                localStorage.removeItem('resumeName');
+                document.getElementById('resumeFileDisplay').style.display = 'none';
+                updateProfileStrength();
+            }
+        }
+
+        // PROFILE STRENGTH
+        function updateProfileStrength() {
+            let score = 40; // Base
+            
+            // Avatar
+            const avatar = document.getElementById('profileAvatar');
+            if (avatar.querySelector('img')) score += 15;
+            
+            // About content
+            const about = document.getElementById('aboutContent').textContent;
+            if (about.length > 100) score += 15;
+            
+            // Resume
+            if (localStorage.getItem('resumeName')) score += 10;
+            
+            // Skills
+            score += Math.min(skillsData.length * 2, 20);
+            
+            // Update UI
+            const text = document.getElementById('progressText');
+            const fill = document.getElementById('progressFill');
+            
+            const circumference = 283;
+            const offset = circumference - (score / 100) * circumference;
+            fill.style.strokeDashoffset = offset;
+            text.textContent = `${score}%`;
+            
+            // Update color
+            if (score >= 80) {
+                fill.style.stroke = '#10B981';
+            } else if (score >= 60) {
+                fill.style.stroke = '#F59E0B';
+            } else {
+                fill.style.stroke = '#EF4444';
+            }
+        }
+
+        // EDIT FUNCTIONS
+        function editAbout() {
+            const newAbout = prompt('Edit your about section:', 
+                'Passionate second-year B.Tech student specializing in Artificial Intelligence and Machine Learning. Currently exploring the fascinating world of deep learning, computer vision, and natural language processing with a goal to create innovative solutions that make a difference.');
+            
+            if (newAbout) {
+                document.getElementById('aboutContent').innerHTML = `
+                    <p>${newAbout}</p>
+                    <div class="highlight-box">
+                        <div class="highlight-title">Current Focus</div>
+                        <p>
+                            Building expertise in TensorFlow and PyTorch while working on AI projects that solve 
+                            real-world problems. Actively participating in hackathons and contributing to open-source 
+                            AI projects.
+                        </p>
+                    </div>
+                `;
+                updateProfileStrength();
+            }
+        }
+
+        function manageSkills() {
+            const newSkill = prompt('Add a new skill:');
+            if (newSkill) {
+                const rating = parseInt(prompt('Rate your skill (0-100):'));
+                if (!isNaN(rating) && rating >= 0 && rating <= 100) {
+                    skillsData.push({ name: newSkill, rating: rating });
+                    loadSkills();
+                    updateProfileStrength();
+                }
+            }
+        }
+
+        // ENHANCE PANEL ACTIONS
+        function addSection(type) {
+            closeEnhancePanel();
+            alert(`Opening ${type} section editor...`);
+        }
+
+        function openAIEnhance() {
+            closeEnhancePanel();
+            alert('AI Profile Assistant: Analyzing your profile for optimization suggestions...');
+        }
+
+        // QUICK ACTIONS
+        function shareProfile() {
+            alert('Share profile link: profilehub.com/heer-thakkar');
+        }
+
+        function exportProfile() {
+            alert('Exporting profile as PDF...');
+        }
+
+        function viewAnalytics() {
+            alert('Opening profile analytics...');
+        }
+
+        function openSettings() {
+            alert('Opening profile settings...');
+        }
+
+        // INITIALIZE
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSkills();
+            updateProfileStrength();
+            
+            // Load saved resume
+            const savedResume = localStorage.getItem('resumeName');
+            if (savedResume) {
+                displayResume(savedResume);
+            }
+            
+            // Animate elements
+            setTimeout(() => {
+                document.querySelectorAll('.profile-card').forEach((card, index) => {
+                    setTimeout(() => {
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(20px)';
+                        card.offsetHeight;
+                        card.style.transition = 'all 0.5s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, index * 100);
+                });
+            }, 300);
+        });
+    </script>
+</body>
+</html>
