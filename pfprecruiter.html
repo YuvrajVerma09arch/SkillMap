@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Profile | TechNova Solutions</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #2563EB;
+            --light-blue: #3B82F6;
+            --sky-blue: #60A5FA;
+            --blue-bg: #EFF6FF;
+            --white: #FFFFFF;
+            --off-white: #F8FAFC;
+            --light-gray: #F1F5F9;
+            --medium-gray: #CBD5E1;
+            --text-dark: #1E293B;
+            --text-gray: #64748B;
+            --success-green: #10B981;
+            --border-radius: 12px;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        
+        body {
+            background-color: var(--off-white);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        /* HEADER */
+        .main-header {
+            background-color: var(--white);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-blue);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        .brand-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+        
+        .search-container {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 40px;
+            position: relative;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            background-color: var(--light-gray);
+            border: 1px solid transparent;
+            border-radius: 25px;
+            font-size: 15px;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            background-color: var(--white);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gray);
+        }
+        
+        .header-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-gray);
+            padding: 8px 12px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-blue);
+            background-color: var(--blue-bg);
+        }
+        
+        .nav-link.active {
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-text {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #EF4444;
+            color: white;
+            font-size: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background-color: var(--blue-bg);
+            border: 1px solid var(--medium-gray);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        
+        .profile-btn:hover {
+            background-color: var(--light-gray);
+            border-color: var(--primary-blue);
+        }
+        
+        .profile-initials {
+            width: 32px;
+            height: 32px;
+            background-color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        /* MAIN CONTENT */
+        .main-container {
+            max-width: 1200px;
+            margin: 24px auto;
+            padding: 0 24px;
+        }
+        
+        /* PROFILE HERO */
+        .profile-hero {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .cover-section {
+            height: 240px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--sky-blue));
+            position: relative;
+        }
+        
+        .profile-main {
+            padding: 0 32px;
+            position: relative;
+        }
+        
+        .profile-avatar-container {
+            position: relative;
+            display: inline-block;
+            margin-top: -60px;
+            margin-bottom: 20px;
+        }
+        
+        .profile-avatar {
+            width: 160px;
+            height: 160px;
+            border-radius: 20px;
+            background-color: var(--white);
+            border: 6px solid var(--white);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 70px;
+            color: var(--primary-blue);
+            overflow: hidden;
+        }
+        
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .avatar-upload-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: var(--primary-blue);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 3px solid var(--white);
+            transition: all 0.3s ease;
+        }
+        
+        .avatar-upload-btn:hover {
+            background-color: var(--light-blue);
+            transform: scale(1.1);
+        }
+        
+        .profile-info {
+            padding: 0 0 32px;
+        }
+        
+        .profile-name {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+        
+        .profile-tagline {
+            font-size: 18px;
+            color: var(--text-gray);
+            margin-bottom: 16px;
+            max-width: 600px;
+        }
+        
+        .profile-details {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-gray);
+        }
+        
+        .detail-icon {
+            color: var(--primary-blue);
+        }
+        
+        .detail-text {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        .profile-tags {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .profile-tag {
+            background-color: var(--blue-bg);
+            color: var(--primary-blue);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid rgba(37, 99, 235, 0.2);
+        }
+        
+        /* CONTENT GRID */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        
+        /* CARDS */
+        .profile-card {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 28px;
+            margin-bottom: 20px;
+            border: 1px solid var(--light-gray);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .profile-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--blue-bg);
+        }
+        
+        .card-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-icon {
+            color: var(--primary-blue);
+            font-size: 20px;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #specialityInput {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            color: #2d3748;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #specialityInput:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        #specialityInput::placeholder {
+            color: #94a3b8;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--light-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.2);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--blue-bg);
+            transform: translateY(-2px);
+        }
+        
+        .btn-small {
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+        
+        /* ABOUT SECTION */
+        .about-content {
+            line-height: 1.8;
+            color: var(--text-gray);
+        }
+        
+        .highlight-box {
+            background-color: var(--blue-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 4px solid var(--primary-blue);
+        }
+        
+        .highlight-title {
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        /* Company Info Grid */
+        .company-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background-color: var(--light-gray);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--medium-gray);
+        }
+
+        .info-title {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .info-value a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .info-value a:hover {
+            text-decoration: underline;
+        }
+        
+        /* SKILLS SECTION - Changed to Specialties */
+        .specialties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        
+        .specialty-item {
+            background-color: var(--off-white);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--light-gray);
+            position: relative;
+        }
+        
+        .specialty-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--sky-blue));
+            border-radius: 4px 4px 0 0;
+        }
+        
+        .specialty-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .specialty-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .specialty-rating {
+            color: var(--success-green);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .specialty-bar {
+            height: 8px;
+            background-color: var(--light-gray);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .specialty-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-blue), var(--sky-blue));
+            border-radius: 4px;
+            width: 0;
+            transition: width 1.5s ease;
+        }
+        
+        /* PROFILE PROGRESS */
+        .progress-card {
+            text-align: center;
+        }
+        
+        .progress-circle {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+        
+        .progress-svg {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-bg {
+            fill: none;
+            stroke: var(--light-gray);
+            stroke-width: 8;
+        }
+        
+        .progress-fill {
+            fill: none;
+            stroke: var(--primary-blue);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            transition: stroke-dashoffset 1.5s ease;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+        
+        .progress-label {
+            color: var(--text-gray);
+            margin-bottom: 20px;
+        }
+        
+        /* OPEN JOBS */
+        .jobs-container {
+            text-align: center;
+            padding: 40px 20px;
+            border: 2px dashed var(--medium-gray);
+            border-radius: var(--border-radius);
+            background-color: var(--off-white);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .jobs-container:hover {
+            border-color: var(--primary-blue);
+            background-color: var(--blue-bg);
+        }
+        
+        .jobs-icon {
+            width: 70px;
+            height: 70px;
+            background-color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 28px;
+        }
+        
+        .jobs-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+        
+        .jobs-subtitle {
+            color: var(--text-gray);
+            margin-bottom: 20px;
+        }
+        
+        .jobs-list {
+            background-color: var(--light-gray);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .job-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .job-name {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        /* QUICK ACTIONS */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 10px;
+            background-color: var(--off-white);
+            border: 1px solid var(--light-gray);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background-color: var(--blue-bg);
+            border-color: var(--primary-blue);
+            transform: translateY(-4px);
+        }
+        
+        .action-icon {
+            font-size: 24px;
+            color: var(--primary-blue);
+            margin-bottom: 12px;
+        }
+        
+        .action-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        /* ENHANCE PANEL */
+        .enhance-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+        
+        .enhance-panel {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: panelSlide 0.3s ease;
+        }
+        
+        @keyframes panelSlide {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .panel-header {
+            padding: 28px 32px;
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-gray);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            background-color: var(--light-gray);
+            color: var(--text-dark);
+        }
+        
+        .panel-content {
+            padding: 32px;
+        }
+        
+        .enhance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .enhance-card {
+            background-color: var(--off-white);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--light-gray);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .enhance-card:hover {
+            border-color: var(--primary-blue);
+            background-color: var(--blue-bg);
+            transform: translateY(-4px);
+        }
+
+        #addSpecialtyBtn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 16px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        #addSpecialtyBtn {
+                justify-content: center;
+        }
+
+        #addSpecialtyBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(59, 130, 246, 0.3);
+        }
+
+        #addSpecialtyBtn:active {
+            transform: translateY(0);
+        }
+        
+        .card-icon-large {
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary-blue);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .enhance-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+        
+        .enhance-desc {
+            color: var(--text-gray);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-nav {
+                gap: 15px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 0 16px;
+                height: auto;
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-container {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+            }
+            
+            .profile-main {
+                padding: 0 20px;
+            }
+            
+            .profile-avatar {
+                width: 120px;
+                height: 120px;
+                font-size: 50px;
+            }
+            
+            .profile-name {
+                font-size: 28px;
+            }
+            
+            .profile-details {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .specialties-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* UTILITIES */
+        .text-blue {
+            color: var(--primary-blue);
+        }
+        
+        .bg-blue-light {
+            background-color: var(--blue-bg);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="#" class="logo">
+                <div class="logo-icon"><svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="45"
+        height="45"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#2563EB"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+>
+        <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        <path d="M12 7a5 5 0 1 0 5 5" />
+        <path d="M13 3.055a9 9 0 1 0 7.941 7.945" />
+        <path d="M15 6v3h3l3 -3h-3v-3z" />
+        <path d="M15 9l-3 3" />
+        </svg></div>
+                
+            </a>
+            
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-box" placeholder="Search companies, jobs, candidates...">
+            </div>
+            
+            <div class="header-nav">
+                <a href="#" class="nav-link active">
+                    <i class="fas fa-building nav-icon"></i>
+                    <span class="nav-text">Company</span>
+                </a>
+
+                <a href="#" class="nav-link">
+                    <i class="fas fa-briefcase nav-icon"></i>
+                    <span class="nav-text">Post Jobs</span>
+                </a>
+                
+                <a href="#" class="nav-link">
+                    <i class="fas fa-users nav-icon"></i>
+                    <span class="nav-text">Candidates</span>
+                </a>
+                
+                <button class="profile-btn" onclick="openEnhancePanel()">
+                    <div class="profile-initials">T</div>
+                    <span>TechNova</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ENHANCE PROFILE PANEL -->
+    <div class="enhance-overlay" id="enhancePanel">
+        <div class="enhance-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Enhance Company Profile</h2>
+                <button class="close-btn" onclick="closeEnhancePanel()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="panel-content">
+                <!-- AI Assistant Section -->
+                <div class="enhance-grid">
+                    <div class="enhance-card" onclick="openAIEnhance()">
+                        <div class="card-icon-large">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h3 class="enhance-title">AI Company Assistant</h3>
+                        <p class="enhance-desc">Get personalized suggestions to improve your company profile visibility.</p>
+                    </div>
+                    
+                    <div class="enhance-card" onclick="openJobPosting()">
+                        <div class="card-icon-large">
+                            <i class="fas fa-file-import"></i>
+                        </div>
+                        <h3 class="enhance-title">Post Job Openings</h3>
+                        <p class="enhance-desc">Create and manage job postings to attract top talent.</p>
+                    </div>
+                </div>
+                
+                <!-- Profile Sections -->
+                <h3 style="margin-bottom: 24px; color: var(--text-dark); font-size: 20px;">Add Company Sections</h3>
+                
+                <div class="enhance-grid">
+                    <div class="enhance-card" onclick="addSection('team')">
+                        <div class="card-icon-large">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3 class="enhance-title">Team & Culture</h3>
+                        <p class="enhance-desc">Showcase your team, company culture, and work environment.</p>
+                    </div>
+                    
+                    <div class="enhance-card" onclick="addSection('benefits')">
+                        <div class="card-icon-large">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <h3 class="enhance-title">Benefits</h3>
+                        <p class="enhance-desc">Highlight employee benefits, perks, and compensation packages.</p>
+                    </div>
+                    
+                    <div class="enhance-card" onclick="addSection('projects')">
+                        <div class="card-icon-large">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h3 class="enhance-title">Projects</h3>
+                        <p class="enhance-desc">Display your company projects with descriptions and achievements.</p>
+                    </div>
+                    
+                    <div class="enhance-card" onclick="addSection('awards')">
+                        <div class="card-icon-large">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <h3 class="enhance-title">Awards</h3>
+                        <p class="enhance-desc">Add company awards, recognitions, and achievements.</p>
+                    </div>
+                    
+                    <div class="enhance-card" onclick="addSection('specialties')">
+                        <div class="card-icon-large">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h3 class="enhance-title">Specialties</h3>
+                        <p class="enhance-desc">Highlight your company's core competencies and specialties.</p>
+                    </div>
+                    
+                    <div class="enhance-card" onclick="addSection('techstack')">
+                        <div class="card-icon-large">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h3 class="enhance-title">Tech Stack</h3>
+                        <p class="enhance-desc">List technologies and tools your company specializes in.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-container">
+        <!-- PROFILE HERO -->
+        <section class="profile-hero">
+            <div class="cover-section"></div>
+            <div class="profile-main">
+                <div class="profile-avatar-container">
+                    <div class="profile-avatar" id="profileAvatar">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="avatar-upload-btn" onclick="uploadAvatar()">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="updateAvatar(event)">
+                </div>
+                
+                <div class="profile-info">
+                    <h1 class="profile-name">TechNova Solutions</h1>
+                    <p class="profile-tagline">Innovating the Future with AI & Cloud Solutions | Enterprise Digital Transformation</p>
+                    
+                    <div class="profile-details">
+                        <div class="detail-item">
+                            <i class="fas fa-map-marker-alt detail-icon"></i>
+                            <span class="detail-text">Ahmedabad, Gujarat, India</span>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <i class="fas fa-eye detail-icon"></i>
+                            <span class="detail-text">2,850 Company Views</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-calendar-alt detail-icon"></i>
+                            <span class="detail-text">Established since 2018</span>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-tags">
+                        <span class="profile-tag">AI Solutions</span>
+                        <span class="profile-tag">Cloud Computing</span>
+                        <span class="profile-tag">Digital Transformation</span>
+                        <span class="profile-tag">Enterprise Software</span>
+                        <span class="profile-tag">Machine Learning</span>
+                        <span class="profile-tag">Data Analytics</span>
+                        <div class="input-group">
+                        <input type="text" id="specialityInput" placeholder="Add company specialty (e.g., Cybersecurity, IoT, Blockchain)">
+                        <button id="addSpecialtyBtn">
+                            <i class="fas fa-plus"></i> Add Specialty
+                        </button>
+                        </div>
+                        <div id="message" class="message"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTENT GRID -->
+        <div class="content-grid">
+            <!-- LEFT COLUMN -->
+            <div class="left-column">
+                <!-- ABOUT SECTION -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-building card-icon"></i>
+                            Company Overview
+                        </h2>
+                        <div class="card-actions">
+                            <button class="btn btn-outline btn-small" onclick="editAbout()">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                    </div>
+                    <div class="about-content" id="aboutContent">
+                        <p>
+                            TechNova Solutions is a leading technology company specializing in artificial intelligence, 
+                            cloud computing, and digital transformation solutions for enterprises. We help businesses 
+                            leverage cutting-edge technologies to drive innovation, improve efficiency, and gain competitive 
+                            advantages in today's digital landscape.
+                        </p>
+                        
+                        <div class="company-info-grid">
+                            <div class="info-card">
+                                <div class="info-title">Website</div>
+                                <div class="info-value">
+                                    <a href="https://technova-solutions.com" target="_blank">technova-solutions.com</a>
+                                </div>
+                            </div>
+                            
+                            <div class="info-card">
+                                <div class="info-title">Company Size</div>
+                                <div class="info-value">500-1000 employees</div>
+                            </div>
+                            
+                            <div class="info-card">
+                                <div class="info-title">Headquarters</div>
+                                <div class="info-value">Ahmedabad, Gujarat, India</div>
+                            </div>
+                            
+                            <div class="info-card">
+                                <div class="info-title">Industry</div>
+                                <div class="info-value">Technology & Services</div>
+                            </div>
+                        </div>
+                        
+                        <div class="highlight-box">
+                            <div class="highlight-title">Current Focus</div>
+                            <p>
+                                Expanding our AI-powered enterprise solutions portfolio and establishing strategic 
+                                partnerships with global cloud providers. Currently investing in R&D for quantum computing 
+                                applications and edge computing solutions for IoT ecosystems.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SPECIALTIES SECTION -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-star card-icon"></i>
+                            Company Specialties
+                        </h2>
+                        <div class="card-actions">
+                            <button class="btn btn-outline btn-small" onclick="manageSpecialties()">
+                                <i class="fas fa-plus"></i> Add Specialty
+                            </button>
+                        </div>
+                    </div>
+                    <div class="specialties-grid" id="specialtiesContainer">
+                        <!-- Specialties loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="right-column">
+                <!-- PROFILE PROGRESS -->
+                <div class="profile-card progress-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-line card-icon"></i>
+                            Profile Strength
+                        </h2>
+                    </div>
+                    <div class="progress-circle">
+                        <svg class="progress-svg" width="140" height="140" viewBox="0 0 140 140">
+                            <circle class="progress-bg" cx="70" cy="70" r="45" />
+                            <circle class="progress-fill" id="progressFill" cx="70" cy="70" r="45" />
+                        </svg>
+                        <div class="progress-text" id="progressText">85%</div>
+                    </div>
+                    <p class="progress-label">Complete your company profile to attract better talent</p>
+                    <button class="btn btn-primary" onclick="openEnhancePanel()">
+                        <i class="fas fa-magic"></i> Enhance Profile
+                    </button>
+                </div>
+
+                <!-- OPEN JOBS -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-briefcase card-icon"></i>
+                            Open Positions
+                        </h2>
+                    </div>
+                    <div class="jobs-container" onclick="openJobPosting()">
+                        <div class="jobs-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <h3 class="jobs-title">Post Open Positions</h3>
+                        <p class="jobs-subtitle">Attract top talent to your company</p>
+                        <button class="btn btn-outline">
+                            <i class="fas fa-plus"></i> Post Job
+                        </button>
+                        <input type="file" id="jobInput" accept=".pdf,.doc,.docx" style="display: none;" onchange="handleJobPosting(event)">
+                        
+                        <div class="jobs-list" id="jobsListDisplay">
+                            <div class="job-info">
+                                <span class="job-name">Senior AI Engineer</span>
+                                <button class="btn btn-outline btn-small" onclick="removeJob(event)">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </div>
+                            <div class="job-info">
+                                <span class="job-name">Cloud Architect</span>
+                                <button class="btn btn-outline btn-small" onclick="removeJob(event)">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QUICK ACTIONS -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-bolt card-icon"></i>
+                            Quick Actions
+                        </h2>
+                    </div>
+                    <div class="actions-grid">
+                        <button class="action-btn" onclick="shareCompany()">
+                            <i class="fas fa-share-alt action-icon"></i>
+                            <span class="action-text">Share Company</span>
+                        </button>
+                        
+                        <button class="action-btn" onclick="exportCompanyProfile()">
+                            <i class="fas fa-download action-icon"></i>
+                            <span class="action-text">Export Profile</span>
+                        </button>
+                        
+                        <button class="action-btn" onclick="viewAnalytics()">
+                            <i class="fas fa-chart-bar action-icon"></i>
+                            <span class="action-text">Analytics</span>
+                        </button>
+                        
+                        <button class="action-btn" onclick="openCompanySettings()">
+                            <i class="fas fa-cog action-icon"></i>
+                            <span class="action-text">Settings</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // ENHANCE PANEL
+        function openEnhancePanel() {
+            document.getElementById('enhancePanel').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeEnhancePanel() {
+            document.getElementById('enhancePanel').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close panel when clicking outside
+        document.getElementById('enhancePanel').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEnhancePanel();
+            }
+        });
+
+        // SPECIALTIES DATA
+        const specialtiesData = [
+            { name: 'Artificial Intelligence', rating: 90 },
+            { name: 'Cloud Computing', rating: 85 },
+            { name: 'Machine Learning', rating: 88 },
+            { name: 'Data Analytics', rating: 82 },
+            { name: 'Digital Transformation', rating: 87 },
+            { name: 'Enterprise Software', rating: 80 },
+            { name: 'Cybersecurity', rating: 75 },
+            { name: 'IoT Solutions', rating: 70 }
+        ];
+
+        // LOAD SPECIALTIES
+        function loadSpecialties() {
+            const container = document.getElementById('specialtiesContainer');
+            container.innerHTML = '';
+            
+            specialtiesData.forEach(specialty => {
+                const specialtyElement = document.createElement('div');
+                specialtyElement.className = 'specialty-item';
+                specialtyElement.innerHTML = `
+                    <div class="specialty-header">
+                        <div class="specialty-name">${specialty.name}</div>
+                        <div class="specialty-rating">${specialty.rating}%</div>
+                    </div>
+                    <div class="specialty-bar">
+                        <div class="specialty-progress" style="width: ${specialty.rating}%"></div>
+                    </div>
+                `;
+                container.appendChild(specialtyElement);
+            });
+            
+            // Animate progress bars
+            setTimeout(() => {
+                document.querySelectorAll('.specialty-progress').forEach(bar => {
+                    bar.style.transition = 'width 1.5s ease';
+                });
+            }, 100);
+        }
+
+        // AVATAR FUNCTIONS
+        function uploadAvatar() {
+            document.getElementById('avatarInput').click();
+        }
+
+        function updateAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const avatar = document.getElementById('profileAvatar');
+                    avatar.innerHTML = `<img src="${e.target.result}" alt="Company Logo">`;
+                    updateProfileStrength();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // JOB POSTING FUNCTIONS
+        function openJobPosting() {
+            closeEnhancePanel();
+            const jobTitle = prompt('Enter job title:');
+            if (jobTitle) {
+                const jobDesc = prompt('Enter job description:');
+                if (jobDesc) {
+                    // Add to jobs list
+                    const jobsList = document.getElementById('jobsListDisplay');
+                    const jobElement = document.createElement('div');
+                    jobElement.className = 'job-info';
+                    jobElement.innerHTML = `
+                        <span class="job-name">${jobTitle}</span>
+                        <button class="btn btn-outline btn-small" onclick="removeJob(event)">
+                            <i class="fas fa-trash"></i> Remove
+                        </button>
+                    `;
+                    jobsList.appendChild(jobElement);
+                    jobsList.style.display = 'block';
+                    updateProfileStrength();
+                }
+            }
+        }
+
+        function removeJob(event) {
+            event.stopPropagation();
+            if (confirm('Remove this job posting?')) {
+                event.target.closest('.job-info').remove();
+                
+                // Hide jobs list if empty
+                const jobsList = document.getElementById('jobsListDisplay');
+                if (jobsList.children.length === 0) {
+                    jobsList.style.display = 'none';
+                }
+                updateProfileStrength();
+            }
+        }
+
+        // PROFILE STRENGTH
+        function updateProfileStrength() {
+            let score = 50; // Base
+            
+            // Avatar/Logo
+            const avatar = document.getElementById('profileAvatar');
+            if (avatar.querySelector('img')) score += 10;
+            
+            // About content
+            const about = document.getElementById('aboutContent').textContent;
+            if (about.length > 100) score += 15;
+            
+            // Open Jobs
+            const jobsList = document.getElementById('jobsListDisplay');
+            if (jobsList.style.display === 'block') score += 10;
+            
+            // Specialties
+            score += Math.min(specialtiesData.length * 2, 15);
+            
+            // Update UI
+            const text = document.getElementById('progressText');
+            const fill = document.getElementById('progressFill');
+            
+            const circumference = 283;
+            const offset = circumference - (score / 100) * circumference;
+            fill.style.strokeDashoffset = offset;
+            text.textContent = `${score}%`;
+            
+            // Update color
+            if (score >= 80) {
+                fill.style.stroke = '#10B981';
+            } else if (score >= 60) {
+                fill.style.stroke = '#F59E0B';
+            } else {
+                fill.style.stroke = '#EF4444';
+            }
+        }
+
+        // EDIT FUNCTIONS
+        function editAbout() {
+            const currentAbout = `TechNova Solutions is a leading technology company specializing in artificial intelligence, 
+            cloud computing, and digital transformation solutions for enterprises. We help businesses 
+            leverage cutting-edge technologies to drive innovation, improve efficiency, and gain competitive 
+            advantages in today's digital landscape.`;
+            
+            const newAbout = prompt('Edit company overview:', currentAbout);
+            
+            if (newAbout) {
+                document.getElementById('aboutContent').innerHTML = `
+                    <p>${newAbout}</p>
+                    
+                    <div class="company-info-grid">
+                        <div class="info-card">
+                            <div class="info-title">Website</div>
+                            <div class="info-value">
+                                <a href="https://technova-solutions.com" target="_blank">technova-solutions.com</a>
+                            </div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-title">Company Size</div>
+                            <div class="info-value">500-1000 employees</div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-title">Headquarters</div>
+                            <div class="info-value">Ahmedabad, Gujarat, India</div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-title">Industry</div>
+                            <div class="info-value">Technology & Services</div>
+                        </div>
+                    </div>
+                    
+                    <div class="highlight-box">
+                        <div class="highlight-title">Current Focus</div>
+                        <p>
+                            Expanding our AI-powered enterprise solutions portfolio and establishing strategic 
+                            partnerships with global cloud providers. Currently investing in R&D for quantum computing 
+                            applications and edge computing solutions for IoT ecosystems.
+                        </p>
+                    </div>
+                `;
+                updateProfileStrength();
+            }
+        }
+
+        function manageSpecialties() {
+            const newSpecialty = prompt('Add a new company specialty:');
+            if (newSpecialty) {
+                const rating = parseInt(prompt('Rate your expertise in this area (0-100):'));
+                if (!isNaN(rating) && rating >= 0 && rating <= 100) {
+                    specialtiesData.push({ name: newSpecialty, rating: rating });
+                    loadSpecialties();
+                    updateProfileStrength();
+                }
+            }
+        }
+
+        // SPECIALTY ADD FUNCTIONALITY
+        const specialityInput = document.getElementById('specialityInput');
+        const addSpecialtyBtn = document.getElementById('addSpecialtyBtn');
+        const messageDiv = document.getElementById('message');
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function getSpecialtyIcon(specialty) {
+            const specialtyLower = specialty.toLowerCase();
+            
+            if (specialtyLower.includes('ai') || specialtyLower.includes('artificial') || specialtyLower.includes('intelligence')) {
+                return 'fas fa-robot';
+            } else if (specialtyLower.includes('cloud') || specialtyLower.includes('aws') || specialtyLower.includes('azure')) {
+                return 'fas fa-cloud';
+            } else if (specialtyLower.includes('data') || specialtyLower.includes('analytics')) {
+                return 'fas fa-chart-bar';
+            } else if (specialtyLower.includes('cyber') || specialtyLower.includes('security')) {
+                return 'fas fa-shield-alt';
+            } else if (specialtyLower.includes('iot') || specialtyLower.includes('internet')) {
+                return 'fas fa-network-wired';
+            } else if (specialtyLower.includes('blockchain') || specialtyLower.includes('crypto')) {
+                return 'fas fa-link';
+            } else if (specialtyLower.includes('machine') || specialtyLower.includes('learning')) {
+                return 'fas fa-brain';
+            } else {
+                return 'fas fa-code';
+            }
+        }
+
+        function addSpecialty() {
+            const newSpecialty = specialityInput.value.trim();
+            
+            if (!newSpecialty) {
+                showMessage("Please enter a specialty name", "error");
+                return;
+            }
+            
+            if (newSpecialty.length > 30) {
+                showMessage("Specialty name is too long (max 30 characters)", "error");
+                return;
+            }
+            
+            // Check for duplicates
+            if (specialtiesData.some(s => s.name.toLowerCase() === newSpecialty.toLowerCase())) {
+                showMessage(`"${newSpecialty}" is already in your specialties list`, "error");
+                return;
+            }
+            
+            // Add new specialty with default rating
+            specialtiesData.push({ name: newSpecialty, rating: 75 });
+            
+            // Re-render specialties
+            loadSpecialties();
+            
+            // Show success message
+            showMessage(`"${newSpecialty}" has been added to your specialties`, "success");
+            
+            // Clear input
+            specialityInput.value = '';
+            specialityInput.focus();
+            
+            updateProfileStrength();
+        }
+
+        // Event listeners for specialty addition
+        addSpecialtyBtn.addEventListener('click', addSpecialty);
+        
+        specialityInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addSpecialty();
+            }
+        });
+
+        // ENHANCE PANEL ACTIONS
+        function addSection(type) {
+            closeEnhancePanel();
+            alert(`Opening ${type} section editor...`);
+        }
+
+        function openAIEnhance() {
+            closeEnhancePanel();
+            alert('AI Company Assistant: Analyzing your company profile for optimization suggestions...');
+        }
+
+        // QUICK ACTIONS
+        function shareCompany() {
+            alert('Share company profile: companyhub.com/technova-solutions');
+        }
+
+        function exportCompanyProfile() {
+            alert('Exporting company profile as PDF...');
+        }
+
+        function viewAnalytics() {
+            alert('Opening company analytics dashboard...');
+        }
+
+        function openCompanySettings() {
+            alert('Opening company settings...');
+        }
+
+        // INITIALIZE
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSpecialties();
+            updateProfileStrength();
+            
+            // Show jobs list if there are jobs
+            const jobsList = document.getElementById('jobsListDisplay');
+            if (jobsList.children.length > 0) {
+                jobsList.style.display = 'block';
+            }
+            
+            // Animate elements
+            setTimeout(() => {
+                document.querySelectorAll('.profile-card').forEach((card, index) => {
+                    setTimeout(() => {
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(20px)';
+                        card.offsetHeight;
+                        card.style.transition = 'all 0.5s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, index * 100);
+                });
+            }, 300);
+        });
+    </script>
+</body>
+</html>
