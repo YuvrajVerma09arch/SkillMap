@@ -18,9 +18,9 @@
     .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; }
     .shape-2 { width: 200px; height: 200px; bottom: 10%; right: -5%; }
 
-    /* --- GLASS CARD (THE BLUE THEME IS BACK) --- */
+    /* --- GLASS CARD --- */
     .glass-card {
-        background: rgba(255, 255, 255, 0.15); /* Back to Blue/White Glass */
+        background: rgba(255, 255, 255, 0.15);
         backdrop-filter: blur(25px);
         -webkit-backdrop-filter: blur(25px);
         border: 1px solid rgba(255, 255, 255, 0.3);
@@ -29,63 +29,37 @@
         overflow: hidden;
     }
 
-    /* --- TABLE FIX (CRITICAL) --- */
+    /* --- TABLE STYLING --- */
     .custom-table {
-        margin-bottom: 0;
-        width: 100%;
-        border-collapse: separate; 
-        border-spacing: 0;
-        --bs-table-bg: transparent; /* 🚫 KILLS THE WHITE STRIP */
+        margin-bottom: 0; width: 100%;
+        border-collapse: separate; border-spacing: 0;
+        --bs-table-bg: transparent;
     }
-
-    /* Headers */
     .custom-table th {
-        background: rgba(0, 0, 0, 0.1) !important; /* Slight dark tint for header */
+        background: rgba(0, 0, 0, 0.1) !important;
         color: rgba(255, 255, 255, 0.9) !important;
-        border: none; 
-        padding: 16px; 
-        font-weight: 700; 
-        text-transform: uppercase; 
-        font-size: 0.8rem;
-        letter-spacing: 0.5px;
+        border: none; padding: 16px; 
+        font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px;
     }
-
-    /* Cells */
     .custom-table td {
         border-top: 1px solid rgba(255, 255, 255, 0.1); 
-        padding: 16px; 
-        color: white !important; /* Forces White Text */
-        background-color: transparent !important; /* Ensures Blue Gradient shows through */
-        vertical-align: middle;
-        font-weight: 500;
+        padding: 16px; color: white !important;
+        background-color: transparent !important;
+        vertical-align: middle; font-weight: 500;
     }
-
-    /* Hover */
-    .custom-table tr:hover td { 
-        background-color: rgba(255, 255, 255, 0.1) !important; 
-    }
+    .custom-table tr:hover td { background-color: rgba(255, 255, 255, 0.1) !important; }
 
     /* --- AVATAR & BADGES --- */
     .avatar-circle {
-        width: 45px; height: 45px; 
-        background: white; 
-        color: #1d4ed8;
-        border-radius: 50%; 
-        display: flex; align-items: center; justify-content: center; 
-        font-weight: 800; font-size: 1.2rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        width: 45px; height: 45px; background: white; color: #1d4ed8;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        font-weight: 800; font-size: 1.2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    
     .skill-badge {
-        background: rgba(255, 255, 255, 0.2); 
-        color: white; 
+        background: rgba(255, 255, 255, 0.2); color: white; 
         border: 1px solid rgba(255,255,255,0.2);
-        padding: 4px 10px; 
-        border-radius: 12px; 
-        font-size: 0.75rem; 
-        margin-right: 4px;
-        display: inline-block;
-        margin-bottom: 2px;
+        padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; 
+        margin-right: 4px; display: inline-block; margin-bottom: 2px;
     }
 
     /* --- STATUS BADGES --- */
@@ -94,18 +68,28 @@
         text-transform: uppercase; letter-spacing: 0.5px;
     }
     .status-applied { background: rgba(255, 255, 255, 0.25); color: white; }
-    .status-shortlisted { background: #10b981; color: white; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+    
+    /* Shortlist = Orange/Star */
+    .status-shortlisted { background: #f59e0b; color: white; box-shadow: 0 0 10px rgba(245, 158, 11, 0.4); }
+    
+    /* Accepted = Green/Success */
+    .status-accepted { background: #10b981; color: white; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+    
+    /* Rejected = Red/Danger */
     .status-rejected { background: #ef4444; color: white; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
 
-    /* --- BUTTONS --- */
+    /* --- ACTION BUTTONS --- */
     .btn-action {
         width: 34px; height: 34px; border-radius: 10px; border: none;
         display: flex; align-items: center; justify-content: center; 
-        transition: all 0.2s; cursor: pointer;
+        transition: all 0.2s; cursor: pointer; margin-left: 5px;
     }
-    .btn-action:hover { transform: translateY(-2px); }
-    .btn-check { background: #10b981; color: white; }
-    .btn-x { background: #ef4444; color: white; }
+    .btn-action:hover { transform: translateY(-2px); filter: brightness(1.1); }
+    
+    .btn-shortlist { background: #f59e0b; color: white; } /* Orange Star */
+    .btn-accept { background: #10b981; color: white; }    /* Green Check */
+    .btn-reject { background: #ef4444; color: white; }    /* Red X */
+
 </style>
 
 <div class="bg-shape shape-1"></div>
@@ -169,13 +153,26 @@
                         </td>
 
                         <td class="text-end">
-                            <div class="d-flex justify-content-end gap-2">
+                            <div class="d-flex justify-content-end">
+                                
                                 <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Shortlisted') }}" method="POST">
-                                    <button class="btn-action btn-check" title="Shortlist"><i class="bi bi-check-lg"></i></button>
+                                    <button class="btn-action btn-shortlist" title="Shortlist / Interview" {% if app_data.status == 'Accepted' %}disabled style="opacity:0.5"{% endif %}>
+                                        <i class="bi bi-star-fill"></i>
+                                    </button>
                                 </form>
+
+                                <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Accepted') }}" method="POST">
+                                    <button class="btn-action btn-accept" title="Hire / Accept">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                </form>
+
                                 <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Rejected') }}" method="POST">
-                                    <button class="btn-action btn-x" title="Reject"><i class="bi bi-x-lg"></i></button>
+                                    <button class="btn-action btn-reject" title="Reject">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
                                 </form>
+
                             </div>
                         </td>
                     </tr>
@@ -191,4 +188,4 @@
         {% endif %}
     </div>
 </div>
-{% endblock %}
+{% endblock %}  

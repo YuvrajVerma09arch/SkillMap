@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- THEME OVERRIDES (Match Seeker Profile) --- */
+    body {
+        background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%) !important;
+        color: white;
+        overflow-x: hidden;
+    }
+
+    /* --- NAVBAR OVERRIDE --- */
+    .navbar {
+        background: transparent !important;
+        backdrop-filter: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: none !important;
+    }
+    .navbar .nav-link, .navbar .navbar-brand { color: rgba(255, 255, 255, 0.9) !important; }
+    .navbar .nav-link:hover { color: white !important; }
+    .navbar .logo-box { background: rgba(255, 255, 255, 0.2) !important; color: white !important; }
+    .navbar-toggler-icon { filter: invert(1); }
+
+    /* --- FLOATING BUBBLES --- */
+    .bg-shape {
+        position: fixed; background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%; backdrop-filter: blur(5px); z-index: -1;
+        animation: float 20s infinite ease-in-out;
+    }
+    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; }
+    .shape-2 { width: 200px; height: 200px; bottom: 10%; right: -5%; animation-delay: -5s; }
+
+    /* --- CURSOR GLOW --- */
+    .cursor-glow {
+        width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 70%);
+        position: fixed; border-radius: 50%; pointer-events: none;
+        transform: translate(-50%, -50%); z-index: 0; transition: transform 0.1s ease-out;
+    }
+
+    /* --- GLASS CARDS --- */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        overflow: hidden; margin-bottom: 24px;
+        transition: transform 0.3s ease, background 0.3s;
+        position: relative; z-index: 1;
+    }
+    .glass-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* --- TYPOGRAPHY --- */
+    h1, h2, h3, h5, h6 { color: white !important; font-weight: 700; }
+    p, span, div, i { color: rgba(255, 255, 255, 0.9); }
+    .text-muted { color: rgba(255, 255, 255, 0.6) !important; }
+
+    /* --- AVATAR --- */
+    .company-avatar {
+        width: 140px; height: 140px;
+        background: white; color: #2563EB;
+        border: 4px solid rgba(255,255,255,0.3); border-radius: 24px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 50px; font-weight: 800;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    /* --- JOB ITEM --- */
+    .job-item {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 16px; padding: 20px;
+        margin-bottom: 15px; transition: all 0.2s;
+    }
+    .job-item:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
+
+    /* --- BUTTONS --- */
+    .btn-glass {
+        background: rgba(255, 255, 255, 0.1); color: white;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 12px; padding: 10px 20px; transition: all 0.2s;
+    }
+    .btn-glass:hover { background: white; color: #2563EB; transform: translateY(-2px); }
+</style>
+
+<div class="bg-shape shape-1"></div>
+<div class="bg-shape shape-2"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<div class="container py-5">
+    
+    <div class="glass-card p-0">
+        <div style="height: 180px; background: linear-gradient(90deg, #2563EB, #60A5FA); opacity: 0.8;"></div>
+        <div class="row align-items-end px-4 pb-4 mt-n5">
+            <div class="col-md-auto" style="margin-top: -70px;">
+                <div class="company-avatar">
+                    {{ profile.company_name[0] | upper }}
+                </div>
+            </div>
+            <div class="col-md py-3">
+                <h1 class="mb-1">{{ profile.company_name }}</h1>
+                <p class="fs-5 mb-2 opacity-75">
+                    {{ profile.industry }} • {{ profile.location }}
+                </p>
+                <div class="d-flex gap-3 text-muted small">
+                    <span><i class="bi bi-people-fill"></i> {{ profile.company_size }} Employees</span>
+                    {% if profile.website %}
+                    <span><i class="bi bi-globe"></i> Website</span>
+                    {% endif %}
+                    <span><i class="bi bi-shield-check"></i> Verified</span>
+                </div>
+            </div>
+            <div class="col-md-auto py-3 text-end">
+                {% if is_owner %}
+                    <a href="{{ url_for('main.setup_profile') }}" class="btn btn-glass me-2"><i class="bi bi-pencil"></i> Edit</a>
+                    <a href="{{ url_for('jobs.post_job') }}" class="btn btn-light text-primary fw-bold rounded-3 px-4"><i class="bi bi-plus-lg"></i> Post Job</a>
+                {% else %}
+                    <button class="btn btn-glass me-2"><i class="bi bi-heart"></i> Follow</button>
+                    <button class="btn btn-light text-primary fw-bold rounded-3 px-4"><i class="bi bi-share"></i> Share</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            
+            <div class="glass-card p-4">
+                <h3 class="mb-3"><i class="bi bi-building me-2 text-primary"></i> About Company</h3>
+                <p style="line-height: 1.8; opacity: 0.9;">
+                    {{ profile.company_name }} is a leading organization in the <strong>{{ profile.industry }}</strong> sector. 
+                    We are dedicated to innovation and growth, currently operating out of {{ profile.location }}.
+                    Our team size consists of approximately {{ profile.company_size }} talented individuals.
+                </p>
+            </div>
+
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between mb-4">
+                    <h3><i class="bi bi-briefcase me-2 text-success"></i> Open Positions</h3>
+                    <span class="badge bg-light text-primary rounded-pill d-flex align-items-center px-3">{{ jobs|length }} Active</span>
+                </div>
+                
+                <div>
+                    {% for job in jobs %}
+                    <div class="job-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">{{ job.title }}</h5>
+                            <div class="small opacity-75">
+                                <i class="bi bi-geo-alt me-1"></i> {{ job.location }} • 
+                                <i class="bi bi-clock me-1"></i> {{ job.job_type }}
+                            </div>
+                        </div>
+                        {% if is_owner %}
+                            <a href="{{ url_for('jobs.view_applicants', job_id=job.id) }}" class="btn btn-sm btn-outline-light rounded-pill px-3">Manage</a>
+                        {% else %}
+                            <button class="btn btn-sm btn-light text-primary rounded-pill px-3 fw-bold">View</button>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No active job openings.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+            
+            <div class="glass-card p-4">
+                <h5 class="mb-3">Contact Information</h5>
+                <div class="d-flex align-items-center mb-3 p-3 rounded" style="background: rgba(255,255,255,0.1);">
+                    <i class="bi bi-person-circle fs-2 me-3"></i>
+                    <div>
+                        <div class="fw-bold">{{ profile.recruiter_name }}</div>
+                        <div class="small opacity-75">{{ profile.role_title }}</div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center p-3 rounded" style="background: rgba(255,255,255,0.1);">
+                    <i class="bi bi-envelope fs-2 me-3"></i>
+                    <div style="overflow: hidden;">
+                        <div class="small opacity-75">Email</div>
+                        <div class="fw-bold text-truncate">{{ profile.work_email }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-4 text-center">
+                <h5 class="mb-4">Hiring Velocity</h5>
+                <div class="position-relative d-inline-block mb-3">
+                    <svg width="120" height="120" viewBox="0 0 140 140">
+                        <circle cx="70" cy="70" r="50" stroke="rgba(255,255,255,0.1)" stroke-width="10" fill="none" />
+                        <circle cx="70" cy="70" r="50" stroke="#10B981" stroke-width="10" fill="none" stroke-dasharray="314" stroke-dashoffset="100" stroke-linecap="round" />
+                    </svg>
+                    <div class="position-absolute top-50 start-50 translate-middle fw-bold fs-3">High</div>
+                </div>
+                <p class="small opacity-75">This company actively reviews applications.</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // Logic for the Cursor Glow Effect
+    document.addEventListener('mousemove', function(e) {
+        const glow = document.getElementById('cursorGlow');
+        glow.style.left = e.clientX + 'px';
+        glow.style.top = e.clientY + 'px';
+    });
+</script>
+{% endblock %}

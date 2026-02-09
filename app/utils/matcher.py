@@ -1,49 +1,85 @@
-# app/utils/matcher.py
+import difflib
+
+# 1. Define Common Skill Aliases (The "Thesaurus")
+SKILL_ALIASES = {
+    "js": "javascript",
+    "reactjs": "react",
+    "react.js": "react",
+    "node": "node.js",
+    "nodejs": "node.js",
+    "py": "python",
+    "ml": "machine learning",
+    "ai": "artificial intelligence",
+    "aws": "amazon web services",
+    "cpp": "c++",
+    "c#": "csharp",
+    "golang": "go"
+}
+
+def normalize_skill(skill):
+    """
+    Cleans a skill string: lowercase, stripped, and de-aliased.
+    Input: "  ReactJS  " -> Output: "react"
+    """
+    if not skill:
+        return ""
+    clean = skill.strip().lower()
+    return SKILL_ALIASES.get(clean, clean)
 
 def calculate_match_score(user_skills, job_skills):
     """
-    Calculates similarity between user skills and job requirements.
-    Uses Jaccard Similarity (Intersection over Union).
+    Calculates a smarter similarity score using Fuzzy Matching + Jaccard.
     """
     if not user_skills or not job_skills:
         return 0
     
-    # Normalize: " Python " -> "python"
-    u_set = set([s.strip().lower() for s in user_skills.split(',')])
-    j_set = set([s.strip().lower() for s in job_skills.split(',')])
+    # 1. Normalize Inputs (Handle List or CSV String)
+    if isinstance(user_skills, list):
+        u_list = [normalize_skill(s) for s in user_skills]
+    else:
+        u_list = [normalize_skill(s) for s in user_skills.split(',')]
+
+    if isinstance(job_skills, list):
+        j_list = [normalize_skill(s) for s in job_skills]
+    else:
+        j_list = [normalize_skill(s) for s in job_skills.split(',')]
+        
+    # Convert to sets for uniqueness
+    u_set = set([u for u in u_list if u])
+    j_set = set([j for j in j_list if j])
     
-    # Find Intersection (Matching Skills)
-    intersection = u_set.intersection(j_set)
+    # 2. Find Matches (Direct + Fuzzy)
+    matches = 0
     
-    # Find Union (Total Unique Skills)
-    union = u_set.union(j_set)
+    # Check every job requirement against user skills
+    for job_skill in j_set:
+        if job_skill in u_set:
+            matches += 1
+            continue
+            
+        # Fuzzy Check: If no exact match, check for "close enough"
+        # e.g., "Github" vs "Git" -> might trigger if similarity > 0.8
+        for user_skill in u_set:
+            # difflib.SequenceMatcher gives a ratio 0.0 to 1.0
+            similarity = difflib.SequenceMatcher(None, job_skill, user_skill).ratio()
+            
+            # If 80% similar, count as a match
+            if similarity > 0.85: 
+                matches += 1
+                break
     
-    if len(union) == 0:
+    # 3. Calculate Final Score (Intersection / Union)
+    # Note: We use the count of matches we found manually
+    total_unique_skills = len(u_set.union(j_set))
+    
+    if total_unique_skills == 0:
         return 0
         
-    # Score = (Matches / Total) * 100
-    score = (len(intersection) / len(union)) * 100
-    return round(score)
-
-def get_recommended_jobs(user, all_jobs):
-    """
-    Takes a User object and a list of Job objects.
-    Returns a list of tuples: [(Job, Score), (Job, Score)] sorted by high score.
-    """
-    # 1. Get User's Skills from their profile/resume (Assume we saved this string)
-    # For now, let's pretend the user model has a 'skills' column
-    user_skills = getattr(user, 'skills', "") 
+    score = (matches / total_unique_skills) * 100
     
-    ranked_jobs = []
-    
-    for job in all_jobs:
-        score = calculate_match_score(user_skills, job.required_skills)
+    # Bonus: Boost score slightly if they have ALL required skills
+    # to differentiate 100% match from just "lots of skills"
+    if matches == len(j_set):
+        score = min(100, score * 1.2)
         
-        # Only show jobs with some relevance (e.g. > 10%)
-        if score > 10:
-            ranked_jobs.append((job, score))
-    
-    # Sort by Score (Descending)
-    ranked_jobs.sort(key=lambda x: x[1], reverse=True)
-    
-    return ranked_jobs
+    return round(score)
