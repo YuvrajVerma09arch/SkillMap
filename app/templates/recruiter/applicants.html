@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- THEME BASE --- */
+    body {
+        background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%) !important;
+        min-height: 100vh;
+        color: white;
+    }
+
+    /* --- FLOATING BUBBLES --- */
+    .bg-shape {
+        position: fixed; background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%; backdrop-filter: blur(5px); z-index: -1;
+        animation: float 20s infinite ease-in-out;
+    }
+    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; }
+    .shape-2 { width: 200px; height: 200px; bottom: 10%; right: -5%; }
+
+    /* --- GLASS CARD (THE BLUE THEME IS BACK) --- */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.15); /* Back to Blue/White Glass */
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    /* --- TABLE FIX (CRITICAL) --- */
+    .custom-table {
+        margin-bottom: 0;
+        width: 100%;
+        border-collapse: separate; 
+        border-spacing: 0;
+        --bs-table-bg: transparent; /* 🚫 KILLS THE WHITE STRIP */
+    }
+
+    /* Headers */
+    .custom-table th {
+        background: rgba(0, 0, 0, 0.1) !important; /* Slight dark tint for header */
+        color: rgba(255, 255, 255, 0.9) !important;
+        border: none; 
+        padding: 16px; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Cells */
+    .custom-table td {
+        border-top: 1px solid rgba(255, 255, 255, 0.1); 
+        padding: 16px; 
+        color: white !important; /* Forces White Text */
+        background-color: transparent !important; /* Ensures Blue Gradient shows through */
+        vertical-align: middle;
+        font-weight: 500;
+    }
+
+    /* Hover */
+    .custom-table tr:hover td { 
+        background-color: rgba(255, 255, 255, 0.1) !important; 
+    }
+
+    /* --- AVATAR & BADGES --- */
+    .avatar-circle {
+        width: 45px; height: 45px; 
+        background: white; 
+        color: #1d4ed8;
+        border-radius: 50%; 
+        display: flex; align-items: center; justify-content: center; 
+        font-weight: 800; font-size: 1.2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .skill-badge {
+        background: rgba(255, 255, 255, 0.2); 
+        color: white; 
+        border: 1px solid rgba(255,255,255,0.2);
+        padding: 4px 10px; 
+        border-radius: 12px; 
+        font-size: 0.75rem; 
+        margin-right: 4px;
+        display: inline-block;
+        margin-bottom: 2px;
+    }
+
+    /* --- STATUS BADGES --- */
+    .status-badge {
+        padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .status-applied { background: rgba(255, 255, 255, 0.25); color: white; }
+    .status-shortlisted { background: #10b981; color: white; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+    .status-rejected { background: #ef4444; color: white; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+
+    /* --- BUTTONS --- */
+    .btn-action {
+        width: 34px; height: 34px; border-radius: 10px; border: none;
+        display: flex; align-items: center; justify-content: center; 
+        transition: all 0.2s; cursor: pointer;
+    }
+    .btn-action:hover { transform: translateY(-2px); }
+    .btn-check { background: #10b981; color: white; }
+    .btn-x { background: #ef4444; color: white; }
+</style>
+
+<div class="bg-shape shape-1"></div>
+<div class="bg-shape shape-2"></div>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold display-6 mb-0 text-white">Applicants</h2>
+            <p class="opacity-75 mb-0 text-white">For Role: <span class="fw-bold text-warning">{{ job.title }}</span></p>
+        </div>
+        <a href="{{ url_for('main.recruiter_dashboard') }}" class="btn btn-outline-light rounded-pill px-4">
+            <i class="bi bi-arrow-left me-2"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="glass-card">
+        {% if applicants %}
+        <div class="table-responsive">
+            <table class="table custom-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Experience</th>
+                        <th>Top Skills</th>
+                        <th>Applied</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app_data in applicants %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-3">{{ app_data.name[0] | upper }}</div>
+                                <div>
+                                    <div class="fw-bold">{{ app_data.name }}</div>
+                                    <div class="small opacity-75">{{ app_data.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td><span class="fw-bold">{{ app_data.experience }}</span></td>
+
+                        <td style="max-width: 300px;">
+                            {% for skill in app_data.skills[:3] %}
+                                <span class="skill-badge">{{ skill }}</span>
+                            {% endfor %}
+                            {% if app_data.skills|length > 3 %}
+                                <span class="skill-badge">+{{ app_data.skills|length - 3 }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="opacity-75 small">{{ app_data.applied_at }}</td>
+
+                        <td>
+                            <span class="status-badge status-{{ app_data.status|lower }}">
+                                {{ app_data.status }}
+                            </span>
+                        </td>
+
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end gap-2">
+                                <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Shortlisted') }}" method="POST">
+                                    <button class="btn-action btn-check" title="Shortlist"><i class="bi bi-check-lg"></i></button>
+                                </form>
+                                <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Rejected') }}" method="POST">
+                                    <button class="btn-action btn-x" title="Reject"><i class="bi bi-x-lg"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-people display-1 opacity-25 text-white"></i>
+                <h3 class="mt-3 opacity-75 text-white">No applicants yet.</h3>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

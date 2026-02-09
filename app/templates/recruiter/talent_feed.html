@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- THEME BASE --- */
+    body {
+        background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%) !important;
+        min-height: 100vh;
+        color: white;
+    }
+
+    /* --- FLOATING BUBBLES --- */
+    .bg-shape {
+        position: fixed; background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%; backdrop-filter: blur(5px); z-index: -1;
+        animation: float 20s infinite ease-in-out;
+    }
+    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; }
+    .shape-2 { width: 200px; height: 200px; bottom: 10%; right: -5%; }
+    
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(20px, -20px); }
+    }
+
+    /* --- TALENT CARD --- */
+    .talent-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 24px;
+        padding: 24px;
+        transition: transform 0.3s ease, background 0.3s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .talent-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+
+    /* --- AVATAR --- */
+    .talent-avatar {
+        width: 80px; height: 80px;
+        background: white;
+        color: #2563EB;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 32px; font-weight: 800;
+        margin-bottom: 16px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    /* --- BADGES --- */
+    .skill-badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        margin: 2px;
+        display: inline-block;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* --- BUTTONS --- */
+    .btn-view {
+        background: white;
+        color: #2563EB;
+        border: none;
+        border-radius: 50px;
+        padding: 8px 24px;
+        font-weight: 700;
+        margin-top: auto; /* Pushes button to bottom */
+        transition: all 0.2s;
+        text-decoration: none;
+        width: 100%;
+    }
+    .btn-view:hover {
+        transform: scale(1.05);
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+    
+    .head-text { color: rgba(255,255,255,0.9); font-size: 0.9rem; }
+</style>
+
+<div class="bg-shape shape-1"></div>
+<div class="bg-shape shape-2"></div>
+
+<div class="container py-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="fw-bold mb-1">Discover Talent</h1>
+            <p class="mb-0 text-white-50">Find your next star employee.</p>
+        </div>
+        <a href="{{ url_for('main.recruiter_dashboard') }}" class="btn btn-outline-light rounded-pill px-4">
+            <i class="bi bi-speedometer2 me-2"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for seeker in seekers %}
+        <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="talent-card">
+                <div class="talent-avatar">
+                    {{ seeker.name[0] | upper }}
+                </div>
+                
+                <h4 class="fw-bold mb-1">{{ seeker.name }}</h4>
+                <p class="head-text mb-3 text-truncate w-100">
+                    {{ seeker.seeker_profile.headline if seeker.seeker_profile.headline else "Aspiring Professional" }}
+                </p>
+
+                <div class="mb-4 w-100">
+                    {% if seeker.seeker_profile.skills %}
+                        {% for skill in seeker.seeker_profile.skills[:3] %}
+                            <span class="skill-badge">{{ skill }}</span>
+                        {% endfor %}
+                        {% if seeker.seeker_profile.skills|length > 3 %}
+                            <span class="skill-badge">+{{ seeker.seeker_profile.skills|length - 3 }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="skill-badge opacity-50">No skills listed</span>
+                    {% endif %}
+                </div>
+
+                <div class="w-100 mt-2 d-flex justify-content-between text-white-50 small mb-3 px-2">
+                    <span><i class="bi bi-briefcase me-1"></i> {{ seeker.seeker_profile.experience_years }} Exp</span>
+                    <span><i class="bi bi-geo-alt me-1"></i> {{ seeker.seeker_profile.location if seeker.seeker_profile.location else "India" }}</span>
+                </div>
+
+                <a href="{{ url_for('main.view_profile', user_id=seeker.id) }}" class="btn-view">
+                    View Profile
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="display-1 opacity-25 mb-3"><i class="bi bi-search"></i></div>
+            <h3>No talent found yet.</h3>
+            <p class="text-white-50">Wait for users to complete their profiles.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

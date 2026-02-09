@@ -1,47 +1,49 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from config import Config  # <--- IMPORT YOUR CONFIG FILE
 from dotenv import load_dotenv
 import os
 
-# Initialize Extensions (Global Scope)
 db = SQLAlchemy()
 login_manager = LoginManager()
 
 def create_app():
+    # 1. Load Env Vars First
     load_dotenv()
     
     app = Flask(__name__)
     
-    # CONFIGURATION
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'dev_key_only'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///skillmap.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-    # CRITICAL FIX: Upload Folder Config
-    upload_folder = os.path.join(os.getcwd(), 'uploads')
-    app.config['UPLOAD_FOLDER'] = upload_folder
+    # 2. LOAD CONFIG FROM OBJECT (The Fix)
+    app.config.from_object(Config)
     
-    # Ensure upload directory exists
-    if not os.path.exists(upload_folder):
-        os.makedirs(upload_folder)
+    # 3. Verify Database URL is loaded
+    if not app.config['SQLALCHEMY_DATABASE_URI']:
+        raise RuntimeError("❌ ERROR: DATABASE_URL is missing! Check your .env file.")
 
-    # Initialize Plugins
+    # 4. Ensure Upload Folder Exists
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+
+    # Initialize Extensions
     db.init_app(app)
     login_manager.init_app(app)
     
     login_manager.login_view = 'auth.login'
+    login_manager.login_message = "Please log in to access this feature."
     login_manager.login_message_category = 'info'
 
     # Register Blueprints
     from app.main.routes import main
     from app.auth.routes import auth
-    
+    from app.jobs.routes import jobs
     app.register_blueprint(main)
     app.register_blueprint(auth)
+    app.register_blueprint(jobs)
 
-    # Create Database Tables
+    # Database Tables (Verify connection to Neon)
     with app.app_context():
+        # Since we created tables via SQL Editor, this just verifies models match
         db.create_all()
 
     return app

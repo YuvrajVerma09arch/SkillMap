@@ -70,11 +70,10 @@ def login():
             login_user(user)
             flash(f'Welcome back, {user.name}!', 'success')
             
-            # OPTIONAL: Check if they completed the profile?
-            # For now, sending to Roadmap is fine.
-            return redirect(url_for('main.roadmap'))
-        else:
-            flash('Login failed. Check email and password.', 'error')
+            if user.role == 'recruiter':
+               return redirect(url_for('main.recruiter_dashboard'))
+            else:
+             return redirect(url_for('jobs.job_feed'))
             
     return render_template('auth/login.html')
 
