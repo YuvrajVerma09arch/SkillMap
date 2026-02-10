@@ -19,8 +19,49 @@ def is_valid_email(email):
     pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     return re.match(pattern, email) is not None
 
+# --- CORE HELPER: SENDING LOGIC ---
+def _send_smtp_email(to_email, subject, html_content):
+    """
+    Internal helper to handle the SMTP connection and sending.
+    """
+    print(f"\n📨 STARTING EMAIL SEND PROCESS...")
+    print(f"   To: {to_email} | Subject: {subject}")
+
+    if not is_valid_email(to_email):
+        return False, "Invalid email format."
+
+    SENDER_EMAIL = os.environ.get("MAIL_USERNAME")
+    SENDER_PASSWORD = os.environ.get("MAIL_PASSWORD")
+
+    if not SENDER_EMAIL or not SENDER_PASSWORD:
+        return False, "Server credentials missing."
+
+    message = MIMEMultipart("alternative")
+    message["Subject"] = subject
+    message["From"] = SENDER_EMAIL
+    message["To"] = to_email
+
+    part = MIMEText(html_content, "html")
+    message.attach(part)
+
+    try:
+        # Use Certifi for SSL Conte xt
+        context = ssl.create_default_context(cafile=certifi.where())
+        
+        print("   Connecting to Google...")
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.sendmail(SENDER_EMAIL, to_email, message.as_string())
+            print("✅ Email sent successfully!")
+            
+        return True, "Email sent successfully!"
+
+    except Exception as e:
+        print(f"  SMTP Error: {e}")
+        return False, f"Failed to send: {str(e)}"
+
+# --- 1. ROADMAP EMAIL (Keep Existing) ---
 def format_roadmap_html(user_name, target_role, roadmap):
-    # (Simplified HTML for brevity - paste your full HTML function here if you want the pretty version)
     html = f"""
     <div style="font-family: 'Helvetica', sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
         <div style="background: #2563EB; padding: 30px; text-align: center;">
@@ -33,7 +74,6 @@ def format_roadmap_html(user_name, target_role, roadmap):
             <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
     """
     
-    # Loop Logic
     if isinstance(roadmap, list):
         for step in roadmap:
             month = step.get('month', 'Phase')
@@ -51,38 +91,52 @@ def format_roadmap_html(user_name, target_role, roadmap):
     return html
 
 def send_roadmap_email(user_email, user_name, target_role, roadmap_data):
-    print(f"\n📨 STARTING EMAIL SEND PROCESS...")
-    
-    if not is_valid_email(user_email):
-        return False, "Invalid email format."
-
-    SENDER_EMAIL = os.environ.get("MAIL_USERNAME")
-    SENDER_PASSWORD = os.environ.get("MAIL_PASSWORD")
-
-    if not SENDER_EMAIL or not SENDER_PASSWORD:
-        return False, "Server credentials missing."
-
-    message = MIMEMultipart("alternative")
-    message["Subject"] = f"Your Career Roadmap: {target_role} 🚀"
-    message["From"] = SENDER_EMAIL
-    message["To"] = user_email
-
+    subject = f"Your Career Roadmap: {target_role} 🚀"
     html_content = format_roadmap_html(user_name, target_role, roadmap_data)
-    part = MIMEText(html_content, "html")
-    message.attach(part)
+    return _send_smtp_email(user_email, subject, html_content)
 
-    try:
-        # THE FIX: Use Certifi for SSL Context
-        context = ssl.create_default_context(cafile=certifi.where())
-        
-        print("   Connecting to Google...")
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-            server.login(SENDER_EMAIL, SENDER_PASSWORD)
-            server.sendmail(SENDER_EMAIL, user_email, message.as_string())
-            print("✅ Email sent successfully!")
-            
-        return True, "Email sent successfully!"
+# --- 2. NEW: RECRUITER EMAILS ---
 
-    except Exception as e:
-        print(f"❌ SMTP Error: {e}")
-        return False, f"Failed to send: {str(e)}"
+def send_interview_invite(candidate_email, candidate_name, job_title, recruiter_email):
+    subject = f"Interview Invitation: {job_title}"
+    html = f"""
+    <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; padding: 20px;">
+        <h2 style="color: #2563EB;">Good News! You've been Shortlisted.</h2>
+        <p>Hi <strong>{candidate_name}</strong>,</p>
+        <p>We reviewed your profile for the <strong>{job_title}</strong> position and we are impressed!</p>
+        <p>We would like to invite you for an interview to discuss your skills further.</p>
+        <div style="background: #f8fafc; padding: 15px; border-left: 4px solid #2563EB; margin: 20px 0;">
+            <strong>Next Steps:</strong><br>
+            Please reply to this email (<a href="mailto:{recruiter_email}">{recruiter_email}</a>) to schedule a time.
+        </div>
+        <p>Best regards,<br>The Hiring Team</p>
+    </div>
+    """
+    return _send_smtp_email(candidate_email, subject, html)
+
+def send_job_offer(candidate_email, candidate_name, job_title):
+    subject = f"🎉 Job Offer: {job_title}"
+    html = f"""
+    <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; padding: 20px;">
+        <h2 style="color: #10b981;">Congratulations! You're Hired!</h2>
+        <p>Dear <strong>{candidate_name}</strong>,</p>
+        <p>We are thrilled to offer you the position of <strong>{job_title}</strong>!</p>
+        <p>After reviewing your interview performance, we believe you are the perfect fit for our team. You will receive a formal offer letter shortly.</p>
+        <p>Welcome aboard! 🚀</p>
+    </div>
+    """
+    return _send_smtp_email(candidate_email, subject, html)
+
+def send_rejection(candidate_email, candidate_name, job_title):
+    subject = f"Update on your application for {job_title}"
+    html = f"""
+    <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; padding: 20px;">
+        <h2 style="color: #64748b;">Application Update</h2>
+        <p>Dear <strong>{candidate_name}</strong>,</p>
+        <p>Thank you for giving us the opportunity to consider you for the <strong>{job_title}</strong> role.</p>
+        <p>While your skills are impressive, we have decided to move forward with other candidates who match our specific needs more closely at this time.</p>
+        <p>We have added your resume to our talent pool for future openings.</p>
+        <p>Best wishes in your job search.</p>
+    </div>
+    """
+    return _send_smtp_email(candidate_email, subject, html)

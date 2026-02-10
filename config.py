@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Config:
     # Security Key
@@ -6,6 +9,8 @@ class Config:
     
     # Database Connection
     uri = os.environ.get('DATABASE_URL')
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
     
     # --- DEBUGGING BLOCK ---
     if uri:
@@ -20,7 +25,9 @@ class Config:
         uri = uri.replace("postgres://", "postgresql://", 1)
         
     SQLALCHEMY_DATABASE_URI = uri
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # basedir = os.path.abspath(os.path.dirname(__file__))
+    # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
+    # SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True, 

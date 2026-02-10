@@ -42,7 +42,8 @@ class SeekerProfile(db.Model):
     
     # Postgres JSON Columns (Stores lists like ["Python", "Java"])
     skills = db.Column(JSON) 
-    
+    projects = db.Column(JSON)
+    profile_pic = db.Column(db.String(255))
     resume_file = db.Column(db.String(255))
     resume_text = db.Column(db.Text) # For AI Analysis
     linkedin_url = db.Column(db.String(255))
@@ -55,7 +56,9 @@ class RecruiterProfile(db.Model):
     __tablename__ = 'recruiter_profiles'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False)
-    
+    recruiter_name = db.Column(db.String(100))
+    role_title = db.Column(db.String(100))
+    work_email = db.Column(db.String(120))
     company_name = db.Column(db.String(100), nullable=False)
     industry = db.Column(db.String(50))
     company_size = db.Column(db.String(50))

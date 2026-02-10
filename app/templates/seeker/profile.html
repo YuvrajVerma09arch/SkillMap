@@ -6,30 +6,24 @@
     body {
         background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%) !important;
         color: white;
-        overflow-x: hidden; /* Prevent scrollbar from cursor glow */
+        overflow-x: hidden;
     }
 
-    /* --- NAVBAR OVERRIDE (Make it look like Home) --- */
-    /* This forces the navbar to be transparent on this page only */
+    /* --- NAVBAR OVERRIDE --- */
     .navbar {
         background: transparent !important;
         backdrop-filter: none !important;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
         box-shadow: none !important;
+        position: absolute !important;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
     }
-    .navbar .nav-link, .navbar .navbar-brand {
-        color: rgba(255, 255, 255, 0.9) !important;
-    }
-    .navbar .nav-link:hover {
-        color: white !important;
-    }
-    .navbar .logo-box {
-        background: rgba(255, 255, 255, 0.2) !important;
-        color: white !important;
-    }
-    .navbar-toggler-icon {
-        filter: invert(1); /* Make hamburger white */
-    }
+    .navbar .nav-link, .navbar .navbar-brand { color: rgba(255, 255, 255, 0.9) !important; }
+    .navbar .nav-link:hover { color: white !important; }
+    .navbar .logo-box { background: rgba(255, 255, 255, 0.2) !important; color: white !important; }
+    .navbar-toggler-icon { filter: invert(1); }
 
     /* --- FLOATING BUBBLES --- */
     .bg-shape {
@@ -48,17 +42,12 @@
         50% { transform: translate(20px, -20px); }
     }
 
-    /* --- CURSOR GLOW EFFECT --- */
+    /* --- CURSOR GLOW --- */
     .cursor-glow {
-        width: 400px;
-        height: 400px;
+        width: 400px; height: 400px;
         background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 70%);
-        position: fixed;
-        border-radius: 50%;
-        pointer-events: none; /* Let clicks pass through */
-        transform: translate(-50%, -50%);
-        z-index: 0;
-        transition: transform 0.1s ease-out; /* Smooth follow */
+        position: fixed; border-radius: 50%; pointer-events: none;
+        transform: translate(-50%, -50%); z-index: 0; transition: transform 0.1s ease-out;
     }
 
     /* --- GLASS CARDS --- */
@@ -69,11 +58,9 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 24px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        margin-bottom: 24px;
+        overflow: hidden; margin-bottom: 24px;
         transition: transform 0.3s ease, background 0.3s;
-        position: relative;
-        z-index: 1;
+        position: relative; z-index: 1;
     }
     .glass-card:hover {
         transform: translateY(-5px);
@@ -86,102 +73,56 @@
     p, span, div { color: rgba(255, 255, 255, 0.9); }
     .text-muted { color: rgba(255, 255, 255, 0.6) !important; }
 
-    /* --- PROFILE HEADER --- */
-    .profile-hero {
-        position: relative;
-        padding-bottom: 20px;
-    }
+    /* --- PROFILE HERO --- */
+    .profile-hero { position: relative; padding-bottom: 20px; }
     .cover-section {
-        height: 200px;
+        height: 220px;
         background: linear-gradient(90deg, #2563EB, #60A5FA);
         opacity: 0.8;
     }
     .profile-avatar-container {
-        margin-top: -80px;
-        margin-left: 40px;
-        position: relative;
-        display: inline-block;
-    }
-    .profile-avatar {
-        width: 160px; height: 160px;
-        background: #1e293b;
-        color: white;
-        border: 6px solid rgba(255, 255, 255, 0.2);
-        border-radius: 24px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 60px; font-weight: 800;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        margin-top: -80px; margin-left: 40px;
+        position: relative; display: inline-block;
     }
     
-    /* --- BADGES --- */
+    /* UPDATED AVATAR STYLE */
+    .profile-avatar {
+        width: 160px; height: 160px;
+        background: #1e293b; color: white;
+        border: 6px solid rgba(255, 255, 255, 0.2);
+        border-radius: 24px; display: flex; align-items: center; justify-content: center;
+        font-size: 60px; font-weight: 800;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        overflow: hidden; /* Ensures image stays inside border */
+    }
+    
     .skill-tag {
-        background: rgba(255, 255, 255, 0.15);
-        color: white;
+        background: rgba(255, 255, 255, 0.15); color: white;
         border: 1px solid rgba(255, 255, 255, 0.3);
-        padding: 6px 14px;
-        border-radius: 50px;
-        font-size: 0.85rem;
-        display: inline-block;
-        margin: 4px;
+        padding: 6px 14px; border-radius: 50px;
+        font-size: 0.85rem; display: inline-block; margin: 4px;
     }
 
     /* --- BUTTONS --- */
     .btn-glass {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        color: white;
-        border-radius: 12px;
-        padding: 10px 20px;
-        transition: all 0.2s;
+        background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.4);
+        color: white; border-radius: 12px; padding: 10px 20px; transition: all 0.2s;
+        text-decoration: none; display: inline-block;
     }
-    .btn-glass:hover {
-        background: white; color: #2563EB;
-        transform: translateY(-2px);
-    }
+    .btn-glass:hover { background: white; color: #2563EB; transform: translateY(-2px); }
+    
     .btn-primary-glass {
-        background: white; color: #2563EB;
-        border: none; border-radius: 12px;
-        padding: 10px 24px; font-weight: 700;
+        background: white; color: #2563EB; border: none; border-radius: 12px;
+        padding: 10px 24px; font-weight: 700; text-decoration: none; display: inline-block;
     }
-    .btn-primary-glass:hover {
-        box-shadow: 0 0 15px rgba(255,255,255,0.4);
-        transform: translateY(-2px);
-    }
-
-    /* --- PROGRESS CIRCLE --- */
-    .progress-circle { width: 120px; height: 120px; margin: 0 auto; position: relative; }
-    .progress-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 8; }
-    .progress-fill { 
-        fill: none; stroke: #10B981; stroke-width: 8; stroke-linecap: round; 
-        stroke-dasharray: 283; stroke-dashoffset: 70; /* Mock value */
-    }
-    .progress-text {
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        font-size: 28px; font-weight: 700; color: white;
-    }
-
-    /* --- ACTION GRID --- */
-    .action-grid {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-    }
-    .action-box {
-        background: rgba(255,255,255,0.05);
-        padding: 20px; border-radius: 16px; text-align: center;
-        border: 1px solid rgba(255,255,255,0.1);
-        cursor: pointer; transition: all 0.2s;
-    }
-    .action-box:hover {
-        background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3);
-    }
-    .action-icon { font-size: 24px; margin-bottom: 10px; color: #60A5FA; }
-
+    .btn-primary-glass:hover { box-shadow: 0 0 15px rgba(255,255,255,0.4); transform: translateY(-2px); color: #1d4ed8; }
 </style>
 
 <div class="bg-shape shape-1"></div>
 <div class="bg-shape shape-2"></div>
 <div class="cursor-glow" id="cursorGlow"></div>
 
-<div class="container py-5">
+<div class="container py-5" style="padding-top: 100px !important;">
     
     <div class="glass-card profile-hero">
         <div class="cover-section"></div>
@@ -189,7 +130,12 @@
             <div class="col-md-auto">
                 <div class="profile-avatar-container">
                     <div class="profile-avatar">
-                        {{ user.name[0] | upper }}
+                        {% if profile.profile_pic %}
+                            <img src="{{ url_for('static', filename='uploads/' + profile.profile_pic) }}" 
+                                 alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            {{ user.name[0] | upper }}
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -206,11 +152,18 @@
             </div>
             <div class="col-md-auto py-4 text-end">
                 {% if is_own_profile %}
-                    <button class="btn btn-glass me-2"><i class="bi bi-pencil"></i> Edit Profile</button>
+                    <a href="{{ url_for('main.setup_profile') }}" class="btn btn-glass me-2"><i class="bi bi-pencil"></i> Edit Profile</a>
                     <button class="btn btn-primary-glass"><i class="bi bi-share"></i> Share</button>
                 {% elif is_recruiter %}
-                    <button class="btn btn-glass me-2"><i class="bi bi-envelope"></i> Message</button>
-                    <button class="btn btn-primary-glass"><i class="bi bi-download"></i> Download Resume</button>
+                    {% if profile.resume_file %}
+                        <a href="{{ url_for('static', filename='uploads/' + profile.resume_file) }}" download target="_blank" class="btn btn-primary-glass">
+                            <i class="bi bi-download me-2"></i> Download Resume
+                        </a>
+                    {% else %}
+                        <button class="btn btn-glass" disabled style="opacity: 0.5; cursor: not-allowed;">
+                            No Resume Available
+                        </button>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -222,26 +175,17 @@
             <div class="glass-card p-4">
                 <div class="d-flex justify-content-between mb-3">
                     <h3><i class="bi bi-person-lines-fill me-2 text-primary"></i> About</h3>
-                    {% if is_own_profile %}
-                    <button class="btn btn-sm btn-glass"><i class="bi bi-pencil"></i></button>
-                    {% endif %}
                 </div>
                 <p style="line-height: 1.8; opacity: 0.9;">
                    Passionate about <strong>{{ profile.education_level }}</strong>. 
                    Skilled in building scalable applications and solving complex problems. 
                    Currently looking for opportunities to leverage my skills in a challenging environment.
                 </p>
-                <div class="p-3 rounded mt-3" style="background: rgba(255,255,255,0.1); border-left: 4px solid #60A5FA;">
-                    <strong>Current Focus:</strong> Developing Full Stack AI Applications using Flask and React.
-                </div>
             </div>
 
             <div class="glass-card p-4">
                 <div class="d-flex justify-content-between mb-3">
                     <h3><i class="bi bi-stars me-2 text-warning"></i> Skills</h3>
-                    {% if is_own_profile %}
-                    <button class="btn btn-sm btn-glass"><i class="bi bi-plus-lg"></i></button>
-                    {% endif %}
                 </div>
                 <div>
                     {% if profile.skills %}
@@ -253,6 +197,24 @@
                     {% endif %}
                 </div>
             </div>
+
+            {% if profile.projects %}
+            <div class="glass-card p-4">
+                <h3 class="mb-3"><i class="bi bi-code-slash me-2 text-info"></i> Projects</h3>
+                <div class="row g-3">
+                    {% for project in profile.projects %}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);">
+                            <h5 class="fw-bold mb-2">{{ project.title }}</h5>
+                            <a href="{{ project.link }}" target="_blank" class="btn btn-sm btn-glass text-white text-decoration-none">
+                                <i class="bi bi-github me-1"></i> View Project
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             <div class="glass-card p-4">
                 <h3><i class="bi bi-mortarboard me-2 text-info"></i> Education</h3>
@@ -267,17 +229,34 @@
         <div class="col-lg-4">
             
             {% if is_own_profile %}
-            <div class="glass-card p-4 text-center">
-                <h5 class="mb-4">Profile Strength</h5>
-                <div class="progress-circle mb-3">
-                    <svg width="120" height="120" viewBox="0 0 140 140">
-                        <circle class="progress-bg" cx="70" cy="70" r="45" />
-                        <circle class="progress-fill" cx="70" cy="70" r="45" />
-                    </svg>
-                    <div class="progress-text">75%</div>
+            <div class="glass-card p-4">
+                <h5 class="mb-3">Profile Completeness</h5>
+                
+                <ul class="list-unstyled small mb-0">
+                    {% if not profile.resume_file %}
+                        <li class="text-danger mb-2"><i class="bi bi-x-circle me-2"></i> Upload Resume</li>
+                    {% else %}
+                        <li class="text-success mb-2"><i class="bi bi-check-circle me-2"></i> Resume Uploaded</li>
+                    {% endif %}
+
+                    {% if not profile.projects %}
+                        <li class="text-danger mb-2"><i class="bi bi-x-circle me-2"></i> Add a Project</li>
+                    {% else %}
+                        <li class="text-success mb-2"><i class="bi bi-check-circle me-2"></i> Project Added</li>
+                    {% endif %}
+
+                    {% if not profile.linkedin_url %}
+                        <li class="text-warning mb-2"><i class="bi bi-exclamation-circle me-2"></i> Link LinkedIn</li>
+                    {% else %}
+                        <li class="text-success mb-2"><i class="bi bi-check-circle me-2"></i> LinkedIn Linked</li>
+                    {% endif %}
+                </ul>
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('main.setup_profile') }}" class="btn btn-primary-glass w-100 btn-sm">
+                        Complete Profile
+                    </a>
                 </div>
-                <p class="small opacity-75 mb-3">Add a project to reach 80%!</p>
-                <button class="btn btn-primary-glass w-100"><i class="bi bi-magic"></i> AI Enhance</button>
             </div>
             {% endif %}
 
@@ -287,50 +266,30 @@
                     <div class="d-flex align-items-center p-3 rounded" style="background: rgba(255,255,255,0.1);">
                         <i class="bi bi-file-pdf fs-1 text-danger me-3"></i>
                         <div style="overflow: hidden;">
-                            <div class="fw-bold text-truncate">My_Resume.pdf</div>
-                            <small class="text-muted">Uploaded recently</small>
+                            <div class="fw-bold text-truncate">{{ profile.resume_file }}</div>
+                            <small class="text-muted">Uploaded</small>
                         </div>
+                    </div>
+                    <div class="mt-3 text-center">
+                         <a href="{{ url_for('static', filename='uploads/' + profile.resume_file) }}" download target="_blank" class="btn btn-sm btn-glass w-100">
+                            Download
+                        </a>
                     </div>
                 {% else %}
                     <div class="text-center py-3 border border-dashed rounded" style="border-color: rgba(255,255,255,0.3) !important;">
                         <p class="mb-2">No resume uploaded</p>
                         {% if is_own_profile %}
-                        <button class="btn btn-sm btn-glass">Upload</button>
+                        <a href="{{ url_for('main.setup_profile') }}" class="btn btn-sm btn-glass">Upload</a>
                         {% endif %}
                     </div>
                 {% endif %}
             </div>
 
-            <div class="glass-card p-4">
-                <h5 class="mb-3">Quick Actions</h5>
-                <div class="action-grid">
-                    <div class="action-box">
-                        <i class="bi bi-share action-icon"></i>
-                        <div class="small fw-bold">Share</div>
-                    </div>
-                    <div class="action-box">
-                        <i class="bi bi-file-earmark-arrow-down action-icon"></i>
-                        <div class="small fw-bold">Export PDF</div>
-                    </div>
-                    {% if is_own_profile %}
-                    <div class="action-box">
-                        <i class="bi bi-gear action-icon"></i>
-                        <div class="small fw-bold">Settings</div>
-                    </div>
-                    <div class="action-box">
-                        <i class="bi bi-bar-chart action-icon"></i>
-                        <div class="small fw-bold">Analytics</div>
-                    </div>
-                    {% endif %}
-                </div>
             </div>
-
-        </div>
     </div>
 </div>
 
 <script>
-    // Logic for the Cursor Glow Effect
     document.addEventListener('mousemove', function(e) {
         const glow = document.getElementById('cursorGlow');
         glow.style.left = e.clientX + 'px';

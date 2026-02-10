@@ -1,49 +1,47 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from config import Config  # <--- IMPORT YOUR CONFIG FILE
-from dotenv import load_dotenv
-import os
+from flask_migrate import Migrate
+from authlib.integrations.flask_client import OAuth
+from config import Config
 
+# Initialize Extensions Globaly
 db = SQLAlchemy()
+migrate = Migrate()
 login_manager = LoginManager()
+login_manager.login_view = 'auth.login'
+oauth = OAuth()
 
-def create_app():
-    # 1. Load Env Vars First
-    load_dotenv()
-    
+def create_app(config_class=Config):
     app = Flask(__name__)
-    
-    # 2. LOAD CONFIG FROM OBJECT (The Fix)
-    app.config.from_object(Config)
-    
-    # 3. Verify Database URL is loaded
-    if not app.config['SQLALCHEMY_DATABASE_URI']:
-        raise RuntimeError("❌ ERROR: DATABASE_URL is missing! Check your .env file.")
+    app.config.from_object(config_class)
 
-    # 4. Ensure Upload Folder Exists
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
-
-    # Initialize Extensions
+    # 1. Init Extensions
     db.init_app(app)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
-    
-    login_manager.login_view = 'auth.login'
-    login_manager.login_message = "Please log in to access this feature."
-    login_manager.login_message_category = 'info'
+    oauth.init_app(app)
 
-    # Register Blueprints
+    # 2. Register Google Client (MUST BE BEFORE BLUEPRINTS)
+    # Check if keys exist to avoid silent failures
+    if not app.config.get('GOOGLE_CLIENT_ID') or not app.config.get('GOOGLE_CLIENT_SECRET'):
+        print("⚠️ WARNING: Google Auth Keys are missing in Config!")
+    
+    oauth.register(
+        name='google',
+        client_id=app.config.get('GOOGLE_CLIENT_ID'),
+        client_secret=app.config.get('GOOGLE_CLIENT_SECRET'),
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        client_kwargs={'scope': 'openid email profile'}
+    )
+
+    # 3. Register Blueprints
     from app.main.routes import main
     from app.auth.routes import auth
     from app.jobs.routes import jobs
+    
     app.register_blueprint(main)
     app.register_blueprint(auth)
     app.register_blueprint(jobs)
-
-    # Database Tables (Verify connection to Neon)
-    with app.app_context():
-        # Since we created tables via SQL Editor, this just verifies models match
-        db.create_all()
 
     return app

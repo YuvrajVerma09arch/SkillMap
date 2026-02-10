@@ -10,7 +10,6 @@
     <style>
         /* --- 1. SETTINGS & COLORS --- */
         :root {
-            /* We keep the Blue Theme as requested */
             --bg-gradient: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);
             --card-glass: rgba(255, 255, 255, 0.1);
             --card-border: rgba(255, 255, 255, 0.2);
@@ -29,10 +28,10 @@
             justify-content: center;
             background: var(--bg-gradient);
             overflow: hidden;
-            perspective: 1200px; /* Crucial for 3D Flip */
+            perspective: 1200px;
         }
 
-        /* --- BACKGROUND SHAPES (The "SkillMap" Look) --- */
+        /* --- BACKGROUND SHAPES --- */
         .shape {
             position: absolute;
             background: rgba(255, 255, 255, 0.1);
@@ -41,36 +40,10 @@
             z-index: -1;
             animation: float 20s infinite ease-in-out;
         }
-
-        /* Top Left - Small */
-        .shape-1 { 
-            width: 100px; height: 100px; 
-            top: 15%; left: 15%; 
-            animation-delay: 0s; 
-        }
-        
-        /* Bottom Right - Medium */
-        .shape-2 { 
-            width: 150px; height: 150px; 
-            bottom: 15%; right: 15%; 
-            animation-delay: -5s; 
-        }
-        
-        /* Bottom Left - Large Faint */
-        .shape-3 { 
-            width: 300px; height: 300px; 
-            bottom: -50px; left: -50px; 
-            opacity: 0.4; 
-            animation-delay: -10s; 
-        }
-        
-        /* Top Right - Large Faint */
-        .shape-4 { 
-            width: 250px; height: 250px; 
-            top: -50px; right: -50px; 
-            opacity: 0.4; 
-            animation-delay: -15s; 
-        }
+        .shape-1 { width: 100px; height: 100px; top: 15%; left: 15%; animation-delay: 0s; }
+        .shape-2 { width: 150px; height: 150px; bottom: 15%; right: 15%; animation-delay: -5s; }
+        .shape-3 { width: 300px; height: 300px; bottom: -50px; left: -50px; opacity: 0.4; animation-delay: -10s; }
+        .shape-4 { width: 250px; height: 250px; top: -50px; right: -50px; opacity: 0.4; animation-delay: -15s; }
 
         @keyframes float {
             0%, 100% { transform: translate(0, 0) rotate(0deg); }
@@ -81,56 +54,48 @@
         /* --- 2. THE 3D SCENE --- */
         .scene {
             width: 420px;
-            height: 550px;
+            height: 600px; /* Increased slightly for Google Button */
             position: relative;
-            /* No perspective here, it's on body */
         }
 
-        /* The Card Object that Rotates */
         .card-3d {
             width: 100%;
             height: 100%;
             position: relative;
-            transform-style: preserve-3d; /* Allows Front/Back faces */
-            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy Flip */
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* FLIP STATE */
         .card-3d.is-flipped {
             transform: rotateY(180deg);
         }
 
-        /* --- 3. FACES (Front & Back) --- */
+        /* --- 3. FACES --- */
         .card-face {
             position: absolute;
             width: 100%;
             height: 100%;
-            top: 0;
-            left: 0;
-            
-            /* Glassmorphism Styling */
+            top: 0; left: 0;
             background: var(--card-glass);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--card-border);
             border-radius: 24px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
-            
-            backface-visibility: hidden; /* Hides the back when facing away */
+            backface-visibility: hidden;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 3rem;
+            padding: 2.5rem;
             color: white;
-            overflow: hidden; /* Keeps the glow inside */
+            overflow: hidden;
         }
 
-        /* Back Face needs to be pre-rotated so it faces "out" when flipped */
         .card-face.face-back {
             transform: rotateY(180deg);
         }
 
-        /* --- 4. SPOTLIGHT GLOW EFFECT (From Option 3) --- */
+        /* SPOTLIGHT GLOW */
         .card-face::before {
             content: "";
             position: absolute;
@@ -140,33 +105,23 @@
                 rgba(255, 255, 255, 0.15),
                 transparent 40%
             );
-            z-index: 1;
-            opacity: 0;
-            transition: opacity 0.5s;
-            pointer-events: none;
+            z-index: 1; opacity: 0; transition: opacity 0.5s; pointer-events: none;
         }
-        
-        /* Show glow on hover */
-        .scene:hover .card-face::before {
-            opacity: 1;
-        }
+        .scene:hover .card-face::before { opacity: 1; }
 
-        /* --- 5. CONTENT STYLING --- */
+        /* --- CONTENT --- */
         .content-wrapper {
             position: relative;
-            z-index: 5; /* Above the glow */
-            transform: translateZ(30px); /* 3D Depth popping out */
+            z-index: 5;
+            transform: translateZ(30px);
         }
 
         h2 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-        p { font-size: 0.9rem; opacity: 0.8; margin-bottom: 2rem; line-height: 1.5; }
+        p { font-size: 0.9rem; opacity: 0.8; margin-bottom: 1.5rem; line-height: 1.5; }
 
         /* Inputs */
-        .input-group {
-            position: relative;
-            margin-bottom: 1.2rem;
-        }
-
+        .input-group { position: relative; margin-bottom: 1rem; }
+        
         input {
             width: 100%;
             background: rgba(0, 0, 0, 0.2);
@@ -177,20 +132,12 @@
             font-size: 1rem;
             transition: all 0.3s;
         }
-        
-        /* Input Focus Glow */
         input:focus {
-            outline: none;
-            background: rgba(0, 0, 0, 0.3);
-            border-color: white;
+            outline: none; background: rgba(0, 0, 0, 0.3); border-color: white;
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
         }
-
         .input-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
+            position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
             color: rgba(255, 255, 255, 0.6);
         }
 
@@ -205,47 +152,59 @@
             font-weight: 700;
             font-size: 1rem;
             cursor: pointer;
-            margin-top: 1rem;
+            margin-top: 0.5rem;
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
+        .btn-main:hover { transform: scale(1.02); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
 
-        .btn-main:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        /* Google Button */
+        .btn-google {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: background 0.3s;
         }
+        .btn-google:hover { background: rgba(255, 255, 255, 0.25); }
+
+        /* Divider */
+        .divider {
+            display: flex; align-items: center; text-align: center;
+            margin: 1.5rem 0; opacity: 0.6; font-size: 0.85rem;
+        }
+        .divider::before, .divider::after {
+            content: ''; flex: 1; border-bottom: 1px solid white;
+        }
+        .divider span { padding: 0 10px; }
 
         .btn-link {
-            background: none;
-            border: none;
-            color: white;
-            text-decoration: underline;
-            cursor: pointer;
-            font-size: 0.9rem;
-            margin-top: 1.5rem;
-            opacity: 0.9;
+            background: none; border: none; color: white;
+            text-decoration: underline; cursor: pointer;
+            font-size: 0.9rem; margin-top: 1.5rem; opacity: 0.9;
+            display: inline-block;
         }
         .btn-link:hover { opacity: 1; }
 
-        /* Flash Messages (Floating) */
+        /* Flash Messages */
         .flash-container {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            width: 90%;
-            max-width: 400px;
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 9999; width: 90%; max-width: 400px;
         }
         .alert {
-            background: rgba(255, 255, 255, 0.9);
-            color: #1e3a8a;
-            padding: 12px 20px;
-            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.95); color: #1e3a8a;
+            padding: 12px 20px; border-radius: 50px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: 10px;
+            text-align: center; font-weight: 600; margin-bottom: 10px;
             animation: slideDown 0.5s ease-out;
         }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -292,8 +251,16 @@
                         <button type="submit" class="btn-main">Sign In</button>
                     </form>
 
+                    <div class="divider"><span>OR</span></div>
+
+                    <a href="{{ url_for('auth.google_login') }}" style="text-decoration: none;">
+                        <button type="button" class="btn-google">
+                            <i class="bi bi-google"></i> Continue with Google
+                        </button>
+                    </a>
+
                     <div style="text-align: center;">
-                        <button class="btn-link" onclick="flipCard()">New here? Create Account</button>
+                        <a href="{{ url_for('auth.role_select') }}" class="btn-link">New here? Create Account</a>
                     </div>
                 </div>
             </div>
@@ -301,7 +268,7 @@
             <div class="card-face face-back">
                 <div class="content-wrapper">
                     <h2>Join SkillMap</h2>
-                    <p>Start your AI-powered journey today.</p>
+                    <p>Creating account as <strong>{{ request.args.get('role', 'Seeker')|capitalize }}</strong>.</p>
                     
                     <form action="{{ url_for('auth.register') }}" method="POST">
                         <input type="hidden" name="role" value="{{ request.args.get('role', 'seeker') }}">
@@ -322,6 +289,14 @@
                         <button type="submit" class="btn-main">Create Account</button>
                     </form>
 
+                    <div class="divider"><span>OR</span></div>
+
+                    <a href="{{ url_for('auth.google_login', role=request.args.get('role')) }}" style="text-decoration: none;">
+                        <button type="button" class="btn-google">
+                            <i class="bi bi-google"></i> Sign up with Google
+                        </button>
+                    </a>
+
                     <div style="text-align: center;">
                         <button class="btn-link" onclick="flipCard()">Already have an account? Sign In</button>
                     </div>
@@ -341,29 +316,22 @@
             card.classList.toggle('is-flipped');
         }
 
-        // Check URL to auto-flip if on Register mode
+        // AUTO-FLIP: If URL has ?mode=signup, show the back face immediately
         const urlParams = new URLSearchParams(window.location.search);
         if(urlParams.get('mode') === 'signup') {
             card.classList.add('is-flipped');
         }
 
-        // 2. TILT & SPOTLIGHT LOGIC (Combined)
+        // 2. MOUSE TILT & GLOW
         document.addEventListener('mousemove', (e) => {
             const windowWidth = window.innerWidth;
             const windowHeight = window.innerHeight;
             
-            // --- A. TILT CALCULATION ---
-            // Calculate mouse position as a percentage (-1 to 1) from center
             const xVal = (e.clientX - windowWidth / 2) / (windowWidth / 2);
             const yVal = (e.clientY - windowHeight / 2) / (windowHeight / 2);
 
-            // Rotate slightly (max 10 degrees)
-            // Note: We apply this to the SCENE wrapper, not the card itself,
-            // to avoid conflict with the Flip transform.
             scene.style.transform = `rotateY(${xVal * 10}deg) rotateX(${-yVal * 10}deg)`;
 
-            // --- B. SPOTLIGHT CALCULATION ---
-            // We need to update the CSS variable on the faces relative to the card's position
             const rect = scene.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
@@ -373,7 +341,6 @@
                 face.style.setProperty('--mouse-y', `${mouseY}px`);
             });
         });
-
     </script>
 </body>
 </html>

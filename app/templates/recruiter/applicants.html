@@ -122,7 +122,7 @@
                 </thead>
                 <tbody>
                     {% for app_data in applicants %}
-                    <tr>
+                    <tr class="{% if app_data.status in ['Accepted', 'Rejected'] %}opacity-50 bg-secondary bg-opacity-10{% endif %}">
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="avatar-circle me-3">{{ app_data.name[0] | upper }}</div>
@@ -155,23 +155,27 @@
                         <td class="text-end">
                             <div class="d-flex justify-content-end">
                                 
-                                <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Shortlisted') }}" method="POST">
-                                    <button class="btn-action btn-shortlist" title="Shortlist / Interview" {% if app_data.status == 'Accepted' %}disabled style="opacity:0.5"{% endif %}>
-                                        <i class="bi bi-star-fill"></i>
-                                    </button>
-                                </form>
+                                {% if app_data.status not in ['Accepted', 'Rejected'] %}
+                                    <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Shortlisted') }}" method="POST">
+                                        <button class="btn-action btn-shortlist" title="Shortlist / Interview">
+                                            <i class="bi bi-star-fill"></i>
+                                        </button>
+                                    </form>
 
-                                <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Accepted') }}" method="POST">
-                                    <button class="btn-action btn-accept" title="Hire / Accept">
-                                        <i class="bi bi-check-lg"></i>
-                                    </button>
-                                </form>
+                                    <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Accepted') }}" method="POST">
+                                        <button class="btn-action btn-accept" title="Hire / Accept">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
 
-                                <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Rejected') }}" method="POST">
-                                    <button class="btn-action btn-reject" title="Reject">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
-                                </form>
+                                    <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Rejected') }}" method="POST">
+                                        <button class="btn-action btn-reject" title="Reject">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-white small fst-italic opacity-75">Decision Emailed <i class="bi bi-envelope-check ms-1"></i></span>
+                                {% endif %}
 
                             </div>
                         </td>
@@ -188,4 +192,4 @@
         {% endif %}
     </div>
 </div>
-{% endblock %}  
+{% endblock %}

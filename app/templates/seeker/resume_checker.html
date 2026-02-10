@@ -44,7 +44,8 @@
         width: 150px;
         height: 150px;
         border-radius: 50%;
-        background: conic-gradient(var(--score-color) var(--score-percent), #e2e8f0 0deg);
+        /* Default gray, updated dynamically */
+        background: conic-gradient(var(--score-color, #e2e8f0) var(--score-percent, 0%), #e2e8f0 0deg);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -55,19 +56,13 @@
 
     .score-circle::before {
         content: "";
-        position: absolute;
-        width: 120px;
-        height: 120px;
-        background: white;
-        border-radius: 50%;
+        position: absolute; width: 120px; height: 120px;
+        background: white; border-radius: 50%;
     }
 
     .score-text {
-        position: relative;
-        z-index: 2;
-        font-size: 2.5rem;
-        font-weight: 800;
-        color: #1e293b;
+        position: relative; z-index: 2;
+        font-size: 2.5rem; font-weight: 800; color: #1e293b;
     }
 
     /* --- UPLOAD ZONE --- */
@@ -80,47 +75,38 @@
         background: #f8fafc;
         cursor: pointer;
     }
+    .upload-zone:hover { border-color: #2563EB; background: #eff6ff; }
+    .upload-icon { font-size: 2.5rem; color: #94a3b8; margin-bottom: 1rem; }
 
-    .upload-zone:hover {
-        border-color: #2563EB;
-        background: #eff6ff;
+    /* --- AUTO DETECT CARD --- */
+    .resume-detected-card {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
     }
+    .resume-detected-icon { font-size: 2rem; color: #16a34a; margin-bottom: 0.5rem; }
 
-    .upload-icon {
-        font-size: 2.5rem;
-        color: #94a3b8;
-        margin-bottom: 1rem;
-    }
-
-    /* --- RESULTS LISTS --- */
+    /* --- RESULTS --- */
     .skill-tag {
-        background: #fee2e2;
-        color: #dc2626;
-        padding: 0.4rem 1rem;
-        border-radius: 50px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        margin: 4px;
+        background: #fee2e2; color: #dc2626; padding: 0.4rem 1rem;
+        border-radius: 50px; font-size: 0.9rem; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 6px; margin: 4px;
         border: 1px solid #fecaca;
     }
-
     .feedback-item {
-        background: #f8fafc;
-        border-left: 4px solid #2563EB;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-radius: 0 8px 8px 0;
-        font-size: 0.95rem;
+        background: #f8fafc; border-left: 4px solid #2563EB;
+        padding: 1rem; margin-bottom: 1rem;
+        border-radius: 0 8px 8px 0; font-size: 0.95rem;
     }
 </style>
 
 <div class="bg-shape shape-1"></div>
 <div class="bg-shape shape-2"></div>
 
-<div class="container py-5">
+<div class="container py-5" style="padding-top: 100px !important;">
     
     <div class="text-center text-white mb-5">
         <h1 class="fw-bold display-5">Resume Analyst</h1>
@@ -131,24 +117,58 @@
         
         <div class="col-lg-5">
             <div class="glass-panel h-100">
-                <h3 class="fw-bold mb-4">Upload Resume</h3>
+                <h3 class="fw-bold mb-4">Analyze Resume</h3>
                 
-                <form method="POST" enctype="multipart/form-data">
+                <form method="POST" enctype="multipart/form-data" id="analyzeForm">
                     
                     <div class="mb-4">
                         <label class="form-label fw-bold text-secondary">Target Job Description</label>
-                        <textarea name="job_description" class="form-control bg-light border-0 p-3" rows="6" placeholder="Paste the job description here..." required></textarea>
-                    </div>
+                        <textarea name="job_description" class="form-control bg-light border-0 p-3" rows="6" placeholder="Paste the job description here..." required>{{ session.pop('prefill_job_description', '') }}</textarea>                   
+                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label fw-bold text-secondary">Your Resume (PDF)</label>
-                        <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-                            <i class="bi bi-cloud-upload-fill upload-icon"></i>
-                            <h6 class="fw-bold mb-1">Click to Upload</h6>
-                            <p class="text-muted small mb-0">PDF files only (Max 5MB)</p>
-                            <input type="file" name="resume" id="fileInput" class="d-none" accept=".pdf" onchange="showFileName(this)" required>
-                        </div>
-                        <div id="fileNameDisplay" class="mt-2 text-success small fw-bold text-center"></div>
+                        <label class="form-label fw-bold text-secondary">Your Resume</label>
+                        
+                        {% if profile_resume %}
+                            <div id="profileResumeBlock">
+                                <div class="resume-detected-card">
+                                    <i class="bi bi-file-earmark-check-fill resume-detected-icon"></i>
+                                    <h6 class="fw-bold text-success">Resume Detected</h6>
+                                    <p class="small text-muted mb-2 text-truncate">{{ profile_resume }}</p>
+                                    
+                                    <input type="hidden" name="use_existing" id="useExistingInput" value="yes">
+                                    
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="toggleUploadMode()">
+                                        Use different file
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="uploadBlock" style="display: none;">
+                                <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                                    <i class="bi bi-cloud-upload-fill upload-icon"></i>
+                                    <h6 class="fw-bold mb-1">Click to Upload</h6>
+                                    <p class="text-muted small mb-0">PDF files only</p>
+                                    <input type="file" name="resume" id="fileInput" class="d-none" accept=".pdf" onchange="showFileName(this)">
+                                </div>
+                                <div id="fileNameDisplay" class="mt-2 text-success small fw-bold text-center"></div>
+                                <div class="text-center mt-2">
+                                    <button type="button" class="btn btn-sm btn-link text-decoration-none" onclick="toggleUploadMode()">
+                                        Cancel, use profile resume
+                                    </button>
+                                </div>
+                            </div>
+
+                        {% else %}
+                            <input type="hidden" name="use_existing" value="no">
+                            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                                <i class="bi bi-cloud-upload-fill upload-icon"></i>
+                                <h6 class="fw-bold mb-1">Click to Upload</h6>
+                                <p class="text-muted small mb-0">PDF files only</p>
+                                <input type="file" name="resume" id="fileInput" class="d-none" accept=".pdf" onchange="showFileName(this)" required>
+                            </div>
+                            <div id="fileNameDisplay" class="mt-2 text-success small fw-bold text-center"></div>
+                        {% endif %}
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm">
@@ -184,12 +204,16 @@
                 </div>
 
                 <div>
-                    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-chat-left-quote-fill me-2"></i>Recruiter Feedback</h5>
-                    {% for note in results.explanation %}
-                    <div class="feedback-item">
-                        {{ note }}
-                    </div>
-                    {% endfor %}
+                    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-chat-left-quote-fill me-2"></i>AI Feedback</h5>
+                    {% if results.explanation %}
+                        {% for note in results.explanation %}
+                        <div class="feedback-item">
+                            {{ note }}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No specific feedback provided.</p>
+                    {% endif %}
                 </div>
 
             </div>
@@ -197,7 +221,7 @@
             <div class="glass-panel h-100 d-flex flex-column align-items-center justify-content-center text-center text-muted opacity-75">
                 <i class="bi bi-file-earmark-bar-graph display-1 mb-3 text-secondary"></i>
                 <h5>Waiting for data...</h5>
-                <p>Upload your resume to see how you stack up.</p>
+                <p>Paste a JD and hit Analyze to see your score.</p>
             </div>
             {% endif %}
         </div>
@@ -210,6 +234,29 @@
         const display = document.getElementById('fileNameDisplay');
         if (input.files && input.files[0]) {
             display.innerText = "Selected: " + input.files[0].name;
+        }
+    }
+
+    function toggleUploadMode() {
+        const profileBlock = document.getElementById('profileResumeBlock');
+        const uploadBlock = document.getElementById('uploadBlock');
+        const useExistingInput = document.getElementById('useExistingInput');
+        const fileInput = document.getElementById('fileInput');
+
+        if (profileBlock.style.display === 'none') {
+            // Switch back to Profile Resume
+            profileBlock.style.display = 'block';
+            uploadBlock.style.display = 'none';
+            useExistingInput.value = 'yes';
+            fileInput.required = false;
+            fileInput.value = ''; // Clear selection
+            document.getElementById('fileNameDisplay').innerText = '';
+        } else {
+            // Switch to Upload Mode
+            profileBlock.style.display = 'none';
+            uploadBlock.style.display = 'block';
+            useExistingInput.value = 'no';
+            fileInput.required = true;
         }
     }
 </script>

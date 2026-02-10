@@ -45,6 +45,20 @@
         color: rgba(255, 255, 255, 0.6);
         margin-top: 4px;
     }
+
+    /* SKILL CHIPS STYLE */
+    .skill-chip {
+        display: inline-flex; align-items: center; padding: 8px 16px; margin: 4px;
+        background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); 
+        border-radius: 50px; color: white;
+        cursor: pointer; user-select: none; transition: all 0.2s;
+    }
+    .skill-chip:hover { background: rgba(255, 255, 255, 0.3); }
+    .skill-chip.selected {
+        background: white; border-color: white; color: #2563EB; font-weight: 700;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    .skill-chip input { display: none; }
 </style>
 
 <div class="container">
@@ -99,17 +113,23 @@
                 <textarea name="description" class="form-control" rows="3" placeholder="Brief overview of the role..." required></textarea>
             </div>
 
+            <div class="mb-4">
+                <label class="form-label d-block">Required Skills (Select for Smart Matching)</label>
+                <div class="p-3 border border-white border-opacity-25 rounded bg-white bg-opacity-10">
+                    {% for skill in ['Python', 'Java', 'C++', 'JavaScript', 'React', 'Node.js', 'SQL', 'AWS', 'Docker', 'Git', 'Flutter', 'HTML/CSS'] %}
+                    <label class="skill-chip">
+                        <input type="checkbox" name="required_skills" value="{{ skill }}" onchange="toggleSkill(this)"> {{ skill }}
+                    </label>
+                    {% endfor %}
+                </div>
+                <div class="hint-text">Select skills to help our algorithm rank candidates.</div>
+            </div>
+
             <div class="row g-4">
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <label class="form-label">Key Responsibilities</label>
                     <textarea name="responsibilities" class="form-control" rows="4" placeholder="• Design APIs&#10;• Fix bugs&#10;• Drink coffee"></textarea>
                     <div class="hint-text">Enter each point on a new line.</div>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Required Skills</label>
-                    <textarea name="required_skills" class="form-control" rows="4" placeholder="Python, Flask, SQL, React"></textarea>
-                    <div class="hint-text">Separate skills with commas.</div>
                 </div>
 
                 <div class="col-md-6">
@@ -132,4 +152,11 @@
         </form>
     </div>
 </div>
+
+<script>
+    function toggleSkill(checkbox) {
+        if (checkbox.checked) checkbox.parentElement.classList.add('selected');
+        else checkbox.parentElement.classList.remove('selected');
+    }
+</script>
 {% endblock %}

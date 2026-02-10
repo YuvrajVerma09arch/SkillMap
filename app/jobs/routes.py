@@ -1,65 +1,132 @@
-import json
+# app/jobs/routes.py
+
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_required, current_user
 from app import db
-from app.models import JobPost, Application,SeekerProfile,User
+from app.models import JobPost, Application, User, SeekerProfile
+from datetime import datetime
+# --- CRITICAL IMPORT ---
+from app.utils.matcher import calculate_match_score 
+from app.utils.email_service import send_interview_invite, send_job_offer, send_rejection
 
-# Define the Blueprint
 jobs = Blueprint('jobs', __name__)
 
-# --- 1. JOB FEED (Seeker View) ---
+# --- 1. JOB FEED (Seeker) ---
 @jobs.route('/jobs')
 @login_required
 def job_feed():
-    # Logic: Recruiters shouldn't see the seeker feed
-    if current_user.role == 'recruiter':
+    if current_user.role != 'seeker':
         return redirect(url_for('main.recruiter_dashboard'))
+    
+    # Get Query Parameters
+    filter_role = request.args.get('role', '').strip()
+    filter_location = request.args.get('location', '').strip()
+    filter_type = request.args.get('type', '').strip()
+
+    # Start with Base Query (Active Jobs Only)
+    query = JobPost.query.filter_by(is_active=True)
+
+    # Apply Filters
+    if filter_role:
+        query = query.filter(JobPost.title.ilike(f"%{filter_role}%"))
+    if filter_location:
+        query = query.filter(JobPost.location.ilike(f"%{filter_location}%"))
+    if filter_type:
+        query = query.filter(JobPost.job_type == filter_type)
+
+    # Sort by Newest First
+    all_jobs = query.order_by(JobPost.posted_at.desc()).all()
+    
+    # Get IDs of jobs user has already applied to
+    applied_job_ids = []
+    if current_user.seeker_profile:
+        my_apps = Application.query.filter_by(seeker_id=current_user.seeker_profile.id).with_entities(Application.job_id).all()
+        applied_job_ids = [app.job_id for app in my_apps]
+
+    return render_template('seeker/job_feed.html', jobs=all_jobs, applied_ids=applied_job_ids)
+
+# --- 2. APPLY TO JOB (With Smart Score) ---
+@jobs.route('/apply/<int:job_id>', methods=['POST'])
+@login_required
+def apply_to_job(job_id):
+    if current_user.role != 'seeker':
+        flash("Recruiters cannot apply to jobs.", "warning")
+        return redirect(url_for('jobs.job_feed'))
+
+    seeker_profile = current_user.seeker_profile
+    if not seeker_profile:
+        flash("Please complete your profile before applying.", "warning")
+        return redirect(url_for('main.setup_profile'))
+
+    # Check for duplicate
+    existing_app = Application.query.filter_by(job_id=job_id, seeker_id=seeker_profile.id).first()
+    if existing_app:
+        flash("You have already applied to this job.", "info")
+        return redirect(url_for('jobs.job_feed'))
+
+    # --- SMART MATCH CALCULATION ---
+    job = JobPost.query.get(job_id)
+    # This line triggered the error before. Now it will work because of the import.
+    score = calculate_match_score(seeker_profile.skills, job.required_skills)
+    
+    # Create Application with Score
+    new_app = Application(
+        job_id=job_id, 
+        seeker_id=seeker_profile.id,
+        status='Applied',
+        match_score=score 
+    )
+    
+    db.session.add(new_app)
+    db.session.commit()
+    
+    flash("Application submitted successfully!", "success")
+    return redirect(url_for('jobs.job_feed'))
+
+# --- 3. ANALYZE FIT ---
+@jobs.route('/analyze-fit/<int:job_id>', methods=['POST'])
+@login_required
+def analyze_fit(job_id):
+    job = JobPost.query.get_or_404(job_id)
+    
+    # Combine description and skills for the AI
+    full_context = job.description
+    if job.required_skills:
+        skills_text = ", ".join(job.required_skills)
+        full_context += f"\n\n### Required Skills:\n{skills_text}"
         
-    # Fetch Active Jobs (Newest First)
-    db_jobs = JobPost.query.filter_by(is_active=True).order_by(JobPost.posted_at.desc()).all()
+    session['prefill_job_description'] = full_context
+    session['analyzing_job_id'] = job.id
     
-    # Serialize for JS (The Bridge)
-    jobs_data = []
-    for job in db_jobs:
-        # Check if applied
-        has_applied = False
-        if current_user.seeker_profile:
-             has_applied = Application.query.filter_by(
-                job_id=job.id, 
-                seeker_id=current_user.seeker_profile.id
-            ).first() is not None
+    return redirect(url_for('main.resume_checker'))
 
-        jobs_data.append({
-            "id": job.id,
-            "company": job.recruiter.company_name,
-            "logo": job.recruiter.company_name[0].upper(),
-            "title": job.title,
-            "location": job.location,
-            "locationType": "onsite" if "onsite" in job.job_type.lower() else "remote",
-            "type": "fulltime", 
-            "salary": job.salary_range,
-            "description": job.description,
-            "tags": job.required_skills if job.required_skills else [],
-            "applied": has_applied
-        })
+# --- 4. MY APPLICATIONS ---
+@jobs.route('/my-applications')
+@login_required
+def my_applications():
+    if current_user.role != 'seeker':
+        return redirect(url_for('main.recruiter_dashboard'))
     
-    return render_template('seeker/job_feed.html', jobs_json=json.dumps(jobs_data))
+    if not current_user.seeker_profile:
+        return redirect(url_for('main.setup_profile'))
+        
+    my_apps = Application.query.filter_by(seeker_id=current_user.seeker_profile.id)\
+                               .order_by(Application.applied_at.desc()).all()
+                               
+    return render_template('seeker/my_applications.html', applications=my_apps)
 
-# --- 2. POST A JOB (Recruiter View) ---
+# --- 5. RECRUITER: POST JOB ---
 @jobs.route('/post-job', methods=['GET', 'POST'])
 @login_required
 def post_job():
     if current_user.role != 'recruiter':
-        flash("Only recruiters can post jobs.", "danger")
         return redirect(url_for('main.home'))
     
     if not current_user.recruiter_profile:
-        flash("Please complete your profile first.", "warning")
         return redirect(url_for('main.setup_profile'))
 
     if request.method == 'POST':
         try:
-            # Basic Data
             title = request.form.get('title')
             location = request.form.get('location')
             job_type = request.form.get('job_type')
@@ -67,36 +134,26 @@ def post_job():
             experience = request.form.get('experience_required')
             desc = request.form.get('description')
             
-            # List Processing (Split text areas into lists)
-            resp_text = request.form.get('responsibilities', '')
-            responsibilities = [line.strip() for line in resp_text.split('\n') if line.strip()]
+            def parse_list(data, separator=','):
+                return [x.strip() for x in data.split(separator) if x.strip()]
+
+            resp = parse_list(request.form.get('responsibilities', ''), '\n')
             
-            skills_text = request.form.get('required_skills', '')
-            required_skills = [skill.strip() for skill in skills_text.split(',') if skill.strip()]
+            # Use getlist for Checkboxes
+            skills = request.form.getlist('required_skills') 
             
-            nice_text = request.form.get('nice_to_have', '')
-            nice_to_have = [item.strip() for item in nice_text.split(',') if item.strip()]
-            
-            benefits_text = request.form.get('benefits', '')
-            benefits = [item.strip() for item in benefits_text.split(',') if item.strip()]
+            nice = parse_list(request.form.get('nice_to_have', ''), ',')
+            benefits = parse_list(request.form.get('benefits', ''), ',')
 
             new_job = JobPost(
                 recruiter_id=current_user.recruiter_profile.id,
-                title=title,
-                location=location,
-                job_type=job_type,
-                salary_range=salary,
-                experience_required=experience,
-                description=desc,
-                responsibilities=responsibilities,
-                required_skills=required_skills,
-                nice_to_have=nice_to_have,
-                benefits=benefits
+                title=title, location=location, job_type=job_type,
+                salary_range=salary, experience_required=experience, description=desc,
+                responsibilities=resp, required_skills=skills, nice_to_have=nice, benefits=benefits
             )
             
             db.session.add(new_job)
             db.session.commit()
-            
             flash(f"Job '{title}' Posted Successfully!", "success")
             return redirect(url_for('main.recruiter_dashboard'))
             
@@ -106,91 +163,89 @@ def post_job():
 
     return render_template('recruiter/post_job.html')
 
-# --- 3. ANALYZE FIT (Action) ---
-@jobs.route('/analyze-fit/<int:job_id>', methods=['POST'])
-@login_required
-def analyze_fit(job_id):
-    job = JobPost.query.get_or_404(job_id)
-    session['prefill_job_description'] = job.description
-    session['analyzing_job_id'] = job.id
-    return redirect(url_for('main.resume_checker'))
-
-# --- 4. APPLY (Action) ---
-@jobs.route('/apply/<int:job_id>', methods=['POST'])
-@login_required
-def apply_job(job_id):
-    if not current_user.seeker_profile:
-        flash("Complete your profile before applying!", "warning")
-        return redirect(url_for('main.setup_profile'))
-
-    existing = Application.query.filter_by(
-        job_id=job_id, 
-        seeker_id=current_user.seeker_profile.id
-    ).first()
-    
-    if existing:
-        flash("You have already applied to this job!", "warning")
-        return redirect(url_for('jobs.job_feed'))
-        
-    new_app = Application(
-        job_id=job_id,
-        seeker_id=current_user.seeker_profile.id,
-        status='Applied'
-    )
-    
-    db.session.add(new_app)
-    db.session.commit()
-    
-    flash("Application Sent Successfully!", "success")
-    return redirect(url_for('jobs.job_feed'))
-
+# --- 6. RECRUITER: VIEW APPLICANTS ---
 @jobs.route('/job/<int:job_id>/applicants')
 @login_required
 def view_applicants(job_id):
-    # Security: Ensure this job belongs to the current recruiter
     job = JobPost.query.get_or_404(job_id)
-    if job.recruiter_id != current_user.recruiter_profile.id:
+    if not current_user.recruiter_profile or job.recruiter_id != current_user.recruiter_profile.id:
         flash("Unauthorized access.", "danger")
         return redirect(url_for('main.recruiter_dashboard'))
 
-    # Fetch Applications
-    # We join Application -> SeekerProfile -> User to get all details
-    raw_applicants = db.session.query(Application, SeekerProfile, User)\
-        .join(SeekerProfile, Application.seeker_id == SeekerProfile.id)\
-        .join(User, SeekerProfile.user_id == User.id)\
-        .filter(Application.job_id == job_id)\
-        .all()
-
-    # Format Data
-    applicants_list = []
-    for app, seeker, user in raw_applicants:
-        applicants_list.append({
-            "id": app.id,
-            "name": user.name,
-            "email": user.email,
-            "experience": seeker.experience_years,
-            "skills": seeker.skills if seeker.skills else [],
-            "status": app.status,
-            "applied_at": app.applied_at.strftime('%Y-%m-%d')
+    # --- CHANGED: Fetch ALL candidates so we see history ---
+    applications = Application.query.filter_by(job_id=job_id).all()
+    
+    applicants_data = []
+    for app in applications:
+        seeker = app.seeker 
+        user = seeker.user
+        applicants_data.append({
+            'id': app.id,
+            'name': user.name,
+            'email': user.email,
+            'phone': seeker.phone,
+            'experience': seeker.experience_years,
+            'user_id': user.id,
+            'skills': seeker.skills,
+            'status': app.status,
+            'match_score': app.match_score,
+            'applied_at': app.applied_at.strftime('%Y-%m-%d'),
+            'resume': seeker.resume_file
         })
 
-    return render_template('recruiter/applicants.html', job=job, applicants=applicants_list)
+    # Sort: Pending first, then Closed (so active ones are at the top)
+    # We use a simple lambda: 0 if active, 1 if closed
+    applicants_data.sort(key=lambda x: 1 if x['status'] in ['Accepted', 'Rejected'] else 0)
 
-# --- 6. UPDATE APPLICATION STATUS ---
-@jobs.route('/application/<int:app_id>/update/<status>', methods=['POST'])
+    return render_template('recruiter/applicants.html', job=job, applicants=applicants_data)
+
+
+# --- 7. RECRUITER: UPDATE STATUS ---
+@jobs.route('/application/<int:app_id>/update/<string:status>', methods=['POST'])
 @login_required
 def update_status(app_id, status):
-    application = Application.query.get_or_404(app_id)
+    app_record = Application.query.get_or_404(app_id)
+    job = app_record.job
     
-    # Security Check (Complex but necessary)
-    # Check if the job linked to this application belongs to the current recruiter
-    job = JobPost.query.get(application.job_id)
-    if job.recruiter_id != current_user.recruiter_profile.id:
-        flash("You cannot modify this application.", "danger")
+    # Security Check
+    if not current_user.recruiter_profile or job.recruiter_id != current_user.recruiter_profile.id:
+        flash("Unauthorized.", "danger")
         return redirect(url_for('main.recruiter_dashboard'))
-        
-    application.status = status
+    
+    # 1. Update Status
+    app_record.status = status
     db.session.commit()
     
-    flash(f"Candidate marked as {status}", "success")
+    # 2. Trigger Email Logic
+    candidate = app_record.seeker.user
+    job_title = job.title
+    recruiter_email = current_user.email
+    
+    success = True
+    msg = ""
+
+    if status == 'Shortlisted':
+        # Send Interview Invite
+        success, msg = send_interview_invite(candidate.email, candidate.name, job_title, recruiter_email)
+        if success:
+            flash(f"Candidate shortlisted! Invite sent to {candidate.email}", "success")
+        else:
+            flash(f"Candidate shortlisted, but email failed: {msg}", "warning")
+        
+    elif status == 'Accepted':
+        # Send Offer
+        success, msg = send_job_offer(candidate.email, candidate.name, job_title)
+        if success:
+            flash(f"Candidate Hired! Offer sent to {candidate.email}.", "success")
+        else:
+            flash(f"Candidate Hired, but email failed: {msg}", "warning")
+        
+    elif status == 'Rejected':
+        # Send Rejection
+        success, msg = send_rejection(candidate.email, candidate.name, job_title)
+        if success:
+            flash(f"Candidate rejected. Notification sent.", "info")
+        else:
+            flash(f"Candidate rejected, but email failed: {msg}", "warning")
+    
     return redirect(url_for('jobs.view_applicants', job_id=job.id))

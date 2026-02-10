@@ -25,45 +25,118 @@ def home():
 @login_required
 def setup_profile():
     if current_user.role == 'recruiter':
-        if current_user.recruiter_profile:
-            return redirect(url_for('main.recruiter_dashboard'))
-        return render_template('recruiter/setup.html')
+        # Recruiter Logic
+        profile = current_user.recruiter_profile
+        return render_template('recruiter/setup.html', profile=profile)
     else:
-        if current_user.seeker_profile:
-            return redirect(url_for('main.roadmap'))
-        return render_template('seeker/questionnaire.html')
+        # SEEKER LOGIC (EDIT MODE)
+        profile = current_user.seeker_profile
+        
+        # PARSE EDUCATION DATA (Fixing the missing College/Year bug)
+        parsed_edu = {'college': '', 'year': ''}
+        if profile and profile.education_level:
+            # Format is: "Degree - College Name (Year)"
+            # Regex to extract: Anything after " - " until " (", then the Year inside "()"
+            try:
+                # Split "Degree - College..."
+                parts = profile.education_level.split(' - ', 1)
+                if len(parts) > 1:
+                    rest = parts[1] # "LJIET (2026)"
+                    college_part = rest.rsplit(' (', 1) # ["LJIET", "2026)"]
+                    if len(college_part) > 1:
+                        parsed_edu['college'] = college_part[0]
+                        parsed_edu['year'] = college_part[1].replace(')', '')
+                    else:
+                        parsed_edu['college'] = rest
+            except:
+                pass # Fallback to empty if format is weird
 
+        return render_template('seeker/questionnaire.html', profile=profile, parsed_edu=parsed_edu)
 # --- 2. SAVE SEEKER ---
 @main.route('/save-seeker-profile', methods=['POST'])
 @login_required
 def save_seeker_profile():
     try:
+        # 1. Get Basic Data
+        full_name = request.form.get('full_name')
         phone = request.form.get('phone')
         location = request.form.get('location')
         experience_years = request.form.get('experience_years')
         education_level = request.form.get('qualification')
         college = request.form.get('college')
         grad_year = request.form.get('grad_year')
-        skills = request.form.getlist('skills') 
+        skills = request.form.getlist('skills')
+        linkedin = request.form.get('linkedin')
         
+        # 2. Get Project Data
+        project_title = request.form.get('project_title')
+        project_link = request.form.get('project_link')
+        
+        projects_data = []
+        if project_title and project_link:
+            projects_data = [{'title': project_title, 'link': project_link}]
+
+        # 3. Update User Name
+        current_user.name = full_name
+        db.session.add(current_user)
+
+        # 4. Get/Create Profile
         profile = SeekerProfile.query.filter_by(user_id=current_user.id).first()
         if not profile:
             profile = SeekerProfile(user_id=current_user.id)
         
+        # 5. Update Profile Fields
         profile.phone = phone
         profile.location = location
         profile.experience_years = experience_years
+        # Combine Education into one string for storage
         profile.education_level = f"{education_level} - {college} ({grad_year})"
         profile.skills = skills 
+        profile.linkedin_url = linkedin
         
+        # Only overwrite projects if user provided new ones, or if it's a new profile
+        if projects_data:
+            profile.projects = projects_data
+
+        if 'profile_pic' in request.files:
+            pic = request.files['profile_pic']
+            if pic and pic.filename != '':
+                pic_filename = secure_filename(pic.filename)
+                # Unique name: pic_user_ID_hash.jpg
+                pic_unique_name = f"pic_{current_user.id}_{uuid.uuid4().hex[:8]}_{pic_filename}"
+                
+                upload_folder = current_app.config.get('UPLOAD_FOLDER', 'app/static/uploads')
+                if not os.path.exists(upload_folder):
+                    os.makedirs(upload_folder)
+                
+                pic.save(os.path.join(upload_folder, pic_unique_name))
+                profile.profile_pic = pic_unique_name
+        
+        # 6. Handle Resume
+        if 'resume' in request.files:
+            file = request.files['resume']
+            if file and file.filename != '':
+                filename = secure_filename(file.filename)
+                unique_name = f"{current_user.id}_{uuid.uuid4().hex[:8]}_{filename}"
+                
+                upload_folder = current_app.config.get('UPLOAD_FOLDER', 'app/static/uploads')
+                if not os.path.exists(upload_folder):
+                    os.makedirs(upload_folder)
+                
+                file.save(os.path.join(upload_folder, unique_name))
+                profile.resume_file = unique_name
+
         db.session.add(profile)
         db.session.commit()
         
-        flash("Profile Saved Successfully!", "success")
-        return redirect(url_for('jobs.job_feed'))
+        flash("Profile Updated Successfully!", "success")
+        # FIXED: Now redirects to the profile page we just created logic for
+        return redirect(url_for('main.view_profile', user_id=current_user.id))
+        
     except Exception as e:
         db.session.rollback()
-        flash(f"Error: {str(e)}", "danger")
+        print(f"Error: {e}") # Print to terminal for debugging
+        flash(f"Error saving profile: {str(e)}", "danger")
         return redirect(url_for('main.setup_profile'))
 
 # --- 3. SAVE RECRUITER ---
@@ -71,30 +144,39 @@ def save_seeker_profile():
 @login_required
 def save_recruiter_profile():
     try:
+        # Extract Data
         company_name = request.form.get('company_name')
         industry = request.form.get('industry')
         company_size = request.form.get('size')
         location = request.form.get('location')
+        website = request.form.get('website')
+        
+        # New Fields
         recruiter_name = request.form.get('recruiter_name')
         role_title = request.form.get('role_title')
-        website = request.form.get('website')
+        work_email = request.form.get('work_email')
         
         profile = RecruiterProfile.query.filter_by(user_id=current_user.id).first()
         if not profile:
             profile = RecruiterProfile(user_id=current_user.id)
             
+        # Update Fields
         profile.company_name = company_name
         profile.industry = industry
         profile.company_size = company_size
         profile.location = location
         profile.website = website
-        # Note: You might need to add recruiter_name/role_title to your RecruiterProfile model if not there
+        
+        profile.recruiter_name = recruiter_name
+        profile.role_title = role_title
+        profile.work_email = work_email
         
         db.session.add(profile)
         db.session.commit()
         
-        flash("Company Setup Complete!", "success")
+        flash("Company Profile Updated!", "success")
         return redirect(url_for('main.recruiter_dashboard'))
+        
     except Exception as e:
         db.session.rollback()
         flash(f"Error: {str(e)}", "danger")
@@ -107,20 +189,22 @@ def recruiter_dashboard():
     if current_user.role != 'recruiter':
         return redirect(url_for('jobs.job_feed'))
 
-    # 1. Get Profile
-    profile = RecruiterProfile.query.filter_by(user_id=current_user.id).first()
+    # 1. Get Recruiter Profile
+    profile = current_user.recruiter_profile
     if not profile:
         return redirect(url_for('main.setup_profile'))
 
-    # 2. Get Jobs
+    # 2. Get All Active Jobs
     jobs = JobPost.query.filter_by(recruiter_id=profile.id).order_by(JobPost.posted_at.desc()).all()
 
-    # 3. Calculate Stats & Build Max Heap
+    # 3. Initialize Stats & Heap
     total_applicants = 0
     shortlisted_count = 0
-    applicant_heap = MaxHeap() # <--- Your Custom Data Structure
+    applicant_heap = MaxHeap() 
 
+    # 4. Loop through jobs and applications
     for job in jobs:
+        # Get applications for this job
         job_apps = Application.query.filter_by(job_id=job.id).all()
         total_applicants += len(job_apps)
 
@@ -128,26 +212,26 @@ def recruiter_dashboard():
             if application.status == 'Shortlisted':
                 shortlisted_count += 1
             
-            # Access Relations: Application -> SeekerProfile -> User
+            # Smart Match Logic
             seeker_profile = application.seeker
             if seeker_profile:
                 seeker_user = seeker_profile.user
                 
-                # Calculate Smart Match Score
+                # Calculate Score (Seeker Skills vs Job Skills)
+                # Note: job.required_skills is now a clean list from our new form
                 score = calculate_match_score(seeker_profile.skills, job.required_skills)
                 
-                # Prepare Data Packet
+                # Create Candidate Object for Display
                 candidate_data = {
                     "name": seeker_user.name,
-                    "role": job.title,
-                    "id": seeker_user.id,
-                    "status": application.status
+                    "role": job.title, # Showing which job they applied for
+                    "match_score": score
                 }
                 
-                # Push to Heap (Sorts by score automatically)
+                # Push to Heap (Score is the priority key)
                 applicant_heap.push((score, candidate_data))
 
-    # 4. Extract Top 5 Candidates from Heap
+    # 5. Get Top 5 Matches
     top_candidates = applicant_heap.get_top_n(5)
 
     stats = {
@@ -161,67 +245,31 @@ def recruiter_dashboard():
                            jobs=jobs, 
                            candidates=top_candidates)
 
-# --- 5. JOB POSTING ---
-@main.route('/post-job', methods=['GET', 'POST'])
-@login_required
-def post_job():
-    if current_user.role != 'recruiter':
-        return redirect(url_for('main.home'))
-    
-    if not current_user.recruiter_profile:
-        return redirect(url_for('main.setup_profile'))
-
-    if request.method == 'POST':
-        try:
-            # Extract basic data
-            title = request.form.get('title')
-            location = request.form.get('location')
-            job_type = request.form.get('job_type')
-            salary = request.form.get('salary_range')
-            experience = request.form.get('experience_required')
-            desc = request.form.get('description')
-            
-            # Extract smart lists
-            resp = [l.strip() for l in request.form.get('responsibilities', '').split('\n') if l.strip()]
-            skills = [s.strip() for s in request.form.get('required_skills', '').split(',') if s.strip()]
-            nice = [n.strip() for n in request.form.get('nice_to_have', '').split(',') if n.strip()]
-            benefits = [b.strip() for b in request.form.get('benefits', '').split(',') if b.strip()]
-
-            new_job = JobPost(
-                recruiter_id=current_user.recruiter_profile.id,
-                title=title, location=location, job_type=job_type,
-                salary_range=salary, experience_required=experience, description=desc,
-                responsibilities=resp, required_skills=skills, nice_to_have=nice, benefits=benefits
-            )
-            
-            db.session.add(new_job)
-            db.session.commit()
-            flash(f"Job '{title}' Posted!", "success")
-            return redirect(url_for('main.recruiter_dashboard'))
-            
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Error: {str(e)}", "danger")
-
-    return render_template('recruiter/post_job.html')
-
 # --- 6. SEEKER PROFILE VIEWER ---
 @main.route('/profile/<int:user_id>')
 @login_required
 def view_profile(user_id):
     user = User.query.get_or_404(user_id)
-    is_own = (current_user.id == user.id)
-    is_recruiter = (current_user.role == 'recruiter')
     
-    if not is_own and not is_recruiter:
-        flash("Access Denied", "warning")
-        return redirect(url_for('jobs.job_feed'))
+    # Security: Ensure profile exists
+    if user.role == 'seeker' and not user.seeker_profile:
+        if current_user.id == user.id:
+            return redirect(url_for('main.setup_profile'))
+        else:
+            flash("This user has not set up their profile yet.", "warning")
+            return redirect(url_for('main.home'))
 
-    profile = user.seeker_profile
-    if not profile and is_own:
-        return redirect(url_for('main.setup_profile'))
+    # Determine permissions
+    is_own_profile = (current_user.id == user.id)
+    is_recruiter = (current_user.role == 'recruiter')
 
-    return render_template('seeker/profile.html', user=user, profile=profile, is_own_profile=is_own, is_recruiter=is_recruiter)
+    return render_template(
+        'seeker/profile.html', 
+        user=user, 
+        profile=user.seeker_profile,
+        is_own_profile=is_own_profile,
+        is_recruiter=is_recruiter
+    )
 
 @main.route('/my-profile')
 @login_required
@@ -280,26 +328,60 @@ def roadmap():
 @main.route('/resume-checker', methods=['GET', 'POST'])
 @login_required
 def resume_checker():
-    from app.utils.resume_parser import analyze_resume
+    # Lazy import to avoid circular dependencies if any
+    from app.utils.resume_parser import analyze_resume 
+    
     results = None
-    score_gradient = "conic-gradient(#dfe6e9 0%, #dfe6e9 0)"
+    profile_resume = None
+    
+    # 1. Detect Existing Profile Resume
+    if current_user.role == 'seeker' and current_user.seeker_profile:
+        profile_resume = current_user.seeker_profile.resume_file
+
     if request.method == 'POST':
         job_description = request.form.get('job_description')
-        if 'resume' in request.files:
-            resume_file = request.files['resume']
-            if resume_file.filename != '':
-                filename = secure_filename(resume_file.filename)
-                save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-                resume_file.save(save_path)
-                try:
-                    results = analyze_resume(save_path, job_description)
-                    score = results.get('match_score', 0)
-                    score_gradient = f"conic-gradient(#00cec9 {score}%, #dfe6e9 0)"
-                except Exception as e:
-                    flash(f"Error: {str(e)}")
-                finally:
-                    if os.path.exists(save_path): os.remove(save_path)
-    return render_template('seeker/resume_checker.html', results=results, score_gradient=score_gradient)
+        use_existing = request.form.get('use_existing') == 'yes'
+        
+        save_path = None
+        is_temp_file = False
+
+        try:
+            # CASE A: Use Profile Resume
+            if use_existing and profile_resume:
+                # Point to the existing file in static/uploads
+                save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], profile_resume)
+                if not os.path.exists(save_path):
+                    flash("Profile resume file not found on server. Please upload again.", "warning")
+                    save_path = None
+
+            # CASE B: Upload New Resume (Specific for this analysis)
+            elif 'resume' in request.files:
+                file = request.files['resume']
+                if file and file.filename != '':
+                    filename = secure_filename(file.filename)
+                    # Save as temp file so we don't clutter storage
+                    save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], f"temp_{uuid.uuid4().hex[:6]}_{filename}")
+                    file.save(save_path)
+                    is_temp_file = True
+            
+            # 2. Run Analysis
+            if save_path:
+                results = analyze_resume(save_path, job_description)
+                # Ensure we have a score for the UI gauge
+                if 'match_score' not in results:
+                    results['match_score'] = 0
+            else:
+                flash("Please upload a resume or ensure your profile resume is valid.", "warning")
+
+        except Exception as e:
+            flash(f"Analysis Error: {str(e)}", "danger")
+        finally:
+            # 3. Cleanup Temp File
+            if is_temp_file and save_path and os.path.exists(save_path):
+                os.remove(save_path)
+
+    return render_template('seeker/resume_checker.html', results=results, profile_resume=profile_resume)
+
 
 @main.route('/interview', methods=['GET', 'POST'])
 @login_required
@@ -324,3 +406,23 @@ def interview():
             feedback = evaluate_answer(question, user_answer)
             
     return render_template('seeker/interview.html', question=question, feedback=feedback, role=role)
+
+@main.route('/trigger-email', methods=['POST'])
+@login_required
+def trigger_email():
+    roadmap_data = session.get('latest_roadmap')
+    target_role = session.get('target_role')
+    
+    if not roadmap_data:
+        flash("No roadmap found to email. Please generate one first.", "warning")
+        return redirect(url_for('main.roadmap'))
+        
+    # Using the same email service we set up for recruiters
+    success, msg = send_roadmap_email(current_user.email, current_user.name, target_role, roadmap_data)
+    
+    if success:
+        flash(f"Roadmap sent to {current_user.email}!", "success")
+    else:
+        flash(f"Failed to send email: {msg}", "danger")
+        
+    return redirect(url_for('main.roadmap'))

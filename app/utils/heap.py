@@ -22,12 +22,15 @@ class MaxHeap:
         """
         if not self.heap:
             return None
-        if len(self.heap) == 1:
-            return self.heap.pop()
         
+        # Swap root with last element
         root = self.heap[0]
-        self.heap[0] = self.heap.pop()
-        self._heapify_down(0)
+        last_item = self.heap.pop()
+        
+        if self.heap:
+            self.heap[0] = last_item
+            self._heapify_down(0)
+            
         return root
 
     def _heapify_up(self, index):
@@ -60,11 +63,12 @@ class MaxHeap:
         Returns the top N candidates sorted by score.
         """
         result = []
+        # We work on a copy to not empty the actual heap if we needed it later
+        # But for this request/response cycle, popping is fine.
         for _ in range(n):
             item = self.pop()
             if item:
                 score, candidate_data = item
-                # Add score to data for display
                 candidate_data['match_score'] = score
                 result.append(candidate_data)
         return result
