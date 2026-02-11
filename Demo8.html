@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo 8 - Cyberpunk Glitch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap');
+        
+        body {
+            background-color: #000; color: #fff; font-family: 'JetBrains Mono', monospace;
+            background-image: linear-gradient(rgba(0, 255, 200, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 255, 200, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        /* Scanline overlay */
+        body::after {
+            content: ""; position: fixed; inset: 0;
+            background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.5) 50%);
+            background-size: 100% 4px; z-index: 100; pointer-events: none; opacity: 0.3;
+        }
+
+        /* --- GLITCH EFFECT --- */
+        .glitch-wrapper { display: inline-block; position: relative; }
+        .glitch {
+            position: relative; mix-blend-mode: lighten;
+        }
+        .glitch::before, .glitch::after {
+            content: attr(data-text); position: absolute; top: 0; width: 100%; background: black; clip: rect(0, 0, 0, 0);
+        }
+        .glitch::before { left: -2px; text-shadow: 3px 0 #ff00c1; }
+        .glitch::after { left: 2px; text-shadow: -3px 0 #00fff9; }
+        
+        .glitch-wrapper:hover .glitch::before {
+            text-shadow: 5px 0 #ff00c1; animation: glitch-anim 1s infinite linear alternate-reverse;
+        }
+        .glitch-wrapper:hover .glitch::after {
+            text-shadow: -5px 0 #00fff9; animation: glitch-anim 1s infinite linear alternate;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip-path: inset(20% 0 50% 0); transform: skew(0.2deg); }
+            20% { clip-path: inset(60% 0 10% 0); transform: skew(-0.2deg); }
+            40% { clip-path: inset(40% 0 30% 0); transform: skew(0.1deg); }
+            60% { clip-path: inset(80% 0 5% 0); transform: skew(-0.1deg); }
+            80% { clip-path: inset(10% 0 70% 0); transform: skew(0.3deg); }
+            100% { clip-path: inset(30% 0 40% 0); transform: skew(-0.3deg); }
+        }
+
+        /* Neon Button */
+        .cyber-btn {
+            background: transparent; border: 2px solid #00fff9; color: #00fff9;
+            text-transform: uppercase; font-weight: 800; letter-spacing: 2px;
+            position: relative; transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(0, 255, 249, 0.2), inset 0 0 10px rgba(0, 255, 249, 0.2);
+        }
+        .cyber-btn:hover {
+            background: #00fff9; color: black;
+            box-shadow: 0 0 30px rgba(0, 255, 249, 0.6), inset 0 0 20px rgba(0, 255, 249, 0.4);
+            text-shadow: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+    <div class="max-w-4xl w-full z-10">
+        <div class="mb-12">
+             <div class="inline-block border border-pink-500 text-pink-500 px-4 py-1 text-sm mb-6">
+                SYSTEM STATUS: ONLINE // V.0.9.6
+            </div>
+            <h1 class="text-6xl md:text-8xl font-extrabold uppercase leading-none mb-8">
+                <span class="block text-transparent bg-clip-text bg-gradient-to-r from-[#00fff9] to-[#ff00c1]">WAKE UP,</span>
+                <div class="glitch-wrapper">
+                    <span class="glitch" data-text="HIRE FASTER.">HIRE FASTER.</span>
+                </div>
+            </h1>
+            <p class="text-gray-400 text-xl max-w-2xl border-l-4 border-[#00fff9] pl-6">
+                SkillMap is the recruitment layer for the new web. We use generative AI to bypass the noise and connect talent directly.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="border border-[#ff00c1]/30 bg-black/50 p-8 hover:border-[#ff00c1] transition-colors group relative overflow-hidden">
+                <div class="absolute inset-0 bg-[#ff00c1]/10 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500"></div>
+                <h3 class="text-2xl font-bold text-[#ff00c1] mb-4 relative">SEEKER_MODULE</h3>
+                <ul class="space-y-3 text-sm relative text-gray-300">
+                    <li>> Analyze Resume against JD benchmarks.</li>
+                    <li>> Generate recursive career pathing.</li>
+                    <li>> Initiate simulated interview protocols.</li>
+                </ul>
+                <button class="cyber-btn mt-8 w-full py-4" style="border-color: #ff00c1; color: #ff00c1; box-shadow: 0 0 10px rgba(255, 0, 193, 0.2), inset 0 0 10px rgba(255, 0, 193, 0.2);">
+                    JACK IN
+                </button>
+            </div>
+
+            <div class="border border-[#00fff9]/30 bg-black/50 p-8 hover:border-[#00fff9] transition-colors group relative overflow-hidden">
+                 <div class="absolute inset-0 bg-[#00fff9]/10 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500"></div>
+                <h3 class="text-2xl font-bold text-[#00fff9] mb-4 relative">RECRUITER_NODE</h3>
+                <ul class="space-y-3 text-sm relative text-gray-300">
+                    <li>> Post jobs to the decentralized feed.</li>
+                    <li>> Utilize MaxHeap algorithm for auto-ranking.</li>
+                    <li>> Download verified candidate data packets.</li>
+                </ul>
+                 <button class="cyber-btn mt-8 w-full py-4">
+                    ACCESS TERMINAL
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
