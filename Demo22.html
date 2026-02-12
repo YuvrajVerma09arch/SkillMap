@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masterpiece 3 - Void Liquid</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
+
+        /* The Moving Oil Gradient */
+        .oil-bg {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at 50% 50%, #171717 0%, #000 60%);
+            z-index: -1;
+        }
+
+        /* The Hero Orb */
+        .hero-orb {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 400px; height: 400px;
+            background: linear-gradient(135deg, #333, #000);
+            border-radius: 50%;
+            box-shadow: 
+                -20px -20px 60px #1a1a1a,
+                20px 20px 60px #000;
+            z-index: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        /* Rotating Ring */
+        .hero-ring {
+            position: absolute; top: 50%; left: 50%; width: 600px; height: 600px;
+            border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 50%;
+            transform: translate(-50%, -50%) rotateX(60deg);
+            animation: spin-ring 10s linear infinite;
+        }
+        @keyframes spin-ring { from { transform: translate(-50%, -50%) rotateX(60deg) rotate(0deg); } to { transform: translate(-50%, -50%) rotateX(60deg) rotate(360deg); } }
+
+        /* Frosted Glass UI */
+        .frosted-ui {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+
+        .shimmer-text {
+            background: linear-gradient(90deg, #555, #fff, #555);
+            background-size: 200% auto;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: shimmer 3s linear infinite;
+        }
+        @keyframes shimmer { to { background-position: 200% center; } }
+    </style>
+</head>
+<body class="h-screen flex flex-col justify-between p-8">
+
+    <div class="oil-bg"></div>
+    <div class="hero-ring"></div>
+    
+    <div class="hero-orb">
+        <div class="text-center z-10">
+            <h1 class="text-6xl font-black tracking-tighter shimmer-text">CORE</h1>
+            <p class="text-xs uppercase tracking-[0.3em] text-gray-500 mt-2">Intelligence</p>
+        </div>
+    </div>
+
+    <nav class="flex justify-between items-center relative z-10 w-full">
+        <div class="font-bold text-xl tracking-tighter">SKILLMAP.AI</div>
+        <div class="flex gap-8 text-sm text-gray-400">
+            <a href="#" class="hover:text-white transition">Features</a>
+            <a href="#" class="hover:text-white transition">Protocol</a>
+            <a href="#" class="hover:text-white transition">Login</a>
+        </div>
+    </nav>
+
+    <div class="flex justify-center relative z-10">
+        <div class="frosted-ui p-2 flex gap-2">
+            <button class="px-8 py-3 rounded-xl bg-white text-black font-bold hover:bg-gray-200 transition">
+                Start Analysis
+            </button>
+            <button class="px-8 py-3 rounded-xl hover:bg-white/10 transition text-gray-300">
+                Join Talent Pool
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masterpiece 2 - Deep Field</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #020617; color: white; overflow-x: hidden; font-family: system-ui, sans-serif; }
+
+        /* --- THE STAR FIELD (Pure CSS) --- */
+        .stars {
+            width: 1px; height: 1px;
+            background: transparent;
+            box-shadow: 1744px 122px #FFF , 134px 1321px #FFF , 92px 859px #FFF, 1928px 293px #FFF, 102px 1492px #FFF, 1500px 900px #FFF, 400px 400px #FFF;
+            animation: animStar 50s linear infinite;
+        }
+        .stars2 {
+            width: 2px; height: 2px;
+            background: transparent;
+            box-shadow: 1744px 122px #FFF , 34px 1321px #FFF , 922px 859px #FFF;
+            animation: animStar 100s linear infinite;
+        }
+        @keyframes animStar { from { transform: translateY(0px); } to { transform: translateY(-2000px); } }
+
+        /* --- THE NEBULA --- */
+        .nebula {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 100vw; height: 100vh;
+            background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.2) 0%, rgba(10, 10, 20, 0) 70%);
+            pointer-events: none; z-index: -1;
+        }
+
+        /* --- ORBITAL CARDS --- */
+        .orbit-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(139, 92, 246, 0.5); /* The Sunrise Effect */
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+            transition: all 0.5s ease;
+        }
+        .orbit-card:hover {
+            transform: translateY(-10px);
+            border-top-color: rgba(139, 92, 246, 1);
+            box-shadow: 0 20px 60px rgba(124, 58, 237, 0.15);
+        }
+
+        /* --- GLOW TEXT --- */
+        .text-glow {
+            text-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-8">
+
+    <div class="fixed inset-0 z-0">
+        <div class="stars"></div>
+        <div class="stars2"></div>
+        <div class="nebula"></div>
+    </div>
+
+    <div class="relative z-10 w-full max-w-6xl">
+        
+        <div class="flex flex-col md:flex-row items-center justify-between gap-12 mb-20">
+            <div class="text-left">
+                <h1 class="text-7xl md:text-9xl font-black tracking-tighter mb-4 leading-none text-glow">
+                    SKILL<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">MAP.</span>
+                </h1>
+            </div>
+            <div class="max-w-md text-right md:text-left border-l-2 border-violet-500/50 pl-6">
+                <p class="text-xl text-slate-300 leading-relaxed">
+                    Navigate the career cosmos. We align the stars of talent and opportunity using deep-space algorithmic matching.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <a href="#" class="orbit-card p-10 rounded-3xl group block">
+                <div class="flex justify-between items-start mb-8">
+                    <span class="text-violet-400 text-sm font-mono tracking-widest">MODULE 01</span>
+                    <div class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-violet-600 group-hover:border-violet-600 transition-colors">➔</div>
+                </div>
+                <h2 class="text-4xl font-bold mb-4 group-hover:text-violet-300 transition-colors">Start Journey</h2>
+                <p class="text-slate-400">Seekers enter here. Build your profile and launch into the network.</p>
+            </a>
+
+            <a href="#" class="orbit-card p-10 rounded-3xl group block">
+                 <div class="flex justify-between items-start mb-8">
+                    <span class="text-fuchsia-400 text-sm font-mono tracking-widest">MODULE 02</span>
+                    <div class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-fuchsia-600 group-hover:border-fuchsia-600 transition-colors">➔</div>
+                </div>
+                <h2 class="text-4xl font-bold mb-4 group-hover:text-fuchsia-300 transition-colors">Scout Talent</h2>
+                <p class="text-slate-400">Recruiters enter here. Access the SkillMap telescope to find stars.</p>
+            </a>
+        </div>
+
+    </div>
+
+</body>
+</html>
