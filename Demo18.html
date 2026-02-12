@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo 18</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #000; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+
+        /* The Event Horizon */
+        .singularity {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, #000 40%, #4f46e5 45%, transparent 70%);
+            border-radius: 50%;
+            box-shadow: 0 0 100px rgba(79, 70, 229, 0.4);
+            z-index: 0;
+            animation: pulse-hole 5s infinite alternate ease-in-out;
+        }
+        @keyframes pulse-hole {
+            0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 100px rgba(79, 70, 229, 0.4); }
+            100% { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 150px rgba(129, 140, 248, 0.6); }
+        }
+
+        /* Accretion Disk (Spinning Particles) */
+        .accretion-disk {
+            position: absolute; top: 50%; left: 50%;
+            width: 800px; height: 800px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) rotateX(70deg);
+            box-shadow: 0 0 50px rgba(255,255,255,0.1);
+            animation: spin-disk 20s linear infinite;
+            z-index: 1;
+        }
+        .accretion-disk::before {
+            content: ''; position: absolute; top: -50px; left: 50%; width: 10px; height: 10px; background: white; border-radius: 50%;
+            box-shadow: 0 0 20px white;
+        }
+        @keyframes spin-disk { 100% { transform: translate(-50%, -50%) rotateX(70deg) rotate(360deg); } }
+
+        /* Glass HUD */
+        .hud-card {
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative; z-index: 10;
+        }
+        .hud-line {
+            position: absolute; height: 1px; background: linear-gradient(90deg, transparent, #4f46e5, transparent);
+            width: 100%; left: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+    <div class="singularity"></div>
+    <div class="accretion-disk"></div>
+
+    <div class="text-center relative z-10 max-w-4xl">
+        <div class="mb-12">
+            <h1 class="text-8xl font-black tracking-tighter mb-4 mix-blend-screen text-white">
+                GRAVITY
+            </h1>
+            <p class="text-indigo-200 text-xl tracking-[0.5em] uppercase font-light">
+                The Inevitable Match
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="hud-card p-8 rounded-t-3xl border-b-4 border-indigo-500 hover:bg-white/5 transition">
+                <div class="hud-line top-0"></div>
+                <h3 class="text-2xl font-bold mb-2">Attract</h3>
+                <p class="text-gray-400 text-sm">Candidates are pulled to your roles via algorithmic precision.</p>
+            </div>
+            
+            <div class="hud-card p-8 border-b-4 border-purple-500 hover:bg-white/5 transition scale-110 shadow-2xl bg-black/80">
+                <div class="hud-line top-0"></div>
+                <h3 class="text-2xl font-bold mb-2">Analyze</h3>
+                <p class="text-gray-400 text-sm">Deep learning parses resumes beyond the event horizon.</p>
+            </div>
+
+            <div class="hud-card p-8 rounded-t-3xl border-b-4 border-pink-500 hover:bg-white/5 transition">
+                <div class="hud-line top-0"></div>
+                <h3 class="text-2xl font-bold mb-2">Align</h3>
+                <p class="text-gray-400 text-sm">Perfect alignment between talent and opportunity.</p>
+            </div>
+        </div>
+
+        <button class="mt-16 bg-white text-black font-bold py-4 px-12 rounded-full hover:scale-105 transition shadow-[0_0_40px_rgba(255,255,255,0.3)]">
+            ENTER THE VOID
+        </button>
+    </div>
+</body>
+</html>
