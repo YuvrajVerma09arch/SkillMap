@@ -3,3 +3,4 @@ __pycache__/
 instance/
 .env
 app/static/uploads/*
+CHECKPOINT.txt
