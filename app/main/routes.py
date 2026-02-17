@@ -12,7 +12,6 @@ from app.utils.email_service import send_roadmap_email
 # --- ALGORITHMS IMPORT ---
 from app.utils.heap import MaxHeap
 from app.utils.matcher import calculate_match_score
-from app.utils.decorators import check_quota
 
 main = Blueprint('main', __name__)
 
@@ -311,11 +310,13 @@ def talent_feed():
 # ... (Keep existing code for roadmap, resume_checker, interview, trigger_email) ...
 @main.route('/roadmap', methods=['GET', 'POST'])
 @login_required 
-# @check_quota(cost=1)
 def roadmap():
     from app.utils.roadmap_gen import generate_roadmap
     roadmap_data = []
     if request.method == 'POST':
+        if not current_user.deduct_credits(1):
+            flash("You need 1 Credit to analyze a resume. Please Upgrade!", "warning")
+            return redirect(url_for('payments.pricing'))
         current_skills = request.form.get('current_skills')
         target_role = request.form.get('target_role')
         if current_skills and target_role:
@@ -329,7 +330,6 @@ def roadmap():
 
 @main.route('/resume-checker', methods=['GET', 'POST'])
 @login_required
-@check_quota(cost=1)
 def resume_checker():
     # Lazy import to avoid circular dependencies if any
     from app.utils.resume_parser import analyze_resume 
@@ -342,6 +342,9 @@ def resume_checker():
         profile_resume = current_user.seeker_profile.resume_file
 
     if request.method == 'POST':
+        if not current_user.deduct_credits(1):
+            flash("You need 1 Credit to analyze a resume. Please Upgrade!", "warning")
+            return redirect(url_for('payments.pricing'))
         job_description = request.form.get('job_description')
         use_existing = request.form.get('use_existing') == 'yes'
         
@@ -388,7 +391,6 @@ def resume_checker():
 
 @main.route('/interview', methods=['GET', 'POST'])
 @login_required
-@check_quota(cost=1)
 def interview():
     from app.utils.interview_bot import generate_interview_question, evaluate_answer
     if request.args.get('reset'):
@@ -400,6 +402,9 @@ def interview():
     role = session.get('current_role', 'Software Engineer')
     
     if request.method == 'POST':
+        if not current_user.deduct_credits(1):
+            flash("You need 1 Credit to generate a roadmap. Please Upgrade!", "warning")
+            return redirect(url_for('payments.pricing'))
         if 'start_new' in request.form:
             role = request.form.get('role', role)
             question = generate_interview_question(role, "General", resume_text="")

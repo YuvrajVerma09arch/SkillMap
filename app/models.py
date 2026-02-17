@@ -43,10 +43,14 @@ class User(UserMixin, db.Model):
 
     # Helper to deduct credits
     def deduct_credits(self, cost=1):
-        if self.tier != 'Enterprise' and self.credits >= cost:
+        if self.tier == 'Enterprise':
+            return True # Enterprise users get a free pass!
+            
+        if self.credits >= cost:
             self.credits -= cost
             db.session.commit()
             return True
+            
         return False
 
 # 2. SEEKER PROFILES (Unchanged)
