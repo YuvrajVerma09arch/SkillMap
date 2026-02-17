@@ -2,6 +2,7 @@ import os
 import uuid
 from flask import Blueprint, render_template, request, current_app, flash, redirect, url_for, session
 from flask_login import login_required, current_user
+from flask import abort
 from werkzeug.utils import secure_filename
 
 # --- DB & MODELS IMPORT ---
@@ -262,6 +263,8 @@ def view_profile(user_id):
     # Determine permissions
     is_own_profile = (current_user.id == user.id)
     is_recruiter = (current_user.role == 'recruiter')
+    if current_user.id != user_id and current_user.role != 'recruiter':
+        abort(403)
 
     return render_template(
         'seeker/profile.html', 
