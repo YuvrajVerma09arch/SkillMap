@@ -12,6 +12,7 @@ from app.utils.email_service import send_roadmap_email
 # --- ALGORITHMS IMPORT ---
 from app.utils.heap import MaxHeap
 from app.utils.matcher import calculate_match_score
+from app.utils.decorators import check_quota
 
 main = Blueprint('main', __name__)
 
@@ -310,6 +311,7 @@ def talent_feed():
 # ... (Keep existing code for roadmap, resume_checker, interview, trigger_email) ...
 @main.route('/roadmap', methods=['GET', 'POST'])
 @login_required 
+# @check_quota(cost=1)
 def roadmap():
     from app.utils.roadmap_gen import generate_roadmap
     roadmap_data = []
@@ -327,6 +329,7 @@ def roadmap():
 
 @main.route('/resume-checker', methods=['GET', 'POST'])
 @login_required
+@check_quota(cost=1)
 def resume_checker():
     # Lazy import to avoid circular dependencies if any
     from app.utils.resume_parser import analyze_resume 
@@ -385,6 +388,7 @@ def resume_checker():
 
 @main.route('/interview', methods=['GET', 'POST'])
 @login_required
+@check_quota(cost=1)
 def interview():
     from app.utils.interview_bot import generate_interview_question, evaluate_answer
     if request.args.get('reset'):

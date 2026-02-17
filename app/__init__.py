@@ -39,9 +39,11 @@ def create_app(config_class=Config):
     from app.main.routes import main
     from app.auth.routes import auth
     from app.jobs.routes import jobs
+    from app.payments.routes import payments
     
     app.register_blueprint(main)
     app.register_blueprint(auth)
     app.register_blueprint(jobs)
+    app.register_blueprint(payments)
 
     return app

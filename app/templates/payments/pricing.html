@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- PRICING PAGE STYLES --- */
+    body {
+        background-color: #050505; color: white;
+        background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #000 60%);
+        min-height: 100vh;
+    }
+
+    .pricing-header {
+        text-align: center; margin-bottom: 3rem; padding-top: 4rem;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 2rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex; flex-direction: column;
+        height: 100%;
+    }
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 40px -10px rgba(79, 70, 229, 0.3);
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .glass-card.highlight {
+        background: linear-gradient(145deg, rgba(30, 27, 75, 0.6), rgba(10, 10, 10, 0.8));
+        border: 1px solid #4f46e5;
+        box-shadow: 0 0 30px rgba(79, 70, 229, 0.15);
+    }
+
+    .price-tag {
+        font-size: 3rem; font-weight: 800; margin: 1rem 0;
+        background: linear-gradient(to right, #fff, #a5b4fc);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .currency { font-size: 1.5rem; color: #6366f1; vertical-align: top; }
+
+    .feature-list { list-style: none; padding: 0; margin: 2rem 0; flex-grow: 1; }
+    .feature-list li {
+        margin-bottom: 1rem; color: #cbd5e1; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .check-icon { color: #4ade80; }
+
+    .btn-glow {
+        background: #4f46e5; color: white; border: none;
+        width: 100%; padding: 1rem; border-radius: 12px;
+        font-weight: 700; cursor: pointer;
+        box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+        transition: all 0.2s;
+    }
+    .btn-glow:hover { background: #4338ca; box-shadow: 0 0 25px rgba(79, 70, 229, 0.6); }
+
+    .current-plan-badge {
+        background: rgba(255,255,255,0.1); color: white;
+        padding: 4px 12px; border-radius: 20px; font-size: 0.8rem;
+        margin-bottom: 1rem; display: inline-block;
+    }
+</style>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<div class="container pb-5">
+    
+    <div class="pricing-header">
+        <div class="inline-block px-4 py-1 rounded-full border border-indigo-500/30 bg-indigo-950/30 mb-4">
+            <span class="text-indigo-300 text-sm font-bold tracking-widest uppercase">Upgrade Your Career</span>
+        </div>
+        <h1 class="display-4 fw-bold mb-3 text-white">Simple, Transparent Pricing.</h1>
+        <p class="text-secondary fs-5">
+            You have <strong class="text-white">{{ current_user.credits }} Credits</strong> remaining.
+        </p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        
+        <div class="col-lg-4 col-md-6">
+            <div class="glass-card">
+                <div>
+                    <span class="current-plan-badge">Starter</span>
+                    <h3 class="fw-bold">Free</h3>
+                    <div class="price-tag">₹0</div>
+                    <p class="text-secondary small">Perfect for trying out the platform.</p>
+                </div>
+                <ul class="feature-list">
+                    <li><i class="bi bi-check-circle-fill check-icon"></i> 3 AI Resume Scans</li>
+                    <li><i class="bi bi-check-circle-fill check-icon"></i> 1 Career Roadmap</li>
+                    <li><i class="bi bi-check-circle-fill check-icon"></i> Basic Job Search</li>
+                </ul>
+                <button class="btn btn-outline-light w-100 py-3 rounded-3" disabled>Current Plan</button>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="glass-card highlight">
+                <div>
+                    <span class="badge bg-indigo-600 mb-3">Most Popular</span>
+                    <h3 class="fw-bold text-white">Pro</h3>
+                    <div class="price-tag"><span class="currency">₹</span>499</div>
+                    <p class="text-secondary small">For serious job seekers.</p>
+                </div>
+                <ul class="feature-list">
+                    <li><i class="bi bi-check-circle-fill check-icon"></i> <strong>50 AI Credits</strong></li>
+                    <li><i class="bi bi-check-circle-fill check-icon"></i> Unlimited Roadmaps</li>
+                    <li><i class="bi bi-check-circle-fill check-icon"></i> Mock Interview Access</li>
+                    <li><i class="bi bi-check-circle-fill check-icon"></i> <strong>Featured Profile</strong> for Recruiters</li>
+                </ul>
+                <button onclick="buyPlan('pro')" class="btn-glow">Get Pro Access</button>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="glass-card">
+                <div>
+                    <span class="current-plan-badge">Power User</span>
+                    <h3 class="fw-bold">Max</h3>
+                    <div class="price-tag"><span class="currency">₹</span>999</div>
+                    <p class="text-secondary small">Unlock everything.</p>
+                </div>
+                <ul class="feature-list">
+                    <li><i class="bi bi-check-circle-fill check-icon"></i> <strong>200 AI Credits</strong></li>
+                    <li><i class="bi bi-check-circle-fill check-icon"></i> Priority Support</li>
+                    <li><i class="bi bi-check-circle-fill check-icon"></i> Early Access Features</li>
+                </ul>
+                <button onclick="buyPlan('enterprise')" class="btn btn-outline-light w-100 py-3 rounded-3 hover-white">Get Max</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    async function buyPlan(planType) {
+        // 1. Call Backend to Create Order
+        try {
+            const response = await fetch("{{ url_for('payments.create_payment') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ plan: planType })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                alert("Error: " + data.error);
+                return;
+            }
+
+            // 2. Open Razorpay Popup
+            var options = {
+                "key": data.key_id, 
+                "amount": data.amount, 
+                "currency": "INR",
+                "name": "SkillMap AI",
+                "description": planType.toUpperCase() + " Plan Upgrade",
+                "order_id": data.order_id, 
+                "handler": function (response){
+                    // 3. On Success -> Verify with Backend
+                    verifyPayment(response);
+                },
+                "prefill": {
+                    "name": data.user_name,
+                    "email": data.user_email
+                },
+                "theme": {
+                    "color": "#4f46e5"
+                }
+            };
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
+            
+        } catch (err) {
+            console.error(err);
+            alert("Something went wrong initializing payment.");
+        }
+    }
+
+    async function verifyPayment(response) {
+        try {
+            const verifyRes = await fetch("{{ url_for('payments.verify_payment') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature
+                })
+            });
+            
+            const verifyData = await verifyRes.json();
+            
+            if (verifyData.status === 'success') {
+                // Success! Reload to update credits
+                alert("Payment Successful! Credits Added.");
+                window.location.reload(); 
+            } else {
+                alert("Payment Verification Failed.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error verifying payment.");
+        }
+    }
+</script>
+
+{% endblock %}
