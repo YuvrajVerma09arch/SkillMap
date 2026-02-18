@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    /* --- CORE STYLES (matching homepage) --- */
+    :root {
+        --primary-blue: #2563EB;
+        --dark-blue: #1e40af;
+        --text-dark: #0f172a;
+        --text-grey: #64748b;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        overflow-x: hidden;
+        background-color: #fff;
+        scroll-behavior: smooth;
+    }
+    
+    .container-custom {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    /* --- HERO SECTION --- */
+    .legal-hero {
+        position: relative;
+        padding: 120px 0 80px 0;
+        background: radial-gradient(circle at top right, #3b82f6 0%, #1d4ed8 40%, #1e3a8a 100%);
+        color: white;
+        overflow: hidden;
+    }
+
+    .legal-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 600px;
+        height: 600px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        animation: float 20s infinite ease-in-out;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(40px, -40px); }
+    }
+
+    .legal-hero h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        letter-spacing: -2px;
+        margin-bottom: 1rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .legal-hero p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        max-width: 700px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* --- CONTENT SECTIONS --- */
+    .legal-content {
+        padding: 5rem 0;
+        background: #fafbfc;
+    }
+
+    .content-section {
+        margin-bottom: 4rem;
+    }
+
+    .section-divider {
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+        margin: 5rem 0;
+    }
+
+    .content-card {
+        background: white;
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+    }
+
+    .content-card h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .content-card h3 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .content-card p {
+        font-size: 1.05rem;
+        line-height: 1.8;
+        color: var(--text-grey);
+        margin-bottom: 1.5rem;
+    }
+
+    .content-card ul, .content-card ol {
+        margin-left: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .content-card li {
+        font-size: 1.05rem;
+        line-height: 1.8;
+        color: var(--text-grey);
+        margin-bottom: 0.8rem;
+    }
+
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .highlight-box {
+        background: #eff6ff;
+        border-left: 4px solid var(--primary-blue);
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 2rem 0;
+    }
+
+    .highlight-box p {
+        margin-bottom: 0;
+        color: var(--text-dark);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+
+    .info-item {
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .info-item h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-item p {
+        font-size: 0.95rem;
+        margin-bottom: 0;
+        color: var(--text-grey);
+    }
+
+    .last-updated {
+        background: #fef3c7;
+        color: #92400e;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        display: inline-block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 2rem;
+    }
+
+    /* --- FOOTER (matching homepage) --- */
+    .footer { 
+        background: #0f172a; 
+        color: #94a3b8; 
+        padding: 5rem 0 2rem 0; 
+        font-size: 0.95rem; 
+    }
+    
+    .footer-grid { 
+        display: grid; 
+        grid-template-columns: 2fr 1fr 1fr 1fr; 
+        gap: 4rem; 
+        margin-bottom: 4rem; 
+    }
+    
+    .footer h3 { 
+        color: white; 
+        font-weight: 700; 
+        margin-bottom: 1rem; 
+    }
+    
+    .footer a { 
+        color: #94a3b8; 
+        text-decoration: none; 
+        transition: color 0.2s; 
+    }
+    
+    .footer a:hover { 
+        color: white; 
+    }
+    
+    .footer-bottom { 
+        border-top: 1px solid #334155; 
+        padding-top: 2rem; 
+        display: flex; 
+        justify-content: space-between; 
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .legal-hero h1 { font-size: 2.5rem; }
+        .tab-nav-inner { gap: 1rem; }
+        .content-card { padding: 2rem 1.5rem; }
+        .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+        .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+</style>
+</head>
+<body>
+    
+
+
+<div class="legal-hero">
+    <div class="container-custom text-center">
+        <h1>Legal & Transparency</h1>
+        <p>Building trust through clarity. Here's everything you need to know about SkillMap.</p>
+    </div>
+</div>
+
+<div class="legal-content">
+    <div class="container-custom">
+        
+        <!-- ABOUT US SECTION -->
+        <div id="about-section" class="content-section">
+            <div class="content-card">
+                <h2>
+                    <div class="icon-box">
+                        <i class="bi bi-lightbulb-fill"></i>
+                    </div>
+                    About SkillMap
+                </h2>
+                <p>
+                    <strong>SkillMap</strong> is more than just a job portal — it's your personal Career Architect. We exist because the traditional job hunt is broken. Applicants spray resumes into the void, and recruiters drown in unqualified candidates.
+                </p>
+                <p>
+                    Our mission? <strong>Bridge the gap between ambition and opportunity using AI.</strong>
+                </p>
+
+                <h3>🎯 Our Story</h3>
+                <p>
+                    Born out of frustration during college placements in Ahmedabad, SkillMap was built by students who were tired of generic career advice. We realized three critical problems:
+                </p>
+                <ul>
+                    <li><strong>Resume Black Holes:</strong> Most resumes get rejected by ATS systems before a human even sees them.</li>
+                    <li><strong>Unclear Career Paths:</strong> Students know where they want to go, but not HOW to get there.</li>
+                    <li><strong>Skill-Job Mismatch:</strong> Talented people apply to wrong-fit roles, and recruiters miss hidden gems.</li>
+                </ul>
+                <p>
+                    So we built tools that solve these exact problems — powered by AI, designed for real people.
+                </p>
+
+                <h3>🚀 What Makes Us Different</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <h4><i class="bi bi-robot text-primary"></i> AI-First Approach</h4>
+                        <p>Every feature — from resume scoring to interview prep — uses machine learning to give you personalized, actionable insights.</p>
+                    </div>
+                    <div class="info-item">
+                        <h4><i class="bi bi-bar-chart-line text-success"></i> Data-Driven Matching</h4>
+                        <p>Our Smart Match algorithm ranks candidates using a heap-based scoring system. Skills, not luck, get you to the top.</p>
+                    </div>
+                    <div class="info-item">
+                        <h4><i class="bi bi-gem text-warning"></i> Built for Students</h4>
+                        <p>We understand the struggle. SkillMap is designed by students, for students and early-career professionals.</p>
+                    </div>
+                    <div class="info-item">
+                        <h4><i class="bi bi-heart-fill text-danger"></i> Always Free Core Tools</h4>
+                        <p>Resume analysis, roadmaps, and mock interviews will always have a free tier. Career growth shouldn't be gatekept.</p>
+                    </div>
+                </div>
+
+                <h3>🛠️ Our Tech Stack</h3>
+                <p>
+                    SkillMap is built with modern, production-grade technologies:
+                </p>
+                <div class="highlight-box">
+                    <p><strong>Backend:</strong> Flask, SQLAlchemy, Werkzeug (Python)<br>
+                    <strong>Frontend:</strong> HTML5, CSS3, Bootstrap 5, JavaScript<br>
+                    <strong>AI/ML:</strong> Groq API (LLM inference), Natural Language Processing<br>
+                    <strong>Database:</strong> PostgreSQL / SQLite<br>
+                    <strong>Deployment:</strong> Containerized (Docker-ready)</p>
+                </div>
+
+                <h3>👥 The Team</h3>
+                <p>
+                    We're a small team of college students from Ahmedabad passionate about solving real-world problems. SkillMap started as a semester project and evolved into something we genuinely believe can change how people navigate their careers.
+                </p>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- PRIVACY POLICY SECTION -->
+        <div id="privacy-section" class="content-section">
+            <div class="content-card">
+                <span class="last-updated"><i class="bi bi-clock"></i> Last Updated: February 18, 2026</span>
+                
+                <h2>
+                    <div class="icon-box">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    Privacy Policy
+                </h2>
+                <p>
+                    At SkillMap, your privacy is not a checkbox — it's a commitment. This policy explains what data we collect, how we use it, and your rights.
+                </p>
+
+                <h3>📋 Information We Collect</h3>
+                <p><strong>1. Information You Provide:</strong></p>
+                <ul>
+                    <li><strong>Account Details:</strong> Name, email, password (encrypted), role (seeker/recruiter)</li>
+                    <li><strong>Resume Data:</strong> Uploaded PDFs, extracted text, skills, experience</li>
+                    <li><strong>Career Information:</strong> Current role, target role, learning preferences</li>
+                    <li><strong>Application Data:</strong> Jobs you apply to, interview responses (audio transcripts)</li>
+                </ul>
+
+                <p><strong>2. Automatically Collected Data:</strong></p>
+                <ul>
+                    <li><strong>Usage Analytics:</strong> Pages visited, features used, time spent (via cookies)</li>
+                    <li><strong>Device Information:</strong> Browser type, IP address, operating system</li>
+                    <li><strong>Performance Data:</strong> Error logs, API response times (for debugging)</li>
+                </ul>
+
+                <h3>🔒 How We Use Your Data</h3>
+                <ol>
+                    <li><strong>Core Functionality:</strong> To provide AI-powered resume analysis, roadmap generation, interview simulation, and job matching.</li>
+                    <li><strong>Personalization:</strong> To customize your dashboard, recommend jobs, and improve match accuracy.</li>
+                    <li><strong>Communication:</strong> To send you application updates, feature announcements, and account-related emails (you can opt out).</li>
+                    <li><strong>Security:</strong> To prevent fraud, detect spam, and protect against malicious activity.</li>
+                    <li><strong>Improvement:</strong> To analyze aggregated usage data and improve our AI models (anonymized).</li>
+                </ol>
+
+                <div class="highlight-box">
+                    <p><strong>🛡️ What We DON'T Do:</strong></p>
+                    <ul style="margin-bottom: 0;">
+                        <li>We <strong>never sell</strong> your personal data to third parties.</li>
+                        <li>We <strong>never share</strong> your resume or interview responses with anyone except recruiters you explicitly apply to.</li>
+                        <li>We <strong>never train</strong> our AI on your private data without explicit consent.</li>
+                    </ul>
+                </div>
+
+                <h3>🤝 Data Sharing</h3>
+                <p><strong>When Recruiters See Your Data:</strong></p>
+                <ul>
+                    <li>When you <strong>apply to a job</strong>, the recruiter sees: your name, resume, skills, match score.</li>
+                    <li>Recruiters <strong>cannot</strong> see your interview practice sessions, roadmap details, or other jobs you've applied to.</li>
+                </ul>
+
+                <p><strong>Third-Party Services We Use:</strong></p>
+                <ul>
+                    <li><strong>Groq API:</strong> For AI inference (text generation). Prompts are processed but not stored by Groq.</li>
+                    <li><strong>Cloud Storage (if applicable):</strong> Resume files stored in encrypted AWS S3 / Azure Blob.</li>
+                    <li><strong>Analytics (optional):</strong> Google Analytics or similar (anonymized, can be disabled).</li>
+                </ul>
+
+                <h3>🔐 Data Security</h3>
+                <ul>
+                    <li>Passwords are hashed using <strong>Werkzeug's bcrypt</strong> (industry standard).</li>
+                    <li>All connections use <strong>HTTPS</strong> encryption.</li>
+                    <li>Database access is restricted and logged.</li>
+                    <li>Regular security audits and dependency updates.</li>
+                </ul>
+
+                <h3>✅ Your Rights</h3>
+                <p>You have the right to:</p>
+                <ul>
+                    <li><strong>Access:</strong> Request a copy of all data we have about you.</li>
+                    <li><strong>Correction:</strong> Update incorrect or incomplete information.</li>
+                    <li><strong>Deletion:</strong> Request account and data deletion (within 30 days).</li>
+                    <li><strong>Export:</strong> Download your resume, roadmaps, and application history.</li>
+                    <li><strong>Opt-Out:</strong> Disable marketing emails or analytics tracking.</li>
+                </ul>
+
+                <p>To exercise these rights, email us at <strong>privacy@skillmap.com</strong></p>
+
+                <h3>🍪 Cookies & Tracking</h3>
+                <p>
+                    We use cookies for authentication (staying logged in) and analytics (understanding feature usage). You can disable non-essential cookies in your browser settings.
+                </p>
+
+                <h3>👶 Children's Privacy</h3>
+                <p>
+                    SkillMap is intended for users <strong>16 years or older</strong>. We do not knowingly collect data from children under 16. If we discover such data, we'll delete it immediately.
+                </p>
+
+                <h3>🌍 International Users</h3>
+                <p>
+                    SkillMap is based in India. If you're accessing from outside India, your data may be transferred to Indian servers (protected under India's IT Act and GDPR-inspired practices).
+                </p>
+
+                <h3>📞 Contact Us</h3>
+                <p>
+                    Questions about privacy? Reach us at:<br>
+                    <strong>Email:</strong> privacy@skillmap.com<br>
+                    <strong>Address:</strong> Ahmedabad, Gujarat, India
+                </p>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- TERMS & CONDITIONS SECTION -->
+        <div id="terms-section" class="content-section">
+            <div class="content-card">
+                <span class="last-updated"><i class="bi bi-clock"></i> Last Updated: February 18, 2026</span>
+                
+                <h2>
+                    <div class="icon-box">
+                        <i class="bi bi-file-text"></i>
+                    </div>
+                    Terms & Conditions
+                </h2>
+                <p>
+                    By using SkillMap, you agree to these terms. Please read them carefully — they're here to protect both you and us.
+                </p>
+
+                <h3>1. Acceptance of Terms</h3>
+                <p>
+                    By creating an account or using any part of SkillMap, you agree to be bound by these Terms & Conditions, our Privacy Policy, and applicable laws. If you don't agree, please don't use the platform.
+                </p>
+
+                <h3>2. Eligibility</h3>
+                <ul>
+                    <li>You must be at least <strong>16 years old</strong> to use SkillMap.</li>
+                    <li>You must provide accurate information during registration.</li>
+                    <li>One person = one account. Fake or duplicate accounts will be suspended.</li>
+                </ul>
+
+                <h3>3. User Roles & Responsibilities</h3>
+                <p><strong>Job Seekers:</strong></p>
+                <ul>
+                    <li>You are responsible for the accuracy of your resume and profile.</li>
+                    <li>Do not misrepresent your skills, experience, or qualifications.</li>
+                    <li>Do not use automated tools (bots) to spam applications.</li>
+                </ul>
+
+                <p><strong>Recruiters:</strong></p>
+                <ul>
+                    <li>You must post real, legitimate job openings.</li>
+                    <li>Do not harvest candidate data for purposes outside recruitment.</li>
+                    <li>Do not discriminate against candidates based on protected characteristics.</li>
+                </ul>
+
+                <h3>4. AI-Generated Content</h3>
+                <div class="highlight-box">
+                    <p>
+                        <strong>Important:</strong> SkillMap uses AI (via Groq API) to generate roadmaps, interview questions, and resume feedback. While our AI is trained to be helpful and accurate:
+                    </p>
+                    <ul style="margin-bottom: 0;">
+                        <li>AI suggestions are <strong>guidance, not guarantees</strong>. Always verify critical information.</li>
+                        <li>AI responses may occasionally be incomplete or incorrect.</li>
+                        <li>You are responsible for your final decisions (career paths, interview answers, etc.).</li>
+                    </ul>
+                </div>
+
+                <h3>5. Intellectual Property</h3>
+                <ul>
+                    <li><strong>Your Content:</strong> You retain ownership of resumes, interview responses, and other user-generated content. By uploading, you grant SkillMap a license to process, display, and improve our services.</li>
+                    <li><strong>Our Content:</strong> SkillMap's code, design, AI models, and branding are our intellectual property. You may not copy, reverse-engineer, or resell them.</li>
+                </ul>
+
+                <h3>6. Prohibited Activities</h3>
+                <p>You may NOT:</p>
+                <ul>
+                    <li>Upload malicious files (viruses, malware, scripts).</li>
+                    <li>Scrape or crawl SkillMap using bots (without permission).</li>
+                    <li>Impersonate others or create fake profiles.</li>
+                    <li>Harass, spam, or abuse other users.</li>
+                    <li>Use SkillMap for illegal purposes (fraud, money laundering, etc.).</li>
+                </ul>
+
+                <h3>7. Payment & Refunds (If Applicable)</h3>
+                <p>
+                    Currently, SkillMap's core features are <strong>free</strong>. If we introduce paid features in the future:
+                </p>
+                <ul>
+                    <li>Pricing will be clearly displayed before purchase.</li>
+                    <li>Refunds will be handled on a case-by-case basis (email support@skillmap.com).</li>
+                    <li>We reserve the right to change pricing with 30 days' notice.</li>
+                </ul>
+
+                <h3>8. Termination</h3>
+                <p>
+                    We may suspend or terminate your account if:
+                </p>
+                <ul>
+                    <li>You violate these Terms.</li>
+                    <li>Your account is inactive for 2+ years (with prior notice).</li>
+                    <li>We detect fraudulent or harmful activity.</li>
+                </ul>
+                <p>
+                    You may delete your account at any time from Settings. Data deletion follows our Privacy Policy.
+                </p>
+
+                <h3>9. Disclaimers</h3>
+                <p><strong>No Job Guarantees:</strong> SkillMap helps you improve your chances, but we cannot guarantee you'll get a job.</p>
+                <p><strong>Third-Party Links:</strong> We may link to external resources (courses, tools). We're not responsible for their content or privacy practices.</p>
+                <p><strong>"As-Is" Service:</strong> SkillMap is provided without warranties. We strive for uptime but cannot guarantee 100% availability.</p>
+
+                <h3>10. Limitation of Liability</h3>
+                <p>
+                    To the fullest extent permitted by law, SkillMap is not liable for:
+                </p>
+                <ul>
+                    <li>Lost opportunities, missed interviews, or hiring decisions.</li>
+                    <li>Errors in AI-generated advice or technical glitches.</li>
+                    <li>Indirect, incidental, or consequential damages.</li>
+                </ul>
+
+                <h3>11. Governing Law</h3>
+                <p>
+                    These Terms are governed by the laws of <strong>India</strong>. Any disputes will be resolved in courts located in Ahmedabad, Gujarat.
+                </p>
+
+                <h3>12. Changes to Terms</h3>
+                <p>
+                    We may update these Terms occasionally. If changes are significant, we'll notify you via email or in-app banner. Continued use after changes = acceptance.
+                </p>
+
+                <h3>13. Contact & Support</h3>
+                <p>
+                    Questions, complaints, or feedback? We're here to help.<br>
+                    <strong>Email:</strong> support@skillmap.com<br>
+                    <strong>Legal Inquiries:</strong> legal@skillmap.com<br>
+                    <strong>Based in:</strong> Ahmedabad, Gujarat, India
+                </p>
+
+                <div class="highlight-box">
+                    <p style="margin-bottom: 0;">
+                        <strong>🚀 Thank you for being part of SkillMap!</strong> We're committed to building a platform that respects your privacy, empowers your career, and operates with transparency. Let's architect your future together.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="container-custom">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <h3>SkillMap</h3>
+                <p>
+                    Building the next generation of career tools. <br>Based in Ahmedabad, India.
+                </p>
+            </div>
+            
+            <div class="footer-col">
+                <h4 class="text-white mb-3 fw-bold">Platform</h4>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="{{ url_for('main.resume_checker') }}">Resume Analyst</a></li>
+                    <li class="mb-2"><a href="{{ url_for('main.roadmap') }}">Roadmap Gen</a></li>
+                    <li class="mb-2"><a href="{{ url_for('main.interview') }}">Mock Interview</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4 class="text-white mb-3 fw-bold">Legal</h4>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="#privacy-section">Privacy Policy</a></li>
+                    <li class="mb-2"><a href="#terms-section">Terms of Service</a></li>
+                    <li class="mb-2"><a href="#about-section">About Us</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4 class="text-white mb-3 fw-bold">Social</h4>
+                <div class="d-flex gap-3">
+                    <a href="#" class="fs-5"><i class="bi bi-linkedin"></i></a>
+                    <a href="#" class="fs-5"><i class="bi bi-github"></i></a>
+                    <a href="#" class="fs-5"><i class="bi bi-twitter"></i></a>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="footer-bottom">
+            <span>© 2026 SkillMap. All rights reserved.</span>
+            <span>Designed with Precision.</span>
+        </div>
+    </div>
+</footer>
+
+
+</body>
+</html>
