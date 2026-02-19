@@ -2,7 +2,7 @@ import smtplib
 import ssl
 import os
 import re
-import certifi # <--- CRITICAL IMPORT
+import certifi 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
@@ -20,45 +20,46 @@ def is_valid_email(email):
     return re.match(pattern, email) is not None
 
 # --- CORE HELPER: SENDING LOGIC ---
-def _send_smtp_email(to_email, subject, html_content):
-    """
-    Internal helper to handle the SMTP connection and sending.
-    """
-    print(f"\n📨 STARTING EMAIL SEND PROCESS...")
-    print(f"   To: {to_email} | Subject: {subject}")
-
-    if not is_valid_email(to_email):
-        return False, "Invalid email format."
-
-    SENDER_EMAIL = os.environ.get("MAIL_USERNAME")
-    SENDER_PASSWORD = os.environ.get("MAIL_PASSWORD")
-
-    if not SENDER_EMAIL or not SENDER_PASSWORD:
-        return False, "Server credentials missing."
+def _send_smtp_email(user_email, subject, html_content):
+    sender_email = os.environ.get('MAIL_USERNAME')
+    sender_password = os.environ.get('MAIL_PASSWORD')
+    
+    if not sender_email or not sender_password:
+        print("❌ EMAIL CONFIG ERROR: Missing MAIL_USERNAME or MAIL_PASSWORD")
+        return False, "Email configuration missing."
 
     message = MIMEMultipart("alternative")
     message["Subject"] = subject
-    message["From"] = SENDER_EMAIL
-    message["To"] = to_email
-
+    message["From"] = f"SkillMap AI <{sender_email}>"
+    message["To"] = user_email
+    
     part = MIMEText(html_content, "html")
     message.attach(part)
 
-    try:
-        # Use Certifi for SSL Conte xt
-        context = ssl.create_default_context(cafile=certifi.where())
-        
-        print("   Connecting to Google...")
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-            server.login(SENDER_EMAIL, SENDER_PASSWORD)
-            server.sendmail(SENDER_EMAIL, to_email, message.as_string())
-            print("✅ Email sent successfully!")
-            
-        return True, "Email sent successfully!"
+    context = ssl.create_default_context()
 
+    print(f"📨 STARTING EMAIL SEND PROCESS...")
+    print(f"   To: {user_email} | Subject: {subject}")
+    print(f"   Connecting to Google on Port 587...")
+
+    try:
+        # THE FIX: Use Port 587 and STARTTLS instead of Port 465 SSL
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
+            server.ehlo()  # Can be omitted, but good practice
+            server.starttls(context=context) # Secure the connection
+            server.ehlo()
+            
+            print("   Logging in...")
+            server.login(sender_email, sender_password)
+            
+            print("   Sending email...")
+            server.sendmail(sender_email, user_email, message.as_string())
+            
+        print("✅ EMAIL SENT SUCCESSFULLY!")
+        return True, "Email sent successfully."
     except Exception as e:
-        print(f"  SMTP Error: {e}")
-        return False, f"Failed to send: {str(e)}"
+        print(f"❌ FAILED TO SEND EMAIL: {str(e)}")
+        return False, str(e)
 
 # --- 1. ROADMAP EMAIL (Keep Existing) ---
 def format_roadmap_html(user_name, target_role, roadmap):

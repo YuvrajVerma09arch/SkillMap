@@ -106,9 +106,9 @@ def save_seeker_profile():
                 # Unique name: pic_user_ID_hash.jpg
                 pic_unique_name = f"pic_{current_user.id}_{uuid.uuid4().hex[:8]}_{pic_filename}"
                 
-                upload_folder = current_app.config.get('UPLOAD_FOLDER', 'app/static/uploads')
+                upload_folder = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static', 'uploads'))
                 if not os.path.exists(upload_folder):
-                    os.makedirs(upload_folder)
+                    os.makedirs(upload_folder,exist_ok=True)
                 
                 pic.save(os.path.join(upload_folder, pic_unique_name))
                 profile.profile_pic = pic_unique_name
@@ -120,9 +120,10 @@ def save_seeker_profile():
                 filename = secure_filename(file.filename)
                 unique_name = f"{current_user.id}_{uuid.uuid4().hex[:8]}_{filename}"
                 
-                upload_folder = current_app.config.get('UPLOAD_FOLDER', 'app/static/uploads')
+                upload_folder = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static', 'uploads'))
+                
                 if not os.path.exists(upload_folder):
-                    os.makedirs(upload_folder)
+                    os.makedirs(upload_folder, exist_ok=True)
                 
                 file.save(os.path.join(upload_folder, unique_name))
                 profile.resume_file = unique_name
@@ -334,7 +335,6 @@ def roadmap():
 @main.route('/resume-checker', methods=['GET', 'POST'])
 @login_required
 def resume_checker():
-    # Lazy import to avoid circular dependencies if any
     from app.utils.resume_parser import analyze_resume 
     
     results = None
@@ -348,49 +348,58 @@ def resume_checker():
         if not current_user.deduct_credits(1):
             flash("You need 1 Credit to analyze a resume. Please Upgrade!", "warning")
             return redirect(url_for('payments.pricing'))
+            
         job_description = request.form.get('job_description')
         use_existing = request.form.get('use_existing') == 'yes'
         
         save_path = None
         is_temp_file = False
+        
+        # --- THE FIX: ENSURE FOLDER EXISTS ---
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static', 'uploads'))
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder, exist_ok=True) # Creates the folder safely
 
         try:
             # CASE A: Use Profile Resume
             if use_existing and profile_resume:
-                # Point to the existing file in static/uploads
-                save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], profile_resume)
+                save_path = os.path.join(upload_folder, profile_resume)
                 if not os.path.exists(save_path):
-                    flash("Profile resume file not found on server. Please upload again.", "warning")
+                    # Graceful fallback if Render wiped the file
+                    flash("Profile resume file was cleared from the server cache. Please upload it again below.", "warning")
                     save_path = None
 
-            # CASE B: Upload New Resume (Specific for this analysis)
+            # CASE B: Upload New Resume
             elif 'resume' in request.files:
                 file = request.files['resume']
                 if file and file.filename != '':
                     filename = secure_filename(file.filename)
-                    # Save as temp file so we don't clutter storage
-                    save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], f"temp_{uuid.uuid4().hex[:6]}_{filename}")
-                    file.save(save_path)
+                    save_path = os.path.join(upload_folder, f"temp_{uuid.uuid4().hex[:6]}_{filename}")
+                    file.save(save_path) # Now this will work because the folder exists!
                     is_temp_file = True
             
             # 2. Run Analysis
             if save_path:
                 results = analyze_resume(save_path, job_description)
-                # Ensure we have a score for the UI gauge
                 if 'match_score' not in results:
                     results['match_score'] = 0
             else:
-                flash("Please upload a resume or ensure your profile resume is valid.", "warning")
+                # If they tried to use existing but it was missing, we don't run the AI
+                if not use_existing:
+                    flash("Please upload a resume.", "warning")
 
         except Exception as e:
-            flash(f"Analysis Error: {str(e)}", "danger")
+            print(f"Server Error during analysis: {e}")
+            flash("An error occurred while processing the file. Please try again.", "danger")
         finally:
             # 3. Cleanup Temp File
             if is_temp_file and save_path and os.path.exists(save_path):
-                os.remove(save_path)
+                try:
+                    os.remove(save_path)
+                except Exception as cleanup_error:
+                    print(f"Failed to clean up temp file: {cleanup_error}")
 
     return render_template('seeker/resume_checker.html', results=results, profile_resume=profile_resume)
-
 
 @main.route('/interview', methods=['GET', 'POST'])
 @login_required
