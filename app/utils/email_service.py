@@ -2,6 +2,7 @@ import smtplib
 import ssl
 import os
 import re
+import socket
 import certifi 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -25,7 +26,6 @@ def _send_smtp_email(user_email, subject, html_content):
     sender_password = os.environ.get('MAIL_PASSWORD')
     
     if not sender_email or not sender_password:
-        print("❌ EMAIL CONFIG ERROR: Missing MAIL_USERNAME or MAIL_PASSWORD")
         return False, "Email configuration missing."
 
     message = MIMEMultipart("alternative")
@@ -39,14 +39,22 @@ def _send_smtp_email(user_email, subject, html_content):
     context = ssl.create_default_context()
 
     print(f"📨 STARTING EMAIL SEND PROCESS...")
-    print(f"   To: {user_email} | Subject: {subject}")
-    print(f"   Connecting to Google on Port 587...")
+    print(f"   To: {user_email}")
 
     try:
-        # THE FIX: Use Port 587 and STARTTLS instead of Port 465 SSL
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
-            server.ehlo()  # Can be omitted, but good practice
-            server.starttls(context=context) # Secure the connection
+        # --- THE FIX: Force IPv4 Resolution ---
+        # 1. Get the IPv4 address for smtp.gmail.com
+        #    AF_INET means "IPv4 only"
+        gmail_ip_info = socket.getaddrinfo('smtp.gmail.com', 587, family=socket.AF_INET, proto=socket.IPPROTO_TCP)
+        gmail_ip_address = gmail_ip_info[0][4][0] # Extract the IP "142.250.x.x"
+        
+        print(f"   Resolved Gmail to IPv4: {gmail_ip_address}")
+        print("   Connecting via Port 587...")
+
+        # 2. Connect using the IP address, NOT the domain name
+        with smtplib.SMTP(gmail_ip_address, 587, timeout=30) as server:
+            server.ehlo()
+            server.starttls(context=context)
             server.ehlo()
             
             print("   Logging in...")
@@ -57,9 +65,19 @@ def _send_smtp_email(user_email, subject, html_content):
             
         print("✅ EMAIL SENT SUCCESSFULLY!")
         return True, "Email sent successfully."
+
     except Exception as e:
         print(f"❌ FAILED TO SEND EMAIL: {str(e)}")
-        return False, str(e)
+        # If IPv4 fails, try one last desperation fallback to standard
+        try:
+             print("   ⚠️ Retrying with standard connection...")
+             with smtplib.SMTP('smtp.gmail.com', 587, timeout=30) as server:
+                server.starttls(context=context)
+                server.login(sender_email, sender_password)
+                server.sendmail(sender_email, user_email, message.as_string())
+             return True, "Sent on retry."
+        except:
+             return False, f"Network Error: {str(e)}"
 
 # --- 1. ROADMAP EMAIL (Keep Existing) ---
 def format_roadmap_html(user_name, target_role, roadmap):
