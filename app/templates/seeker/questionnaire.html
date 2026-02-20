@@ -2,317 +2,485 @@
 
 {% block content %}
 <style>
-    /* --- THEME OVERRIDES --- */
+    /* --- QUANTUM THEME --- */
+    :root {
+        --primary-dark: #0A1929;
+        --accent-blue: #3b82f6;
+        --accent-pink: #ec4899;
+        --accent-purple: #8b5cf6;
+    }
+
     body {
-        background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);
+        background: #050505 !important;
         min-height: 100vh;
         color: white;
+        font-family: 'Inter', sans-serif;
+        overflow-x: hidden;
     }
 
-    /* Glass Container */
-    .glass-container {
-        max-width: 800px;
-        margin: 40px auto;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
-        overflow: hidden;
-        color: #1e293b; 
-        position: relative;
-        z-index: 10;
-    }
-
-    .header-section {
-        background: #2563EB;
-        padding: 40px;
-        text-align: center;
-        color: white;
-    }
-
-    /* Form & Inputs */
-    .form-section { padding: 40px; display: none; animation: slideIn 0.4s ease; }
-    .form-section.active { display: block; }
+    /* --- QUANTUM BACKGROUND LAYERS --- */
+    .quantum-bg { position: fixed; inset: 0; z-index: -2; pointer-events: none;}
     
-    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .bg-layer-1 {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at 50% 50%, rgba(30,27,75,0.8) 0%, #050505 70%);
+    }
+    
+    .bg-layer-2 {
+        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.4) 0%, transparent 50%),
+                    radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.4) 0%, transparent 50%);
+        animation: plasma-move 30s infinite alternate ease-in-out;
+        filter: blur(80px); opacity: 0.5;
+    }
+    
+    @keyframes plasma-move {
+        0% { transform: rotate(0deg) translate(0,0); }
+        100% { transform: rotate(45deg) translate(-10%, -10%); }
+    }
+    
+    .noise-overlay {
+        position: fixed; inset: 0; z-index: -1;
+        background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        pointer-events: none; mix-blend-mode: overlay; opacity: 0.2;
+    }
+
+    /* --- FLOATING SHAPES --- */
+    .bg-shape {
+        position: fixed; background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
+        border-radius: 50%; filter: blur(60px); opacity: 0.15; z-index: -1;
+        animation: float 20s infinite ease-in-out; pointer-events: none;
+    }
+    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; animation-delay: 0s; }
+    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -5%; animation-delay: 2s; }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+
+    /* --- CURSOR GLOW --- */
+    .cursor-glow {
+        width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(236, 72, 153, 0.05) 50%, rgba(255,255,255,0) 70%);
+        position: fixed; border-radius: 50%; pointer-events: none;
+        transform: translate(-50%, -50%); z-index: 0; transition: transform 0.1s ease-out; filter: blur(20px);
+    }
+
+    /* --- MAIN CONTAINER & GLASS CARD --- */
+    .container-custom { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; position: relative; z-index: 10;}
+    
+    .quantum-card {
+        background: rgba(10, 10, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        overflow: hidden; position: relative; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .quantum-card::after {
+        content: ''; position: absolute; inset: -200%;
+        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, var(--accent-blue) 25%, var(--accent-pink) 50%, var(--accent-purple) 75%, transparent 100%);
+        animation: spin-glow 8s linear infinite; opacity: 0.15; z-index: 0; pointer-events: none;
+    }
+    @keyframes spin-glow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .quantum-card > * { position: relative; z-index: 2; }
+
+    /* --- HEADER SECTION --- */
+    .header-section {
+        background: linear-gradient(135deg, rgba(37,99,235,0.4), rgba(236,72,153,0.4));
+        padding: 2.5rem; text-align: center; position: relative; overflow: hidden; border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .header-section::before {
+        content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 70%);
+    }
+    .header-section h2 { color: white; font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; position: relative; z-index: 2; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
+    .header-section p { color: rgba(255,255,255,0.8); font-size: 1rem; position: relative; z-index: 2; }
+
+    /* --- FORM SECTIONS --- */
+    .form-section { padding: 2.5rem; display: none; animation: slideIn 0.4s ease forwards; }
+    .form-section.active { display: block; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .form-section h4 {
+        font-size: 1.5rem; font-weight: 800; margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, #fff, var(--accent-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    /* --- FORM ELEMENTS --- */
+    .form-group { margin-bottom: 1.5rem; }
+    .form-label { display: block; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 0.5rem; }
+    .required-star { color: var(--accent-pink); margin-left: 0.25rem; }
 
     .form-control, .form-select {
-        padding: 12px;
-        border-radius: 10px;
-        border: 1px solid #cbd5e1;
-        background: #f8fafc;
+        width: 100%; padding: 0.9rem 1.2rem; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px);
+        border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 16px; color: white; font-size: 1rem; transition: all 0.3s ease;
     }
-    .form-control:focus {
-        border-color: #2563EB;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-    }
+    .form-control:focus, .form-select:focus { border-color: var(--accent-pink); box-shadow: 0 0 20px rgba(236, 72, 153, 0.3); outline: none; background: black; color: white; }
+    .form-control::placeholder { color: rgba(255,255,255,0.3); }
+    .form-select option { background: #0A1929; color: white; }
 
-    /* Skill Chips */
+    .input-group { display: flex; }
+    .input-group-text {
+        display: inline-flex; align-items: center; padding: 0.9rem 1.2rem; background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(5px); border: 1px solid rgba(59, 130, 246, 0.3); border-right: none;
+        border-radius: 16px 0 0 16px; color: rgba(255,255,255,0.7); font-weight: 600;
+    }
+    .input-group .form-control { border-radius: 0 16px 16px 0; flex: 1; }
+
+    /* --- PROFILE PICTURE UPLOAD --- */
+    .avatar-upload { text-align: center; margin-bottom: 2.5rem; }
+    .avatar-preview { display: inline-block; position: relative; }
+    .avatar-image {
+        width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+        border: 4px solid rgba(255,255,255,0.2); box-shadow: 0 10px 25px rgba(0,0,0,0.4); margin-bottom: 0.5rem;
+    }
+    .avatar-placeholder {
+        width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.05); backdrop-filter: blur(5px);
+        border: 4px solid rgba(255,255,255,0.2); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.5rem;
+    }
+    .avatar-placeholder i { color: rgba(255,255,255,0.4); font-size: 2.5rem; }
+    .file-input { display: block; width: 100%; font-size: 0.875rem; color: rgba(255,255,255,0.7); margin-top: 0.5rem; }
+    .file-input::-webkit-file-upload-button {
+        margin-right: 1rem; padding: 0.5rem 1.2rem; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4);
+        border-radius: 50px; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s;
+    }
+    .file-input::-webkit-file-upload-button:hover { background: rgba(236, 72, 153, 0.3); border-color: var(--accent-pink);}
+
+    /* --- SKILL CHIPS --- */
     .skill-chip {
-        display: inline-flex; align-items: center; padding: 8px 16px; margin: 4px;
-        background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 50px;
-        cursor: pointer; user-select: none; transition: all 0.2s;
+        display: inline-flex; align-items: center; padding: 0.6rem 1.2rem; margin: 0.25rem;
+        background: rgba(59, 130, 246, 0.15); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 50px; color: white; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-size: 0.95rem;
     }
-    .skill-chip:hover { background: #e2e8f0; }
-    .skill-chip.selected {
-        background: #eff6ff; border-color: #2563EB; color: #2563EB; font-weight: 700;
-        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.1);
-    }
+    .skill-chip:hover { background: rgba(236, 72, 153, 0.25); border-color: var(--accent-pink); transform: translateY(-2px); }
+    .skill-chip.selected { background: rgba(236, 72, 153, 0.3); border-color: var(--accent-pink); box-shadow: 0 0 15px rgba(236, 72, 153, 0.3); font-weight: 700;}
     .skill-chip input { display: none; }
+    .skill-section-label { display: block; color: white; font-weight: 700; margin-bottom: 0.75rem; font-size: 1rem; }
 
-    /* Validation Shake */
-    .shake { animation: shake 0.3s; border-color: #ef4444 !important; }
-    @keyframes shake {
-        0% { transform: translateX(0); } 25% { transform: translateX(-5px); }
-        50% { transform: translateX(5px); } 75% { transform: translateX(-5px); }
-        100% { transform: translateX(0); }
-    }
-
-    /* Auto-complete List */
+    /* --- SUGGESTIONS & ALERTS --- */
     .suggestions-list {
-        background: white; border: 1px solid #cbd5e1; border-radius: 8px;
-        max-height: 200px; overflow-y: auto; position: absolute;
-        width: 90%; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        display: none;
+        background: rgba(10, 10, 20, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px; max-height: 200px; overflow-y: auto; position: absolute; width: 100%; z-index: 1000;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none;
     }
-    .suggestion-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
-    .suggestion-item:hover { background-color: #eff6ff; color: #2563EB; }
+    .suggestion-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); color: white; transition: all 0.2s; font-size: 0.95rem; }
+    .suggestion-item:hover { background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2)); padding-left: 20px; }
+
+    .error-message { color: var(--accent-pink); display: none; margin-top: 0.5rem; font-size: 0.875rem; font-weight: 600;}
+    .shake { animation: shake 0.3s; border-color: #ef4444 !important; box-shadow: 0 0 15px rgba(239,68,68,0.3) !important;}
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
+
+    .info-card { margin-bottom: 1.5rem; padding: 1rem 1.5rem; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; color: #93c5fd; font-size: 0.9rem; display: flex; align-items: center;}
+    .info-card i { margin-right: 0.75rem; font-size: 1.2rem;}
+    
+    .resume-status { margin-bottom: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; color: #34d399; font-size: 0.95rem; display: flex; align-items: center;}
+    .resume-status i { margin-right: 0.5rem; font-size: 1.2rem;}
+    .file-hint { color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-top: 0.5rem; display: block; }
+
+    /* --- BUTTONS --- */
+    .btn-group { display: flex; justify-content: space-between; margin-top: 2rem; }
+    
+    .btn-quantum {
+        position: relative; overflow: hidden; transition: all 0.3s ease; padding: 1rem 2.5rem;
+        border: 1px solid rgba(255,255,255,0.3); border-radius: 50px; font-weight: 700; font-size: 1rem; cursor: pointer;
+    }
+    .btn-quantum::before {
+        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.2) 25%, transparent 50%);
+        animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s; z-index: -1;
+    }
+    .btn-quantum:hover::before { opacity: 1; }
+    
+    .btn-primary { background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2)); color: white; }
+    .btn-primary:hover { background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3)); border-color: var(--accent-pink); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3); }
+    
+    .btn-success { background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2)); color: white; }
+    .btn-success:hover { background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3)); border-color: #10b981; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3); }
+    
+    .btn-back { background: rgba(255,255,255,0.05); color: white;}
+    .btn-back:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); transform: translateY(-2px); }
+
+    .flex { display: flex; } .flex-wrap { flex-wrap: wrap; } .gap-2 { gap: 0.5rem; } .mb-4 { margin-bottom: 1rem; } .text-right { text-align: right; }
+    
+    @media (max-width: 768px) {
+        .container-custom { padding: 1rem; }
+        .header-section, .form-section { padding: 1.5rem; }
+        .btn-group { flex-direction: column; gap: 1rem; }
+        .btn-quantum { width: 100%; text-align: center; justify-content: center; display: flex;}
+    }
 </style>
+
+<div class="quantum-bg">
+    <div class="bg-layer-1"></div>
+    <div class="bg-layer-2"></div>
+</div>
+<div class="noise-overlay"></div>
 
 <div class="bg-shape shape-1"></div>
 <div class="bg-shape shape-2"></div>
 
-<div class="glass-container">
-    <div class="header-section">
-        <h2 class="fw-bold mb-2">{% if profile %}Edit Profile{% else %}Build Profile{% endif %}</h2>
-        <p class="opacity-75 mb-0">{% if profile %}Update your details.{% else %}Let's get you career-ready.{% endif %}</p>
-    </div>
+<div id="cursorGlow" class="cursor-glow"></div>
 
-    <input type="hidden" id="hasResume" value="{{ 'yes' if profile and profile.resume_file else 'no' }}">
-
-    <form id="mainForm" method="POST" action="{{ url_for('main.save_seeker_profile') }}" enctype="multipart/form-data">
+<div class="container-custom" style="padding-top: 100px;">
+    
+    <div class="quantum-card">
         
-        <div class="form-section active" id="step1">
-            <h4 class="mb-4 text-primary fw-bold">1. Basic Information</h4>
-
-            <div class="mb-3 text-center">
-                <label class="d-block mb-2">Profile Picture</label>
-                <div class="d-inline-block position-relative">
-                    {% if profile and profile.profile_pic %}
-                        <img src="{{ url_for('static', filename='uploads/' + profile.profile_pic) }}" 
-                             class="rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid white;">
-                    {% else %}
-                        <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-2" 
-                             style="width: 100px; height: 100px; border: 3px solid white;">
-                            <i class="bi bi-camera text-muted fs-2"></i>
-                        </div>
-                    {% endif %}
-                    <input type="file" name="profile_pic" class="form-control mt-1" accept="image/*">
-                </div>
-            </div>
-            
-            <div class="mb-3">
-                <label>Full Name <span class="text-danger">*</span></label>
-                <input type="text" name="full_name" id="nameInput" class="form-control" 
-                       value="{{ current_user.name }}" required>
-            </div>
-
-            <div class="mb-3">
-                <label>Phone Number (India +91) <span class="text-danger">*</span></label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white text-muted">+91</span>
-                    <input type="tel" name="phone" id="phoneInput" class="form-control" 
-                           value="{{ profile.phone if profile else '' }}"
-                           maxlength="10" placeholder="9876543210" 
-                           oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
-                </div>
-                <small class="text-danger" id="phoneError" style="display:none; font-size: 0.85rem; margin-top: 5px;">
-                    <i class="bi bi-exclamation-circle"></i> Please enter a valid 10-digit mobile number.
-                </small>
-            </div>
-            
-            <div class="mb-3 position-relative">
-                <label>Current Location <span class="text-danger">*</span></label>
-                <input type="text" name="location" id="cityInput" class="form-control" 
-                       value="{{ profile.location if profile else '' }}" 
-                       placeholder="Search City..." autocomplete="off" required>
-                <div id="cityList" class="suggestions-list"></div>
-            </div>
-
-            <label class="mb-2">Current Status <span class="text-danger">*</span></label>
-            <div class="d-flex gap-2 flex-wrap">
-                {% set status = profile.experience_years if profile else 'Student' %} 
-                
-                <label class="skill-chip {% if not profile or status == 'Student' %}selected{% endif %}">
-                    <input type="radio" name="status" value="Student" onchange="toggleRadio(this)" {% if not profile or status == 'Student' %}checked{% endif %}> 🎓 Student
-                </label>
-                
-                <label class="skill-chip {% if status == 'Fresher' %}selected{% endif %}">
-                    <input type="radio" name="status" value="Fresher" onchange="toggleRadio(this)" {% if status == 'Fresher' %}checked{% endif %}> 🌱 Fresher
-                </label>
-                
-                <label class="skill-chip {% if status == 'Experienced' %}selected{% endif %}">
-                    <input type="radio" name="status" value="Experienced" onchange="toggleRadio(this)" {% if status == 'Experienced' %}checked{% endif %}> 💼 Experienced
-                </label>
-            </div>
-            
-            <div class="mt-4 text-end">
-                <button type="button" class="btn btn-primary btn-nav" onclick="validateStep1()">Next <i class="bi bi-arrow-right"></i></button>
-            </div>
+        <div class="header-section">
+            <h2>{% if profile %}Update Data-Core{% else %}Initialize Profile{% endif %}</h2>
+            <p>{% if profile %}Recalibrate your professional vectors.{% else %}Let's map your skills to the global grid.{% endif %}</p>
         </div>
 
-        <div class="form-section" id="step2">
-            <h4 class="mb-4 text-primary fw-bold">2. Education</h4>
+        <input type="hidden" id="hasResume" value="{{ 'yes' if profile and profile.resume_file else 'no' }}">
+
+        <form id="mainForm" method="POST" action="{{ url_for('main.save_seeker_profile') }}" enctype="multipart/form-data">
             
-            <div class="mb-3">
-                <label>Highest Qualification <span class="text-danger">*</span></label>
-                <select name="qualification" class="form-select" required>
-                    <option value="" disabled>Select Degree</option>
-                    <option value="B.Tech" {% if profile and 'B.Tech' in profile.education_level %}selected{% endif %}>B.Tech / B.E.</option>
-                    <option value="BCA" {% if profile and 'BCA' in profile.education_level %}selected{% endif %}>BCA / MCA</option>
-                    <option value="B.Sc" {% if profile and 'B.Sc' in profile.education_level %}selected{% endif %}>B.Sc / M.Sc</option>
-                    <option value="MBA" {% if profile and 'MBA' in profile.education_level %}selected{% endif %}>MBA</option>
-                    <option value="Diploma" {% if profile and 'Diploma' in profile.education_level %}selected{% endif %}>Diploma</option>
-                </select>
-            </div>
-            
-            <div class="mb-3 position-relative">
-                <label>College / University <span class="text-danger">*</span></label>
-                <input type="text" name="college" id="collegeInput" class="form-control" 
-                       value="{{ parsed_edu.college if parsed_edu else '' }}" 
-                       placeholder="Search College..." autocomplete="off" required>
-                <div id="collegeList" class="suggestions-list"></div>
-            </div>
-        
-            <div class="mb-3">
-                <label>Graduation Year <span class="text-danger">*</span></label>
-                <input type="number" name="grad_year" class="form-control" 
-                       value="{{ parsed_edu.year if parsed_edu else '' }}"
-                       placeholder="e.g. 2026" required>
-            </div>
-            
-            <div class="mt-4 d-flex justify-content-between">
-                <button type="button" class="btn btn-light btn-nav" onclick="prevStep(1)">Back</button>
-                <button type="button" class="btn btn-primary btn-nav" onclick="nextStep(3)">Next <i class="bi bi-arrow-right"></i></button>
-            </div>
-        </div>  
+            <div class="form-section active" id="step1">
+                <h4>1. Basic Identification</h4>
 
-        <div class="form-section" id="step3">
-            <h4 class="mb-4 text-primary fw-bold">3. Your Skills</h4>
-            <p class="text-muted small">Select at least 3 skills (Technical, Tools, or Soft Skills).</p>
-
-            <div class="mb-4">
-                <label class="d-block mb-2 fw-bold text-dark">💻 Technical Skills</label>
-                <div class="skill-container">
-                    {% for skill in ['Python', 'Java', 'C++', 'JavaScript', 'React', 'Node.js', 'SQL', 'AWS', 'Docker', 'Git', 'Flutter', 'HTML/CSS'] %}
-                    {% set is_checked = profile and skill in profile.skills %}
-                    <label class="skill-chip {% if is_checked %}selected{% endif %}">
-                        <input type="checkbox" name="skills" value="{{ skill }}" onchange="toggleSkill(this)" {% if is_checked %}checked{% endif %}> {{ skill }}
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label class="d-block mb-2 fw-bold text-dark">🛠️ Tools & Platforms</label>
-                <div class="skill-container">
-                    {% for tool in ['Git', 'Docker', 'AWS', 'Figma', 'Linux', 'Jira', 'Postman', 'VS Code', 'Kali Linux', 'Unity', 'Kubernetes'] %}
-                    {% set is_checked = profile and tool in profile.skills %}
-                    <label class="skill-chip {% if is_checked %}selected{% endif %}">
-                        <input type="checkbox" name="skills" value="{{ tool }}" onchange="toggleSkill(this)" {% if is_checked %}checked{% endif %}> {{ tool }}
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label class="d-block mb-2 fw-bold text-dark">🗣️ Soft Skills</label>
-                <div class="skill-container">
-                    {% for soft in ['Communication', 'Teamwork', 'Leadership', 'Problem Solving', 'Time Management', 'Critical Thinking', 'Adaptability'] %}
-                    {% set is_checked = profile and soft in profile.skills %}
-                    <label class="skill-chip {% if is_checked %}selected{% endif %}">
-                        <input type="checkbox" name="skills" value="{{ soft }}" onchange="toggleSkill(this)" {% if is_checked %}checked{% endif %}> {{ soft }}
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-            
-            <div class="mt-4 d-flex justify-content-between">
-                <button type="button" class="btn btn-light btn-nav" onclick="prevStep(2)">Back</button>
-                <button type="button" class="btn btn-primary btn-nav" onclick="validateSkillsAndNext(3)">Next <i class="bi bi-arrow-right"></i></button>
-            </div>
-        </div>
-
-        <div class="form-section" id="step4">
-            <h4 class="mb-4 text-primary fw-bold">4. Best Project</h4>
-            <div class="alert alert-info small"><i class="bi bi-info-circle"></i> Adding a project increases your hiring chances by 40%.</div>
-            
-            <div class="mb-3">
-                <label>Project Title <span class="text-muted small">(Optional)</span></label>
-                <input type="text" name="project_title" class="form-control" 
-                       value="{{ profile.projects[0]['title'] if profile and profile.projects else '' }}" 
-                       placeholder="e.g. E-Commerce App">
-            </div>
-
-            <div class="mb-3">
-                <label>Project Link (GitHub / Live) <span class="text-muted small">(Optional)</span></label>
-                <input type="url" name="project_link" class="form-control" 
-                       value="{{ profile.projects[0]['link'] if profile and profile.projects else '' }}" 
-                       placeholder="https://github.com/...">
-            </div>
-
-            <div class="mt-4 d-flex justify-content-between">
-                <button type="button" class="btn btn-light btn-nav" onclick="prevStep(3)">Back</button>
-                <button type="button" class="btn btn-primary btn-nav" onclick="nextStep(5)">Next <i class="bi bi-arrow-right"></i></button>
-            </div>
-        </div>
-
-        <div class="form-section" id="step5">
-            <h4 class="mb-4 text-primary fw-bold">5. Final Details</h4>
-            
-            <div class="mb-3">
-                <label>Experience Years <span class="text-danger">*</span></label>
-                <select name="experience_years" class="form-select" required>
-                    <option value="0" selected>0 (Fresher)</option>
-                    <option value="1">1 Year</option>
-                    <option value="2">2 Years</option>
-                    <option value="3+">3+ Years</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label>Resume <span class="text-danger">*</span></label>
-                {% if profile and profile.resume_file %}
-                    <div class="mb-2 text-success small border border-success p-2 rounded bg-success bg-opacity-10">
-                        <i class="bi bi-check-circle-fill"></i> Resume on file: <strong>{{ profile.resume_file }}</strong>
+                <div class="avatar-upload">
+                    <label class="form-label" style="text-align: center; margin-bottom: 1rem;">Profile Hologram</label>
+                    <div class="avatar-preview">
+                        {% if profile and profile.profile_pic %}
+                            <img src="{{ url_for('static', filename='uploads/' + profile.profile_pic) }}" class="avatar-image">
+                        {% else %}
+                            <div class="avatar-placeholder">
+                                <i class="bi bi-camera"></i>
+                            </div>
+                        {% endif %}
+                        <input type="file" name="profile_pic" class="file-input" accept="image/*">
                     </div>
-                    <input type="file" name="resume" id="resumeInput" class="form-control" accept=".pdf,.doc,.docx">
-                    <small class="text-muted">Upload new file only if you want to replace the current one.</small>
-                {% else %}
-                    <input type="file" name="resume" id="resumeInput" class="form-control" accept=".pdf,.doc,.docx" required>
-                    <small class="text-muted">Required for AI Analysis.</small>
-                {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Full Name <span class="required-star">*</span></label>
+                    <input type="text" name="full_name" id="nameInput" class="form-control" 
+                           value="{{ current_user.name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Comms Link (India +91) <span class="required-star">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text">+91</span>
+                        <input type="tel" name="phone" id="phoneInput" class="form-control" 
+                               value="{{ profile.phone if profile else '' }}"
+                               maxlength="10" placeholder="9876543210" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                    </div>
+                    <small class="error-message" id="phoneError">
+                        <i class="bi bi-exclamation-triangle-fill mr-1"></i> Invalid coordinates. Enter a 10-digit number.
+                    </small>
+                </div>
+                
+                <div class="form-group" style="position: relative;">
+                    <label class="form-label">Current Sector (City) <span class="required-star">*</span></label>
+                    <input type="text" name="location" id="cityInput" class="form-control" 
+                           value="{{ profile.location if profile else '' }}" 
+                           placeholder="Search City..." autocomplete="off" required>
+                    <div id="cityList" class="suggestions-list"></div>
+                </div>
+
+                <label class="form-label">Operational Status <span class="required-star">*</span></label>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    {% set status = profile.experience_years if profile else 'Student' %} 
+                    
+                    <label class="skill-chip {% if not profile or status == 'Student' %}selected{% endif %}">
+                        <input type="radio" name="status" value="Student" onchange="toggleRadio(this)" {% if not profile or status == 'Student' %}checked{% endif %}> 🎓 Academic
+                    </label>
+                    
+                    <label class="skill-chip {% if status == 'Fresher' %}selected{% endif %}">
+                        <input type="radio" name="status" value="Fresher" onchange="toggleRadio(this)" {% if status == 'Fresher' %}checked{% endif %}> 🌱 Initiate
+                    </label>
+                    
+                    <label class="skill-chip {% if status == 'Experienced' %}selected{% endif %}">
+                        <input type="radio" name="status" value="Experienced" onchange="toggleRadio(this)" {% if status == 'Experienced' %}checked{% endif %}> 💼 Veteran
+                    </label>
+                </div>
+                
+                <div class="text-right">
+                    <button type="button" class="btn-quantum btn-primary" onclick="validateStep1()">
+                        Proceed to Sector 2 <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label>LinkedIn URL</label>
-                <input type="url" name="linkedin" class="form-control" 
-                       value="{{ profile.linkedin_url if profile and profile.linkedin_url else '' }}"
-                       placeholder="https://linkedin.com/in/...">
+            <div class="form-section" id="step2">
+                <h4>2. Academic Matrix</h4>
+                
+                <div class="form-group">
+                    <label class="form-label">Highest Degree <span class="required-star">*</span></label>
+                    <select name="qualification" class="form-select" required>
+                        <option value="" disabled selected>Select Architecture</option>
+                        <option value="B.Tech" {% if profile and 'B.Tech' in profile.education_level %}selected{% endif %}>B.Tech / B.E.</option>
+                        <option value="BCA" {% if profile and 'BCA' in profile.education_level %}selected{% endif %}>BCA / MCA</option>
+                        <option value="B.Sc" {% if profile and 'B.Sc' in profile.education_level %}selected{% endif %}>B.Sc / M.Sc</option>
+                        <option value="MBA" {% if profile and 'MBA' in profile.education_level %}selected{% endif %}>MBA</option>
+                        <option value="Diploma" {% if profile and 'Diploma' in profile.education_level %}selected{% endif %}>Diploma</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="position: relative;">
+                    <label class="form-label">Institution <span class="required-star">*</span></label>
+                    <input type="text" name="college" id="collegeInput" class="form-control" 
+                           value="{{ parsed_edu.college if parsed_edu else '' }}" 
+                           placeholder="Search Database..." autocomplete="off" required>
+                    <div id="collegeList" class="suggestions-list"></div>
+                </div>
+            
+                <div class="form-group">
+                    <label class="form-label">Completion Cycle (Year) <span class="required-star">*</span></label>
+                    <input type="number" name="grad_year" class="form-control" 
+                           value="{{ parsed_edu.year if parsed_edu else '' }}"
+                           placeholder="e.g. 2026" required>
+                </div>
+                
+                <div class="btn-group">
+                    <button type="button" class="btn-quantum btn-back" onclick="prevStep(1)">
+                        <i class="bi bi-arrow-left me-2"></i> Previous
+                    </button>
+                    <button type="button" class="btn-quantum btn-primary" onclick="nextStep(3)">
+                        Proceed to Sector 3 <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>  
+
+            <div class="form-section" id="step3">
+                <h4>3. Skill Nodes</h4>
+                <p class="text-white-50 mb-4" style="font-size: 0.95rem;">Select at least 3 nodes to initialize the matching algorithm.</p>
+
+                <div class="form-group">
+                    <label class="skill-section-label">💻 Core Languages</label>
+                    <div class="flex flex-wrap gap-2">
+                        {% for skill in ['Python', 'Java', 'C++', 'JavaScript', 'React', 'Node.js', 'SQL', 'AWS', 'Docker', 'Git', 'Flutter', 'HTML/CSS'] %}
+                        {% set is_checked = profile and skill in profile.skills %}
+                        <label class="skill-chip {% if is_checked %}selected{% endif %}">
+                            <input type="checkbox" name="skills" value="{{ skill }}" onchange="toggleSkill(this)" {% if is_checked %}checked{% endif %}> {{ skill }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="skill-section-label">🛠️ Infrastructure & Tools</label>
+                    <div class="flex flex-wrap gap-2">
+                        {% for tool in ['Git', 'Docker', 'AWS', 'Figma', 'Linux', 'Jira', 'Postman', 'VS Code', 'Kali Linux', 'Unity', 'Kubernetes'] %}
+                        {% set is_checked = profile and tool in profile.skills %}
+                        <label class="skill-chip {% if is_checked %}selected{% endif %}">
+                            <input type="checkbox" name="skills" value="{{ tool }}" onchange="toggleSkill(this)" {% if is_checked %}checked{% endif %}> {{ tool }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="skill-section-label">🗣️ Human Protocols</label>
+                    <div class="flex flex-wrap gap-2">
+                        {% for soft in ['Communication', 'Teamwork', 'Leadership', 'Problem Solving', 'Time Management', 'Critical Thinking', 'Adaptability'] %}
+                        {% set is_checked = profile and soft in profile.skills %}
+                        <label class="skill-chip {% if is_checked %}selected{% endif %}">
+                            <input type="checkbox" name="skills" value="{{ soft }}" onchange="toggleSkill(this)" {% if is_checked %}checked{% endif %}> {{ soft }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button type="button" class="btn-quantum btn-back" onclick="prevStep(2)">
+                        <i class="bi bi-arrow-left me-2"></i> Previous
+                    </button>
+                    <button type="button" class="btn-quantum btn-primary" onclick="validateSkillsAndNext(3)">
+                        Proceed to Sector 4 <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
             </div>
 
-            <div class="mt-5 d-flex justify-content-between">
-                <button type="button" class="btn btn-light btn-nav" onclick="prevStep(4)">Back</button>
-                <button type="button" class="btn btn-success btn-nav px-5 shadow" onclick="submitProfile()">
-                    {% if profile %}Update Profile{% else %}Complete Profile{% endif %} <i class="bi bi-check-lg"></i>
-                </button>
-            </div>
-        </div>
+            <div class="form-section" id="step4">
+                <h4>4. Primary Protocol (Project)</h4>
+                <div class="info-card">
+                    <i class="bi bi-info-circle-fill"></i> Uploading a project schematic increases matching efficiency by 40%.
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Project Designation <span style="color: rgba(255,255,255,0.4); font-size: 0.85rem; font-weight: 400;">(Optional)</span></label>
+                    <input type="text" name="project_title" class="form-control" 
+                           value="{{ profile.projects[0]['title'] if profile and profile.projects else '' }}" 
+                           placeholder="e.g. Quantum E-Commerce Node">
+                </div>
 
-    </form>
+                <div class="form-group">
+                    <label class="form-label">Repository Uplink <span style="color: rgba(255,255,255,0.4); font-size: 0.85rem; font-weight: 400;">(GitHub / Live URL)</span></label>
+                    <input type="url" name="project_link" class="form-control" 
+                           value="{{ profile.projects[0]['link'] if profile and profile.projects else '' }}" 
+                           placeholder="https://github.com/...">
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn-quantum btn-back" onclick="prevStep(3)">
+                        <i class="bi bi-arrow-left me-2"></i> Previous
+                    </button>
+                    <button type="button" class="btn-quantum btn-primary" onclick="nextStep(5)">
+                        Final Sequence <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-section" id="step5">
+                <h4>5. Final Calibration</h4>
+                
+                <div class="form-group">
+                    <label class="form-label">Cycles of Experience <span class="required-star">*</span></label>
+                    <select name="experience_years" class="form-select" required>
+                        <option value="0" selected>Level 0 (Initiate)</option>
+                        <option value="1">Level 1 (1 Year)</option>
+                        <option value="2">Level 2 (2 Years)</option>
+                        <option value="3+">Level 3+ (Veteran)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Data Core (Resume PDF) <span class="required-star">*</span></label>
+                    {% if profile and profile.resume_file %}
+                        <div class="resume-status">
+                            <i class="bi bi-check-circle-fill"></i> Document Secured: <strong>{{ profile.resume_file }}</strong>
+                        </div>
+                        <input type="file" name="resume" id="resumeInput" class="file-input" accept=".pdf,.doc,.docx">
+                        <small class="file-hint">Select a new file only to overwrite the existing core.</small>
+                    {% else %}
+                        <input type="file" name="resume" id="resumeInput" class="file-input" accept=".pdf,.doc,.docx" required>
+                        <small class="file-hint">Required for Neural Net Analysis.</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Professional Network (LinkedIn) <span style="color: rgba(255,255,255,0.4); font-size: 0.85rem; font-weight: 400;">(Optional)</span></label>
+                    <input type="url" name="linkedin" class="form-control" 
+                           value="{{ profile.linkedin_url if profile and profile.linkedin_url else '' }}"
+                           placeholder="https://linkedin.com/in/...">
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn-quantum btn-back" onclick="prevStep(4)">
+                        <i class="bi bi-arrow-left me-2"></i> Previous
+                    </button>
+                    <button type="button" class="btn-quantum btn-success" onclick="submitProfile()">
+                        {% if profile %}Execute Update{% else %}Initialize System{% endif %} <i class="bi bi-check-circle-fill ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
 </div>
 
 <script>
+    // Cursor Glow Effect
+    document.addEventListener('mousemove', function(e) {
+        const glow = document.getElementById('cursorGlow');
+        if (glow) {
+            glow.style.left = e.clientX + 'px';
+            glow.style.top = e.clientY + 'px';
+        }
+    });
+
     // --- 1. LOCAL DATA (Top Indian Cities & Colleges) ---
     const cities = [
         "Ahmedabad", "Bangalore", "Mumbai", "Delhi", "Pune", "Hyderabad", "Chennai", "Kolkata", 
@@ -361,8 +529,20 @@
     setupSearch('cityInput', 'cityList', cities);
     setupSearch('collegeInput', 'collegeList', colleges);
 
+    // --- 2. FORM NAVIGATION ---
+    function nextStep(step) {
+        document.querySelectorAll('.form-section').forEach(el => {
+            el.classList.remove('active');
+        });
+        const nextEl = document.getElementById('step' + step);
+        nextEl.classList.add('active');
+    }
+    
+    function prevStep(step) { 
+        nextStep(step); 
+    }
 
-    // --- 2. VALIDATION LOGIC (STRICT) ---
+    // --- 3. VALIDATION ---
     function validateStep1() {
         const name = document.getElementById('nameInput');
         const phone = document.getElementById('phoneInput');
@@ -373,6 +553,7 @@
 
         if(name.value.trim().length < 2) {
             name.classList.add('shake');
+            setTimeout(() => name.classList.remove('shake'), 500);
             isValid = false;
         }
 
@@ -380,6 +561,7 @@
         if (!phoneRegex.test(phone.value)) {
             phone.classList.add('shake');
             errorMsg.style.display = 'block';
+            setTimeout(() => phone.classList.remove('shake'), 500);
             isValid = false;
         } else {
             phone.classList.remove('shake');
@@ -388,15 +570,11 @@
 
         if(loc.value.trim().length < 3) {
             loc.classList.add('shake');
+            setTimeout(() => loc.classList.remove('shake'), 500);
             isValid = false;
         }
 
         if(isValid) {
-            setTimeout(() => {
-                name.classList.remove('shake');
-                phone.classList.remove('shake');
-                loc.classList.remove('shake');
-            }, 500);
             nextStep(2);
         }
     }
@@ -404,7 +582,7 @@
     function validateSkillsAndNext(step) {
         const checked = document.querySelectorAll('input[name="skills"]:checked');
         if (checked.length < 3) {
-            alert("Please select at least 3 skills to build a better roadmap.");
+            alert("Please select at least 3 nodes to build a reliable matrix.");
         } else {
             nextStep(step + 1);
         }
@@ -414,10 +592,9 @@
         const resumeInput = document.getElementById('resumeInput');
         const hasResume = document.getElementById('hasResume').value === 'yes';
 
-        // Check validation ONLY if no existing resume AND no new file selected
         if (!hasResume && resumeInput.files.length === 0) {
             resumeInput.classList.add('shake');
-            alert("Resume is required to complete your profile.");
+            alert("A valid Data Core (Resume) is required for processing.");
             setTimeout(() => resumeInput.classList.remove('shake'), 500);
             return;
         }
@@ -425,21 +602,19 @@
         document.getElementById('mainForm').submit();
     }
 
-
-    // --- 3. UI INTERACTIONS ---
-    function nextStep(step) {
-        document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
-        document.getElementById('step' + step).classList.add('active');
-    }
-    function prevStep(step) { nextStep(step); }
-
+    // --- 4. UI INTERACTIONS ---
     function toggleSkill(checkbox) {
-        if (checkbox.checked) checkbox.parentElement.classList.add('selected');
-        else checkbox.parentElement.classList.remove('selected');
+        if (checkbox.checked) {
+            checkbox.parentElement.classList.add('selected');
+        } else {
+            checkbox.parentElement.classList.remove('selected');
+        }
     }
     
     function toggleRadio(radio) {
-        document.querySelectorAll(`input[name="${radio.name}"]`).forEach(r => r.parentElement.classList.remove('selected'));
+        document.querySelectorAll(`input[name="${radio.name}"]`).forEach(r => {
+            r.parentElement.classList.remove('selected');
+        });
         radio.parentElement.classList.add('selected');
     }
 </script>

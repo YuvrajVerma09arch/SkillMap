@@ -1,192 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkillMap - AI Career Architect</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-
-    <style>
-        /* GLOBAL STYLES */
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* --- NAVBAR CORE --- */
-        .navbar {
-            padding: 1rem 0;
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-
-        /* 1. HOME NAVBAR (Transparent & Absolute) */
-        .navbar-home {
-            position: absolute;
-            width: 100%;
-            top: 0; left: 0;
-            background: transparent;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .navbar-home .nav-link { color: rgba(255, 255, 255, 0.8) !important; }
-        .navbar-home .nav-link:hover { color: white !important; }
-        .navbar-home .navbar-brand { color: white !important; }
-        .navbar-home .navbar-toggler-icon { filter: invert(1); } 
-
-        /* 2. TOOL NAVBAR (Static Blue Glass) */
-        .navbar-tool {
-            background: #2563EB; 
-            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.2);
-        }
-        .navbar-tool .nav-link { color: white !important; }
-        .navbar-tool .nav-link:hover { color: rgba(255, 255, 255, 0.8) !important; }
-        .navbar-tool .navbar-brand { color: white !important; }
-        .navbar-tool .logo-box { background: white; color: #2563EB; }
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SkillMap - AI Career Architect</title>
         
-        /* Sticky State */
-        .navbar.scrolled {
-            background: rgba(37, 99, 235, 0.95);
-            backdrop-filter: blur(10px);
-        }
-
-        /* LOGO BOX */
-        .logo-box {
-            width: 40px; height: 40px;
-            background: white;
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            color: #2563EB;
-            margin-right: 10px;
-        }
-
-        .navbar-brand { font-weight: 700; font-size: 1.5rem; display: flex; align-items: center; }
-        .nav-link { font-weight: 500; margin-left: 1rem; transition: all 0.3s; }
-
-        /* FLASH MESSAGES */
-        .flash-container {
-            position: fixed; top: 100px; right: 20px; z-index: 9999; width: 350px;
-        }
-        .alert-glass {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-left: 5px solid #2563EB;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border-radius: 8px;
-            color: #1e293b;
-        }
-
-        .main-wrapper { flex: 1; }
-    </style>
-</head>
-<body>
-
-    <nav class="navbar navbar-expand-lg {% if request.endpoint == 'main.home' %}navbar-home{% else %}navbar-tool{% endif %}">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.home') }}">
-                <div class="logo-box">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path><path d="M12 7a5 5 0 1 0 5 5"></path><path d="M13 3.055a9 9 0 1 0 7.941 7.945"></path><path d="M15 6v3h3l3 -3h-3v-3z"></path><path d="M15 9l-3 3"></path></svg>
-                </div>
-                <span>SkillMap</span>
-            </a>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        
+        <script src="https://cdn.tailwindcss.com"></script>
+        
+        <script>
+            tailwind.config = {
+                corePlugins: {
+                    preflight: false, // This stops Tailwind from left-aligning everything
+                }
+            }
+        </script>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+        
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+        <style>
+            @keyframes shimmer {
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(100%); }
+            }
+            @keyframes borderGlow {
+                0% { background-position: 0% 0; }
+                100% { background-position: 200% 0; }
+            }
+            @keyframes spin-glow {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            .animate-shimmer { animation: shimmer 3s infinite; }
+            .animate-border-glow { animation: borderGlow 3s linear infinite; background-size: 200% 100%; }
+            .animate-spin-glow { animation: spin-glow 4s linear infinite; }
+            .animate-slideIn { animation: slideIn 0.3s ease-out; }
+            
+            /* Custom gradient backgrounds */
+            .bg-quantum-nav { background: linear-gradient(135deg, #0A1929 0%, #1E4C8F 50%, #ec4899 100%); }
+            .bg-quantum-footer { background: linear-gradient(135deg, #0A1929 0%, #1E4C8F 100%); }
+            
+            /* Navbar overlay effects */
+            .navbar-glow::before {
+                content: ''; position: absolute; inset: 0;
+                background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%, transparent 100%);
+                animation: shimmer 3s infinite; pointer-events: none;
+            }
+            .navbar-border-glow::after {
+                content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px;
+                background: linear-gradient(90deg, transparent 0%, #3b82f6 25%, #ec4899 50%, #8b5cf6 75%, transparent 100%);
+                animation: borderGlow 3s linear infinite; background-size: 200% 100%;
+            }
+            
+            /* Logo box animation */
+            .logo-box { transition: all 0.3s ease; position: relative; overflow: hidden; }
+            .logo-box::before {
+                content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+                background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.3) 25%, transparent 50%);
+                animation: spin-glow 4s linear infinite;
+            }
+            .logo-box:hover { transform: rotate(5deg) scale(1.05); box-shadow: 0 0 30px white; background: rgba(255,255,255,0.3); }
+            
+            /* Navbar link underline animation */
+            .nav-link-custom { position: relative; transition: all 0.3s ease; text-decoration: none;}
+            .nav-link-custom::after {
+                content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+                width: 0; height: 2px; background: white; transition: width 0.3s ease; box-shadow: 0 0 10px white;
+            }
+            .nav-link-custom:hover::after { width: 80%; }
+            
+            /* Button animations */
+            .btn-quantum { position: relative; overflow: hidden; transition: all 0.3s; text-decoration: none;}
+            .btn-quantum::before {
+                content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+                background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.2) 25%, transparent 50%);
+                animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+            }
+            .btn-quantum:hover::before { opacity: 1; }
+            .btn-quantum:hover { transform: translateY(-2px); color: white;}
+            
+            /* Responsive navbar collapse */
+            @media (max-width: 991.98px) {
+                .navbar-collapse-custom {
+                    background: linear-gradient(135deg, #0A1929 0%, #1E4C8F 100%);
+                    backdrop-filter: blur(20px); padding: 1rem; border-radius: 16px; margin-top: 1rem;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.2);
+                }
+            }
+        </style>
+    </head>
+<body class="font-['Inter'] antialiased flex flex-col min-h-screen bg-[#050505] text-white">
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.home') }}">Home</a></li>
+    <div class="fixed top-0 left-0 right-0 h-[100px] z-[999] pointer-events-none bg-gradient-to-b from-black/90 via-black/50 to-transparent"></div>
+
+    <nav class="navbar-glow navbar-border-glow relative z-[1000] py-4 bg-quantum-nav border-b border-white/20 shadow-[0_4px_30px_rgba(236,72,153,0.2)]">
+        <div class="container max-w-7xl mx-auto px-6">
+            <div class="flex items-center justify-between">
+                
+                <a class="flex items-center text-white font-bold text-2xl" href="{{ url_for('main.home') }}">
+                    <div class="logo-box w-[45px] h-[45px] bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="relative z-10"><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path><path d="M12 7a5 5 0 1 0 5 5"></path><path d="M13 3.055a9 9 0 1 0 7.941 7.945"></path><path d="M15 6v3h3l3 -3h-3v-3z"></path><path d="M15 9l-3 3"></path></svg>
+                    </div>
+                    <span>SkillMap</span>
+                </a>
+                
+                <div class="hidden lg:flex items-center space-x-2">
+                    <a href="{{ url_for('main.home') }}" class="nav-link-custom text-white/90 px-4 py-2">Home</a>
                     
                     {% if current_user.is_authenticated %}
-                        
                         {% if current_user.role == 'seeker' %}
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.resume_checker') }}">Resume Analyst</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.roadmap') }}">Roadmap Gen</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.interview') }}">Mock Interview</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('jobs.job_feed') }}">Jobs</a></li>
-                        
+                            <a href="{{ url_for('main.resume_checker') }}" class="nav-link-custom text-white/90 px-4 py-2">Resume Analyst</a>
+                            <a href="{{ url_for('main.roadmap') }}" class="nav-link-custom text-white/90 px-4 py-2">Roadmap Gen</a>
+                            <a href="{{ url_for('main.interview') }}" class="nav-link-custom text-white/90 px-4 py-2">Mock Interview</a>
+                            <a href="{{ url_for('jobs.job_feed') }}" class="nav-link-custom text-white/90 px-4 py-2">Jobs</a>
                         {% elif current_user.role == 'recruiter' %}
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.recruiter_dashboard') }}">Dashboard</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.talent_feed') }}">Find Talent</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.resume_checker') }}">Resume Analyst</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.roadmap') }}">Roadmap Gen</a></li>
+                            <a href="{{ url_for('main.recruiter_dashboard') }}" class="nav-link-custom text-white/90 px-4 py-2">Dashboard</a>
+                            <a href="{{ url_for('main.talent_feed') }}" class="nav-link-custom text-white/90 px-4 py-2">Find Talent</a>
+                            <a href="{{ url_for('main.resume_checker') }}" class="nav-link-custom text-white/90 px-4 py-2">Resume Analyst</a>
+                            <a href="{{ url_for('main.roadmap') }}" class="nav-link-custom text-white/90 px-4 py-2">Roadmap Gen</a>
                         {% endif %}
-
                     {% endif %}
-
-                    <div class="d-flex ms-lg-4 gap-2 mt-3 mt-lg-0">
+                    
+                    <div class="flex ml-4 gap-2">
                         {% if current_user.is_authenticated %}
-                            <div class="dropdown">
-                                <button class="btn btn-light text-primary rounded-pill px-4 fw-bold dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-person-circle fs-5"></i> {{ current_user.username }}
+                            <div class="dropdown relative">
+                                <button class="dropdown-toggle btn-quantum flex items-center gap-2 bg-white/15 backdrop-blur-md text-white border border-white/30 rounded-full px-4 py-2.5">
+                                    <i class="bi bi-person-circle"></i> {{ current_user.name }}
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow mt-2">
+                                <div class="dropdown-menu-custom hidden absolute right-0 mt-2 w-48 bg-[#0A1929]/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-[0_10px_40px_rgba(236,72,153,0.3)] py-2 z-50">
                                     {% if current_user.role == 'recruiter' %}
-                                        <li><a class="dropdown-item" href="{{ url_for('main.my_company') }}">Company Profile</a></li>
+                                        <a href="{{ url_for('main.my_company') }}" class="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 transition">Company Profile</a>
                                     {% else %}
-                                        <li><a class="dropdown-item" href="{{ url_for('main.my_profile') }}">My Profile</a></li>
+                                        <a href="{{ url_for('main.my_profile') }}" class="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 transition">My Profile</a>
                                     {% endif %}
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">Logout</a></li>
-                                </ul>
+                                    <div class="border-t border-white/10 my-1"></div>
+                                    <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-pink-500 hover:text-pink-400 hover:bg-white/10 transition">Logout</a>
+                                </div>
                             </div>
                         {% else %}
-                            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light rounded-pill px-4">Sign In</a>
-                            <a href="{{ url_for('auth.role_select') }}" class="btn btn-light text-primary rounded-pill px-4 fw-bold">Get Started</a>
+                            <a href="{{ url_for('auth.login') }}" class="btn-quantum border border-white/30 text-white bg-white/10 backdrop-blur-md rounded-full px-4 py-2.5">Sign In</a>
+                            <a href="{{ url_for('auth.role_select') }}" class="btn-quantum bg-white/15 backdrop-blur-md text-white border border-white/30 rounded-full px-4 py-2.5 font-bold">Get Started</a>
                         {% endif %}
                     </div>
-                </ul>
+                </div>
+                
+                <button class="navbar-toggler lg:hidden border border-white/30 bg-white/10 rounded-lg p-2">
+                    <span class="text-white">
+                        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 7h22M4 15h22M4 23h22"/>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+            
+            <div id="navbarNav" class="hidden lg:hidden mt-4">
+                <div class="flex flex-col space-y-3 pb-4">
+                    <a href="{{ url_for('main.home') }}" class="text-white/90 hover:text-white">Home</a>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.role == 'seeker' %}
+                            <a href="{{ url_for('main.resume_checker') }}" class="text-white/90 hover:text-white">Resume Analyst</a>
+                            <a href="{{ url_for('main.roadmap') }}" class="text-white/90 hover:text-white">Roadmap Gen</a>
+                            <a href="{{ url_for('main.interview') }}" class="text-white/90 hover:text-white">Mock Interview</a>
+                            <a href="{{ url_for('jobs.job_feed') }}" class="text-white/90 hover:text-white">Jobs</a>
+                            <div class="border-t border-white/20 my-2"></div>
+                            <a href="{{ url_for('main.my_profile') }}" class="text-white/90 hover:text-white">My Profile</a>
+                        {% elif current_user.role == 'recruiter' %}
+                            <a href="{{ url_for('main.recruiter_dashboard') }}" class="text-white/90 hover:text-white">Dashboard</a>
+                            <a href="{{ url_for('main.talent_feed') }}" class="text-white/90 hover:text-white">Find Talent</a>
+                            <div class="border-t border-white/20 my-2"></div>
+                            <a href="{{ url_for('main.my_company') }}" class="text-white/90 hover:text-white">Company Profile</a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.logout') }}" class="text-pink-500 font-bold">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="text-white/90 hover:text-white">Sign In</a>
+                        <a href="{{ url_for('auth.role_select') }}" class="text-white font-bold">Get Started</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="flash-container">
+    <div class="fixed top-[100px] right-5 z-[9999] w-[380px]">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                <div class="alert alert-glass alert-dismissible fade show" role="alert">
-                    {% if category == 'error' or category == 'danger' %}
-                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
-                    {% else %}
-                        <i class="bi bi-check-circle-fill text-success me-2"></i>
-                    {% endif %}
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="alert-quantum bg-[rgba(10,10,20,0.95)] backdrop-blur-xl border-l-4 {% if category == 'error' or category == 'danger' %}border-red-500{% elif category == 'success' %}border-green-500{% elif category == 'warning' %}border-yellow-500{% else %}border-blue-500{% endif %} shadow-2xl rounded-xl text-white p-4 mb-3 animate-slideIn relative overflow-hidden flex items-center justify-between" role="alert">
+                    <div class="flex items-center">
+                        {% if category == 'error' or category == 'danger' %}
+                            <i class="bi bi-exclamation-triangle-fill text-red-500 mr-3 text-xl"></i>
+                        {% elif category == 'success' %}
+                            <i class="bi bi-check-circle-fill text-green-500 mr-3 text-xl"></i>
+                        {% elif category == 'warning' %}
+                            <i class="bi bi-exclamation-circle-fill text-yellow-500 mr-3 text-xl"></i>
+                        {% else %}
+                            <i class="bi bi-info-circle-fill text-blue-500 mr-3 text-xl"></i>
+                        {% endif %}
+                        <span class="font-medium flex-1">{{ message }}</span>
+                    </div>
+                    <button type="button" class="text-white/50 hover:text-white ml-4" onclick="this.parentElement.remove()">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
     </div>
 
-    <div class="{% if request.endpoint != 'main.home' %}main-wrapper{% endif %}">
+    <div class="{% if request.endpoint != 'main.home' %}flex-1 relative z-10{% endif %}">
         {% block content %}{% endblock %}
     </div>
 
     {% if request.endpoint != 'main.home' %}
-    <footer class="bg-white py-4 mt-auto border-top">
-        <div class="container text-center text-muted small">
-            <p class="mb-0">© 2026 SkillMap. Powered by AI.</p>
+    <footer class="relative overflow-hidden py-6 mt-auto bg-quantum-footer backdrop-blur-md border-t border-white/10 shadow-[0_-4px_30px_rgba(236,72,153,0.1)] z-10">
+        <div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500 via-pink-500 via-purple-500 to-transparent animate-border-glow"></div>
+        <div class="container max-w-7xl mx-auto px-6 text-center">
+            <p class="mb-0 text-white/50 text-sm font-medium">© 2026 SkillMap. Powered by AI. <span class="mx-2">|</span> 
+                <a href="#" class="text-white/50 hover:text-white transition-all">Privacy</a> 
+                <span class="mx-2">•</span> 
+                <a href="#" class="text-white/50 hover:text-white transition-all">Terms</a>
+            </p>
         </div>
     </footer>
     {% endif %}
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
-        // Scroll Effect (Only affects Home Page now)
-        window.addEventListener('scroll', function() {
-            const navbar = document.querySelector('.navbar-home');
-            if (navbar) {
-                if (window.scrollY > 50) {
-                    navbar.classList.add('scrolled');
-                } else {
-                    navbar.classList.remove('scrolled');
-                }
+        // Auto-dismiss flash messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert-quantum');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    if (alert) {
+                        alert.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                        alert.style.opacity = '0';
+                        alert.style.transform = 'translateX(100%)';
+                        setTimeout(() => { if (alert.parentNode) alert.remove(); }, 300);
+                    }
+                }, 5000);
+            });
+        });
+
+        // Mobile menu toggle
+        document.querySelector('.navbar-toggler')?.addEventListener('click', function() {
+            const menu = document.getElementById('navbarNav');
+            menu.classList.toggle('hidden');
+            menu.classList.add('navbar-collapse-custom');
+        });
+
+        // Dropdown toggle logic
+        document.querySelectorAll('.dropdown-toggle').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const menu = this.nextElementSibling;
+                menu.classList.toggle('hidden');
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu-custom').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
             }
         });
     </script>

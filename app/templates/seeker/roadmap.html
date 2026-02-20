@@ -2,183 +2,223 @@
 
 {% block content %}
 <style>
-    /* --- THEME & BACKGROUND --- */
-    body {
-        background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);
-        min-height: 100vh;
-        color: #fff;
+    /* --- QUANTUM THEME --- */
+    :root {
+        --primary-dark: #0A1929;
+        --accent-blue: #3b82f6;
+        --accent-pink: #ec4899;
+        --accent-purple: #8b5cf6;
     }
 
-    /* Floating Background Shapes */
-    .bg-shape {
-        position: fixed;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        backdrop-filter: blur(5px);
-        z-index: -1;
-        animation: float 20s infinite ease-in-out;
+    body {
+        background: #050505 !important;
+        min-height: 100vh;
+        color: white;
+        font-family: 'Inter', sans-serif;
+        overflow-x: hidden;
     }
-    .shape-1 { width: 300px; height: 300px; top: -10%; left: -10%; }
-    .shape-2 { width: 200px; height: 200px; bottom: 10%; right: -5%; animation-delay: -5s; }
+
+    /* --- QUANTUM BACKGROUND LAYERS --- */
+    .quantum-bg { position: fixed; inset: 0; z-index: -2; pointer-events: none;}
     
-    @keyframes float {
-        0%, 100% { transform: translate(0, 0); }
-        50% { transform: translate(20px, -20px); }
+    .bg-layer-1 {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at 50% 50%, rgba(30,27,75,0.8) 0%, #050505 70%);
     }
+    
+    .bg-layer-2 {
+        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.4) 0%, transparent 50%),
+                    radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.4) 0%, transparent 50%);
+        animation: plasma-move 30s infinite alternate ease-in-out;
+        filter: blur(80px); opacity: 0.5;
+    }
+    
+    @keyframes plasma-move {
+        0% { transform: rotate(0deg) translate(0,0); }
+        100% { transform: rotate(45deg) translate(-10%, -10%); }
+    }
+    
+    .noise-overlay {
+        position: fixed; inset: 0; z-index: -1;
+        background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        pointer-events: none; mix-blend-mode: overlay; opacity: 0.2;
+    }
+
+    /* --- FLOATING SHAPES --- */
+    .bg-shape {
+        position: fixed; background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
+        border-radius: 50%; filter: blur(60px); opacity: 0.15; z-index: -1;
+        animation: float 20s infinite ease-in-out; pointer-events: none;
+    }
+    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; animation-delay: 0s; }
+    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -5%; animation-delay: 2s; }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+
+    /* --- CURSOR GLOW --- */
+    .cursor-glow {
+        width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(236, 72, 153, 0.05) 50%, rgba(255,255,255,0) 70%);
+        position: fixed; border-radius: 50%; pointer-events: none;
+        transform: translate(-50%, -50%); z-index: 0; transition: transform 0.1s ease-out; filter: blur(20px);
+    }
+
+    /* --- HEADER --- */
+    .header-section { text-align: center; margin-bottom: 3rem; position: relative; z-index: 10;}
+    .header-title {
+        font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #fff, var(--accent-pink));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 30px rgba(236, 72, 153, 0.3);
+    }
+    .header-subtitle { font-size: 1.25rem; color: rgba(255,255,255,0.7); }
 
     /* --- GLASS INPUT CARD --- */
     .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        color: #1e293b;
-        padding: 2.5rem;
-        margin-bottom: 3rem;
+        background: rgba(10, 10, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        padding: 2.5rem; margin-bottom: 3rem; position: relative; overflow: hidden; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 10;
     }
+    .glass-card::after {
+        content: ''; position: absolute; inset: -200%;
+        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, var(--accent-blue) 25%, var(--accent-pink) 50%, var(--accent-purple) 75%, transparent 100%);
+        animation: spin-glow 8s linear infinite; opacity: 0; transition: opacity 0.4s ease; z-index: 0; pointer-events: none;
+    }
+    @keyframes spin-glow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .glass-card:hover::after { opacity: 0.15; }
+    .glass-card:hover { transform: translateY(-5px); border-color: var(--accent-pink); box-shadow: 0 30px 60px -12px rgba(236, 72, 153, 0.3); }
+    .glass-card > * { position: relative; z-index: 2; }
+
+    /* --- FORM ELEMENTS --- */
+    .form-group { margin-bottom: 1.5rem; }
+    .form-label { display: block; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 0.5rem; font-size: 1rem; }
+    .form-control {
+        width: 100%; padding: 1rem; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px);
+        border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; color: white; font-size: 1rem; transition: all 0.3s ease;
+    }
+    .form-control:focus { border-color: var(--accent-pink); box-shadow: 0 0 20px rgba(236, 72, 153, 0.3); outline: none; background: rgba(0, 0, 0, 0.4); }
+    .form-control::placeholder { color: rgba(255,255,255,0.4); }
+
+    /* --- BUTTONS --- */
+    .btn-primary {
+        width: 100%; padding: 1rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2));
+        backdrop-filter: blur(10px); color: white; border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50px; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.3s ease;
+        position: relative; overflow: hidden; letter-spacing: 0.5px;
+    }
+    .btn-primary::before {
+        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.2) 25%, transparent 50%);
+        animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s; z-index: -1;
+    }
+    .btn-primary:hover::before { opacity: 1; }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3)); border-color: var(--accent-pink);
+        transform: translateY(-2px); box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3); color: white;
+    }
+
+    .btn-outline-light {
+        display: inline-block; padding: 0.75rem 2rem; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3); border-radius: 50px; color: white; font-weight: 600; cursor: pointer;
+        transition: all 0.3s ease; text-decoration: none;
+    }
+    .btn-outline-light:hover { background: rgba(236, 72, 153, 0.25); border-color: var(--accent-pink); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3); color: white; }
 
     /* --- TIMELINE STYLES --- */
-    .timeline {
-        position: relative;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px 0;
-    }
-
-    /* The Center Line */
+    .timeline { position: relative; max-width: 800px; margin: 0 auto; padding: 20px 0; z-index: 10; }
     .timeline::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 50%;
-        width: 4px;
-        background: rgba(255, 255, 255, 0.3);
-        margin-left: -2px;
-        border-radius: 2px;
+        content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 4px;
+        background: linear-gradient(180deg, var(--accent-blue), var(--accent-pink), var(--accent-purple));
+        margin-left: -2px; border-radius: 2px; box-shadow: 0 0 20px var(--accent-pink);
     }
 
-    .timeline-item {
-        position: relative;
-        width: 50%;
-        padding: 0 40px;
-        margin-bottom: 40px;
-        opacity: 0; /* Hidden for animation */
-        animation: slideIn 0.6s forwards;
-    }
-
+    .timeline-item { position: relative; width: 50%; padding: 0 40px; margin-bottom: 40px; opacity: 0; animation: slideIn 0.6s forwards; }
     .timeline-item:nth-child(odd) { left: 0; text-align: right; }
     .timeline-item:nth-child(even) { left: 50%; text-align: left; }
 
-    /* The Dot on the Line */
     .timeline-dot {
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        background: #fff;
-        border: 4px solid #2563EB;
-        border-radius: 50%;
-        top: 25px;
-        z-index: 10;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3);
+        position: absolute; width: 24px; height: 24px; background: white; border: 4px solid var(--accent-pink);
+        border-radius: 50%; top: 25px; z-index: 10; box-shadow: 0 0 20px var(--accent-pink);
     }
-    
-    .timeline-item:nth-child(odd) .timeline-dot { right: -10px; }
-    .timeline-item:nth-child(even) .timeline-dot { left: -10px; }
+    .timeline-item:nth-child(odd) .timeline-dot { right: -12px; }
+    .timeline-item:nth-child(even) .timeline-dot { left: -12px; }
 
-    /* The Content Box */
     .timeline-content {
-        background: rgba(255, 255, 255, 0.95);
-        padding: 25px;
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        position: relative;
-        transition: transform 0.3s;
+        background: rgba(10, 10, 20, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(59, 130, 246, 0.3);
+        padding: 25px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        position: relative; transition: all 0.3s ease; color: white;
     }
-
-    .timeline-content:hover {
-        transform: translateY(-5px);
-    }
+    .timeline-content:hover { transform: translateY(-5px); border-color: var(--accent-pink); box-shadow: 0 30px 60px -12px rgba(236, 72, 153, 0.3); }
 
     .month-badge {
-        display: inline-block;
-        background: #2563EB;
-        color: white;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-weight: 700;
-        font-size: 0.8rem;
-        margin-bottom: 10px;
-        text-transform: uppercase;
+        display: inline-block; background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink)); color: white;
+        padding: 6px 16px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
+    .timeline-content h3 { color: white; font-weight: 700; font-size: 1.25rem; margin-bottom: 8px; background: linear-gradient(135deg, #fff, var(--accent-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .timeline-content p { color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-bottom: 12px; line-height: 1.5; }
 
-    .task-list {
-        list-style: none;
-        padding: 0;
-        margin-top: 15px;
-    }
-
+    .task-list { list-style: none; padding: 0; margin-top: 15px; }
     .task-list li {
-        background: #f1f5f9;
-        color: #475569;
-        margin-bottom: 8px;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        background: rgba(59, 130, 246, 0.1); backdrop-filter: blur(5px); color: rgba(255,255,255,0.9);
+        margin-bottom: 8px; padding: 10px 15px; border-radius: 10px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;
+        border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; text-align: left; /* Keep text left aligned even on odd items */
     }
-    
-    .task-list li::before {
-        content: '•';
-        color: #2563EB;
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
+    .task-list li:hover { background: rgba(236, 72, 153, 0.15); border-color: var(--accent-pink); transform: translateX(5px); }
+    .task-list li::before { content: '•'; color: var(--accent-pink); font-weight: bold; font-size: 1.5rem; line-height: 1; }
 
-    /* Animation */
-    @keyframes slideIn {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    /* --- EMAIL SECTION --- */
+    .email-section { text-align: center; margin-top: 3rem; animation: slideIn 1s forwards; position: relative; z-index: 10;}
+    .email-text { color: rgba(255,255,255,0.7); margin-bottom: 1rem; }
 
-    /* Responsive: Mobile Fix */
+    @keyframes slideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
     @media (max-width: 768px) {
+        .header-title { font-size: 2.5rem; } .glass-card { padding: 1.5rem; }
         .timeline::before { left: 20px; }
         .timeline-item { width: 100%; padding-left: 50px; padding-right: 0; text-align: left; }
         .timeline-item:nth-child(odd) { text-align: left; }
-        .timeline-item:nth-child(odd) .timeline-dot, 
-        .timeline-item:nth-child(even) .timeline-dot { left: 10px; right: auto; }
+        .timeline-item:nth-child(odd) .timeline-dot, .timeline-item:nth-child(even) .timeline-dot { left: 8px; right: auto; }
     }
 </style>
 
+<div class="quantum-bg">
+    <div class="bg-layer-1"></div>
+    <div class="bg-layer-2"></div>
+</div>
+<div class="noise-overlay"></div>
+
 <div class="bg-shape shape-1"></div>
 <div class="bg-shape shape-2"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
 
-<div class="container py-5">
+<div class="container py-5" style="padding-top: 100px !important;">
     
-    <div class="text-center text-white mb-5">
-        <h1 class="fw-bold display-5">Career Architect</h1>
-        <p class="opacity-90 fs-5">Tell us where you want to go. We'll build the bridge.</p>
+    <div class="header-section">
+        <h1 class="header-title">Career Architect</h1>
+        <p class="header-subtitle">Tell us where you want to go. We'll build the bridge.</p>
     </div>
 
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="glass-card">
                 <form method="POST">
-                    <div class="mb-4">
-                        <label class="form-label fw-bold text-secondary">Your Current Skills</label>
-                        <textarea name="current_skills" class="form-control form-control-lg bg-light border-0" rows="2" placeholder="e.g., Python basics, SQL, HTML..." required></textarea>
+                    <div class="form-group">
+                        <label class="form-label">Your Current Skills</label>
+                        <textarea name="current_skills" class="form-control" rows="2" placeholder="e.g., Python basics, SQL, HTML..." required></textarea>
                     </div>
                     
-                    <div class="mb-4">
-                        <label class="form-label fw-bold text-secondary">Target Role</label>
-                        <input type="text" name="target_role" class="form-control form-control-lg bg-light border-0" placeholder="e.g., AI Engineer, Full Stack Developer..." required>
+                    <div class="form-group">
+                        <label class="form-label">Target Role</label>
+                        <input type="text" name="target_role" class="form-control" placeholder="e.g., AI Engineer, Full Stack Developer..." required>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm" style="font-size: 1.1rem;">
+                    <button type="submit" class="btn-primary mt-3">
                         <i class="bi bi-magic me-2"></i>Generate Roadmap
                     </button>
                 </form>
@@ -193,8 +233,8 @@
             <div class="timeline-dot"></div>
             <div class="timeline-content">
                 <span class="month-badge">{{ step.month }}</span>
-                <h3 class="fw-bold text-dark h5 mb-2">{{ step.topic }}</h3>
-                <p class="text-secondary small mb-2">{{ step.description }}</p>
+                <h3>{{ step.topic }}</h3>
+                <p>{{ step.description }}</p>
                 
                 {% if step.action_items %}
                 <ul class="task-list">
@@ -207,11 +247,11 @@
         </div>
         {% endfor %}
         
-        <div class="text-center mt-5" style="animation: slideIn 1s forwards;">
-            <p class="text-white opacity-75">Want to save this?</p>
+        <div class="email-section">
+            <p class="email-text">Want to save this?</p>
             
             <form action="{{ url_for('main.trigger_email') }}" method="POST">
-                <button type="submit" class="btn btn-outline-light rounded-pill px-4 hover-scale">
+                <button type="submit" class="btn-outline-light">
                     <i class="bi bi-envelope-paper-fill me-2"></i>Email me this Plan
                 </button>
             </form>
@@ -220,4 +260,14 @@
     {% endif %}
 
 </div>
+
+<script>
+    document.addEventListener('mousemove', function(e) {
+        const glow = document.getElementById('cursorGlow');
+        if (glow) {
+            glow.style.left = e.clientX + 'px';
+            glow.style.top = e.clientY + 'px';
+        }
+    });
+</script>
 {% endblock %}

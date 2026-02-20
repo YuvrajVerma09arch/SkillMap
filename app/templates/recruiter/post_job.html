@@ -2,87 +2,195 @@
 
 {% block content %}
 <style>
-    /* Theme Consistency */
+    /* --- QUANTUM THEME --- */
+    :root {
+        --primary-dark: #0A1929;
+        --accent-blue: #3b82f6;
+        --accent-pink: #ec4899;
+        --accent-purple: #8b5cf6;
+    }
+
     body {
-        background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);
+        background: #050505 !important;
         min-height: 100vh;
         color: white;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* --- QUANTUM BACKGROUND LAYERS --- */
+    .quantum-bg { position: fixed; inset: 0; z-index: -2; pointer-events: none;}
+    
+    .bg-layer-1 {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at 50% 50%, rgba(30,27,75,0.8) 0%, #050505 70%);
     }
     
+    .bg-layer-2 {
+        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.4) 0%, transparent 50%),
+                    radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.4) 0%, transparent 50%);
+        animation: plasma-move 30s infinite alternate ease-in-out;
+        filter: blur(80px); opacity: 0.5;
+    }
+    
+    @keyframes plasma-move {
+        0% { transform: rotate(0deg) translate(0,0); }
+        100% { transform: rotate(45deg) translate(-10%, -10%); }
+    }
+
+    /* --- FLOATING SHAPES --- */
+    .floating-shapes {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; pointer-events: none;
+    }
+
+    .shape {
+        position: absolute; background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
+        border-radius: 50%; filter: blur(60px); opacity: 0.15; animation: float 20s infinite ease-in-out;
+    }
+    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; animation-delay: 0s; }
+    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -5%; animation-delay: 2s; }
+    .shape-3 { width: 200px; height: 200px; top: 40%; right: 20%; animation-delay: 4s; }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+
+    /* --- QUANTUM GLASS CONTAINER --- */
     .glass-container {
-        max-width: 900px;
-        margin: 40px auto;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 24px;
-        padding: 40px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        max-width: 900px; margin: 40px auto;
+        background: rgba(10, 10, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 32px; padding: 40px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); position: relative; overflow: hidden;
+    }
+
+    .glass-container::after {
+        content: ''; position: absolute; inset: -200%;
+        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, var(--accent-blue) 25%, var(--accent-pink) 50%, var(--accent-purple) 75%, transparent 100%);
+        animation: spin-glow 8s linear infinite; opacity: 0.15; z-index: 0; pointer-events: none;
+    }
+
+    @keyframes spin-glow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .glass-container > * { position: relative; z-index: 2; }
+
+    /* --- TYPOGRAPHY & FORMS --- */
+    h2 {
+        background: linear-gradient(135deg, #fff, var(--accent-pink));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        font-weight: 800; font-size: 2.2rem; letter-spacing: -0.5px;
     }
 
     .form-label {
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.9);
-        margin-bottom: 8px;
+        font-weight: 600; color: rgba(255, 255, 255, 0.9); margin-bottom: 8px; font-size: 0.95rem; letter-spacing: 0.3px;
     }
 
     .form-control, .form-select {
-        background: rgba(255, 255, 255, 0.9);
-        border: none;
-        border-radius: 12px;
-        padding: 12px 16px;
-        font-size: 1rem;
-        color: #1e293b;
+        background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px);
+        border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 16px;
+        padding: 14px 18px; font-size: 1rem; color: white; transition: all 0.3s ease;
     }
-    .form-control:focus {
-        background: white;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3);
+    .form-control::placeholder { color: rgba(255, 255, 255, 0.4); font-weight: 300; }
+    .form-control:focus, .form-select:focus {
+        outline: none; background: rgba(0, 0, 0, 0.4); border-color: var(--accent-pink);
+        box-shadow: 0 0 20px rgba(236, 72, 153, 0.3); color: white;
     }
+    .form-select option { background: #0A1929; color: white; }
 
-    /* Helper text for the JSON fields */
-    .hint-text {
-        font-size: 0.85rem;
-        color: rgba(255, 255, 255, 0.6);
-        margin-top: 4px;
-    }
+    .hint-text { font-size: 0.85rem; color: rgba(255, 255, 255, 0.5); margin-top: 6px; font-weight: 400; }
 
-    /* SKILL CHIPS STYLE */
+    /* --- SKILL CHIPS --- */
+    .skills-container {
+        background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px; padding: 20px;
+    }
     .skill-chip {
         display: inline-flex; align-items: center; padding: 8px 16px; margin: 4px;
-        background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); 
-        border-radius: 50px; color: white;
-        cursor: pointer; user-select: none; transition: all 0.2s;
+        background: rgba(59, 130, 246, 0.15); backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 50px; color: white;
+        cursor: pointer; user-select: none; transition: all 0.3s ease; font-size: 0.9rem; font-weight: 500;
     }
-    .skill-chip:hover { background: rgba(255, 255, 255, 0.3); }
+    .skill-chip:hover { 
+        background: rgba(236, 72, 153, 0.25); border-color: var(--accent-pink); transform: translateY(-2px);
+    }
     .skill-chip.selected {
-        background: white; border-color: white; color: #2563EB; font-weight: 700;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3));
+        border-color: var(--accent-pink); color: white; font-weight: 600; box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
     }
     .skill-chip input { display: none; }
+
+    /* --- BUTTONS --- */
+    .btn-outline-light {
+        background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white; transition: all 0.3s ease; border-radius: 50px; padding: 10px 24px; font-weight: 600; text-decoration: none;
+    }
+    .btn-outline-light:hover {
+        background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.6);
+        transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2); color: white;
+    }
+
+    .btn-light {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2));
+        backdrop-filter: blur(10px); color: white !important; border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease; border-radius: 50px; padding: 14px 32px; font-weight: 700; letter-spacing: 0.5px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .btn-light:hover {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3));
+        border-color: rgba(255, 255, 255, 0.6); transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 10px 30px rgba(236, 72, 153, 0.4);
+    }
+
+    hr { border: none; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-blue), var(--accent-pink), transparent); opacity: 0.3; margin: 2rem 0; }
+
+    @media (max-width: 768px) {
+        .glass-container { padding: 24px; margin: 20px; border-radius: 24px; }
+        h2 { font-size: 1.8rem; }
+    }
 </style>
 
-<div class="container">
+<div class="quantum-bg">
+    <div class="bg-layer-1"></div>
+    <div class="bg-layer-2"></div>
+</div>
+
+<div class="floating-shapes">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+</div>
+
+<div class="container position-relative z-10">
     <div class="glass-container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold mb-0">Post a New Job</h2>
-            <a href="{{ url_for('main.recruiter_dashboard') }}" class="btn btn-outline-light rounded-pill px-4">Cancel</a>
+            <a href="{{ url_for('main.recruiter_dashboard') }}" class="btn btn-outline-light">
+                <i class="bi bi-x-lg me-2"></i>Cancel
+            </a>
         </div>
 
         <form action="{{ url_for('jobs.post_job') }}" method="POST">
             
             <div class="row g-4 mb-4">
                 <div class="col-md-12">
-                    <label class="form-label">Job Title</label>
+                    <label class="form-label">
+                        <i class="bi bi-briefcase me-2" style="color: var(--accent-pink);"></i>Job Title
+                    </label>
                     <input type="text" name="title" class="form-control" placeholder="e.g. Senior Python Developer" required>
                 </div>
                 
                 <div class="col-md-6">
-                    <label class="form-label">Location</label>
+                    <label class="form-label">
+                        <i class="bi bi-geo-alt me-2" style="color: var(--accent-blue);"></i>Location
+                    </label>
                     <input type="text" name="location" class="form-control" placeholder="e.g. Ahmedabad / Remote" required>
                 </div>
                 
                 <div class="col-md-6">
-                    <label class="form-label">Work Type</label>
+                    <label class="form-label">
+                        <i class="bi bi-clock me-2" style="color: var(--accent-purple);"></i>Work Type
+                    </label>
                     <select name="job_type" class="form-select">
                         <option value="On-Site">On-Site</option>
                         <option value="Remote">Remote</option>
@@ -91,12 +199,16 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Salary Range</label>
+                    <label class="form-label">
+                        <i class="bi bi-cash-stack me-2" style="color: var(--accent-pink);"></i>Salary Range
+                    </label>
                     <input type="text" name="salary_range" class="form-control" placeholder="e.g. ₹8L - ₹12L PA">
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Experience Required</label>
+                    <label class="form-label">
+                        <i class="bi bi-bar-chart me-2" style="color: var(--accent-blue);"></i>Experience Required
+                    </label>
                     <select name="experience_required" class="form-select">
                         <option value="0-1 Years">Fresher (0-1 Years)</option>
                         <option value="1-3 Years">Junior (1-3 Years)</option>
@@ -106,46 +218,56 @@
                 </div>
             </div>
 
-            <hr class="border-white opacity-25 my-4">
+            <hr>
 
             <div class="mb-4">
-                <label class="form-label">Job Description (Summary)</label>
+                <label class="form-label">
+                    <i class="bi bi-file-text me-2" style="color: var(--accent-pink);"></i>Job Description (Summary)
+                </label>
                 <textarea name="description" class="form-control" rows="3" placeholder="Brief overview of the role..." required></textarea>
             </div>
 
             <div class="mb-4">
-                <label class="form-label d-block">Required Skills (Select for Smart Matching)</label>
-                <div class="p-3 border border-white border-opacity-25 rounded bg-white bg-opacity-10">
+                <label class="form-label d-block">
+                    <i class="bi bi-stars me-2" style="color: var(--accent-blue);"></i>Required Skills (Select for Smart Matching)
+                </label>
+                <div class="skills-container">
                     {% for skill in ['Python', 'Java', 'C++', 'JavaScript', 'React', 'Node.js', 'SQL', 'AWS', 'Docker', 'Git', 'Flutter', 'HTML/CSS'] %}
                     <label class="skill-chip">
                         <input type="checkbox" name="required_skills" value="{{ skill }}" onchange="toggleSkill(this)"> {{ skill }}
                     </label>
                     {% endfor %}
                 </div>
-                <div class="hint-text">Select skills to help our algorithm rank candidates.</div>
+                <div class="hint-text"><i class="bi bi-info-circle me-1"></i>Select skills to help our algorithm rank candidates.</div>
             </div>
 
             <div class="row g-4">
                 <div class="col-md-12">
-                    <label class="form-label">Key Responsibilities</label>
+                    <label class="form-label">
+                        <i class="bi bi-list-check me-2" style="color: var(--accent-purple);"></i>Key Responsibilities
+                    </label>
                     <textarea name="responsibilities" class="form-control" rows="4" placeholder="• Design APIs&#10;• Fix bugs&#10;• Drink coffee"></textarea>
-                    <div class="hint-text">Enter each point on a new line.</div>
+                    <div class="hint-text"><i class="bi bi-dot me-1"></i>Enter each point on a new line.</div>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Nice to Have (Optional)</label>
+                    <label class="form-label">
+                        <i class="bi bi-star me-2" style="color: var(--accent-pink);"></i>Nice to Have (Optional)
+                    </label>
                     <textarea name="nice_to_have" class="form-control" rows="2" placeholder="AWS, Docker..."></textarea>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Benefits (Optional)</label>
+                    <label class="form-label">
+                        <i class="bi bi-gift me-2" style="color: var(--accent-blue);"></i>Benefits (Optional)
+                    </label>
                     <textarea name="benefits" class="form-control" rows="2" placeholder="Health Insurance, Flexible hours..."></textarea>
                 </div>
             </div>
 
             <div class="mt-5 text-end">
-                <button type="submit" class="btn btn-light text-primary fw-bold px-5 py-3 rounded-pill shadow">
-                    Publish Job Post
+                <button type="submit" class="btn btn-light">
+                    <i class="bi bi-rocket-takeoff me-2"></i>Publish Job Post
                 </button>
             </div>
 
@@ -154,6 +276,7 @@
 </div>
 
 <script>
+    // Exact Javascript from your original file
     function toggleSkill(checkbox) {
         if (checkbox.checked) checkbox.parentElement.classList.add('selected');
         else checkbox.parentElement.classList.remove('selected');

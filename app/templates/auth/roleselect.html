@@ -3,415 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choose Your Path - SkillMap</title>
+    <title>Choose Your Path - SkillMap Quantum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* --- QUANTUM SETTINGS & COLORS --- */
+        :root {
+            --primary-dark: #0A1929;
+            --accent-blue: #3b82f6;
+            --accent-pink: #ec4899;
+            --accent-purple: #8b5cf6;
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Inter',  BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', sans-serif;
             overflow-x: hidden;
             position: relative;
             min-height: 100vh;
+            background: #050505;
+            color: white;
         }
 
-        /* Animated Background */
-        .animated-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1e40af 0%, #2563EB 50%, #3b82f6 100%);
-            z-index: -2;
+        /* --- QUANTUM BACKGROUND LAYERS --- */
+        .quantum-bg { position: fixed; inset: 0; z-index: -2; pointer-events: none; }
+        
+        .bg-layer-1 {
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(30,27,75,0.8) 0%, #050505 70%);
+        }
+        
+        .bg-layer-2 {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.4) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.4) 0%, transparent 50%);
+            animation: plasma-move 30s infinite alternate ease-in-out;
+            filter: blur(80px); opacity: 0.5;
+        }
+        
+        @keyframes plasma-move {
+            0% { transform: rotate(0deg) translate(0,0); }
+            100% { transform: rotate(45deg) translate(-10%, -10%); }
+        }
+        
+        .noise-overlay {
+            position: fixed; inset: 0; z-index: -1;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            pointer-events: none; mix-blend-mode: overlay; opacity: 0.2;
         }
 
-        .animated-bg::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(96, 165, 250, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(37, 99, 235, 0.2) 0%, transparent 50%);
-            animation: pulse 8s ease-in-out infinite;
-        }
-
-        .floating-shapes {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-
+        /* Floating Shapes */
+        .floating-shapes { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
         .shape {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: float 20s infinite ease-in-out;
+            position: absolute; background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
+            border-radius: 50%; filter: blur(60px); opacity: 0.15; animation: float 20s infinite ease-in-out;
         }
-
-        .shape:nth-child(1) {
-            width: 80px;
-            height: 80px;
-            top: 10%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-
-        .shape:nth-child(2) {
-            width: 120px;
-            height: 120px;
-            top: 70%;
-            left: 80%;
-            animation-delay: 2s;
-        }
-
-        .shape:nth-child(3) {
-            width: 60px;
-            height: 60px;
-            top: 40%;
-            left: 70%;
-            animation-delay: 4s;
-        }
-
-        .shape:nth-child(4) {
-            width: 100px;
-            height: 100px;
-            top: 80%;
-            left: 20%;
-            animation-delay: 6s;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.8;
-            }
-        }
+        .shape:nth-child(1) { width: 200px; height: 200px; top: 10%; left: 10%; animation-delay: 0s; }
+        .shape:nth-child(2) { width: 300px; height: 300px; top: 70%; left: 80%; animation-delay: 2s; }
+        .shape:nth-child(3) { width: 150px; height: 150px; top: 40%; left: 70%; animation-delay: 4s; }
+        .shape:nth-child(4) { width: 250px; height: 250px; top: 80%; left: 20%; animation-delay: 6s; }
 
         @keyframes float {
-            0%, 100% {
-                transform: translateY(0) translateX(0);
-            }
-            25% {
-                transform: translateY(-30px) translateX(20px);
-            }
-            50% {
-                transform: translateY(-60px) translateX(-20px);
-            }
-            75% {
-                transform: translateY(-30px) translateX(10px);
-            }
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
         }
 
-        /* Navbar */
-         nav {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        /* --- NAVBAR --- */
+        nav {
+            background: linear-gradient(135deg, #0A1929 0%, #1E4C8F 50%, #ec4899 100%) !important;
+            backdrop-filter: blur(10px); padding: 1rem 2rem; box-shadow: 0 4px 30px rgba(236, 72, 153, 0.2);
+            position: relative; border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        nav::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%, transparent 100%);
+            animation: shimmer 3s infinite; pointer-events: none;
+        }
+        nav::after {
+            content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent 0%, var(--accent-blue) 25%, var(--accent-pink) 50%, var(--accent-purple) 75%, transparent 100%);
+            animation: borderGlow 3s linear infinite; background-size: 200% 100%;
         }
 
-        .nav-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes borderGlow { 0% { background-position: 0% 0; } 100% { background-position: 200% 0; } }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 700;
-            text-decoration: none;
-        }
-
+        .nav-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
+        .logo { display: flex; align-items: center; gap: 0.5rem; color: white; font-size: 1.5rem; font-weight: 700; text-decoration: none; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: white;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
+            width: 45px; height: 45px; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(255,255,255,0.3); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.3);
         }
+        .logo-icon::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.3) 25%, transparent 50%);
+            animation: spin-glow 4s linear infinite;
+        }
+        @keyframes spin-glow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .logo:hover .logo-icon { transform: rotate(5deg) scale(1.05); box-shadow: 0 0 30px white; background: rgba(255,255,255,0.3); }
 
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            list-style: none;
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a { color: white; text-decoration: none; font-weight: 500; position: relative; padding: 0.5rem 0; opacity: 0.9; transition: all 0.3s ease; }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 0; height: 2px;
+            background: white; transition: width 0.3s ease; box-shadow: 0 0 10px white;
         }
+        .nav-links a:hover::after { width: 80%; }
+        .nav-links a:hover { opacity: 1; transform: translateY(-1px); }
 
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: opacity 0.3s;
-        }
+        /* --- MAIN CONTAINER --- */
+        .container { max-width: 1200px; margin: 0 auto; padding: 3rem 2rem; text-align: center; position: relative; z-index: 10; }
+        .header { margin-bottom: 3rem; animation: fadeInDown 0.8s ease-out; }
+        .welcome-text { color: var(--accent-blue); font-size: 1rem; margin-bottom: 1rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+        .main-heading { background: linear-gradient(135deg, #fff, var(--accent-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 3.2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -1px; text-shadow: 0 0 30px rgba(236, 72, 153, 0.3); }
 
-        .nav-links a:hover {
-            opacity: 0.8;
-        }
-
-        /* Main Container */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-            text-align: center;
-        }
-
-        .header {
-            margin-bottom: 3rem;
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        .welcome-text {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 1rem;
-            margin-bottom: 1rem;
-            font-weight: 400;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .main-heading {
-            color: white;
-            font-size: 2.8rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.5px;
-        }
-
-        /* Cards Container */
-        .cards-container {
-            display: flex;
-            gap: 2rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 2rem;
-        }
+        /* --- CARDS CONTAINER --- */
+        .cards-container { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
 
         .role-card {
-            background: white;
-            border-radius: 16px;
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 380px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            animation: fadeInUp 0.8s ease-out;
-            position: relative;
-            overflow: hidden;
+            background: rgba(10, 10, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; padding: 2px; /* Padding for border effect */
+            width: 100%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s;
+            animation: fadeInUp 0.8s ease-out; position: relative; overflow: hidden;
         }
-
-        .role-card:nth-child(2) {
-            animation-delay: 0.2s;
-        }
+        .role-card:nth-child(2) { animation-delay: 0.2s; }
 
         .role-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #2563EB, #3b82f6);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
+            content: ''; position: absolute; inset: -200%;
+            background: conic-gradient(from 90deg at 50% 50%, transparent 0%, var(--accent-blue) 25%, var(--accent-pink) 50%, var(--accent-purple) 75%, transparent 100%);
+            animation: spin-glow 8s linear infinite; opacity: 0; transition: opacity 0.4s ease; z-index: 0;
         }
+        .role-card:hover::before { opacity: 1; }
+        .role-card:hover { transform: translateY(-12px); box-shadow: 0 30px 60px -12px rgba(236, 72, 153, 0.3); }
 
-        .role-card:hover {
-            transform: translateY(-12px);
-            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.3);
+        .card-inner {
+            background: rgba(10, 10, 15, 0.95); border-radius: 22px; padding: 2.5rem;
+            position: relative; z-index: 2; height: 100%; transition: background 0.3s;
         }
-
-        .role-card:hover::before {
-            transform: scaleX(1);
-        }
+        .role-card:hover .card-inner { background: rgba(20, 20, 30, 0.95); }
 
         .card-icon {
-            font-size: 4rem;
-            margin-bottom: 1.5rem;
-            animation: bounce 2s infinite;
+            width: 80px; height: 80px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2));
+            border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;
+            transition: all 0.3s ease; border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        .role-card:hover .card-icon { transform: scale(1.1) rotate(5deg); background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(236, 72, 153, 0.4)); box-shadow: 0 0 30px rgba(236, 72, 153, 0.3); }
 
-        .role-card:hover .card-icon {
-            animation: bounce 0.6s;
-        }
+        .card-title { font-size: 2rem; font-weight: 800; color: white; margin-bottom: 1rem; letter-spacing: -0.5px; }
+        .card-description { color: rgba(255, 255, 255, 0.7); margin-bottom: 1.5rem; line-height: 1.6; font-size: 1rem; }
 
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        .card-title {
-            font-size: 1.75rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 1rem;
-            letter-spacing: -0.3px;
-        }
-
-        .card-description {
-            color: #64748b;
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-            font-size: 0.95rem;
-        }
-
-        .benefits-list {
-            list-style: none;
-            margin-bottom: 2rem;
-            text-align: left;
-        }
-
-        .benefits-list li {
-            padding: 0.5rem 0;
-            color: #475569;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .benefits-list li::before {
-            content: '✓';
-            color: #2563EB;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
+        .benefits-list { list-style: none; margin-bottom: 2rem; text-align: left; }
+        .benefits-list li { padding: 0.6rem 0; color: rgba(255, 255, 255, 0.8); display: flex; align-items: center; gap: 0.75rem; font-size: 0.95rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .benefits-list li:last-child { border-bottom: none; }
+        .benefits-list li::before { content: '✓'; color: var(--accent-pink); font-weight: bold; font-size: 1.2rem; text-shadow: 0 0 10px var(--accent-pink); }
 
         .continue-btn {
-            width: 100%;
-            padding: 1rem 2rem;
-            background: #2563EB;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            width: 100%; padding: 1rem 2rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2));
+            backdrop-filter: blur(10px); color: white; border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s ease;
+            position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
-
         .continue-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.2) 25%, transparent 50%);
+            animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s;
         }
-
-        .continue-btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
+        .continue-btn:hover::before { opacity: 1; }
         .continue-btn:hover {
-            background: #1d4ed8;
-            transform: scale(1.02);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(236, 72, 153, 0.4));
+            border-color: rgba(255, 255, 255, 0.8); transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 30px rgba(236, 72, 153, 0.4);
         }
 
-        .continue-btn:active {
-            transform: scale(0.98);
-        }
-
-        .bottom-note {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
-            margin-top: 2rem;
-            animation: fadeIn 1s ease-out 0.5s both;
-        }
+        .bottom-note { color: rgba(255, 255, 255, 0.4); font-size: 0.9rem; margin-top: 2rem; animation: fadeIn 1s ease-out 0.5s both; letter-spacing: 1px;}
 
         /* Animations */
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .main-heading {
-                font-size: 2rem;
-            }
-
-            .cards-container {
-                gap: 1.5rem;
-            }
-
-            .role-card {
-                max-width: 100%;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            nav {
-                padding: 1rem;
-            }
+            .main-heading { font-size: 2.2rem; }
+            .cards-container { gap: 1.5rem; }
+            .role-card { max-width: 100%; }
+            .nav-links { display: none; }
         }
     </style>
 </head>
 <body>
-    <!-- Animated Background -->
-    <div class="animated-bg"></div>
+    <div class="quantum-bg">
+        <div class="bg-layer-1"></div>
+        <div class="bg-layer-2"></div>
+    </div>
+    <div class="noise-overlay"></div>
+
     <div class="floating-shapes">
         <div class="shape"></div>
         <div class="shape"></div>
@@ -419,94 +209,94 @@
         <div class="shape"></div>
     </div>
 
-    <!-- Navbar -->
     <nav>
         <div class="nav-content">
-            <a href="#" class="logo">
-                <div class="logo-icon"><svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="45"
-  height="45"
-  viewBox="0 0 24 24"
-  fill="none"
-  stroke="#2563EB"
-  stroke-width="2"
-  stroke-linecap="round"
-  stroke-linejoin="round"
->
-  <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
-  <path d="M12 7a5 5 0 1 0 5 5" />
-  <path d="M13 3.055a9 9 0 1 0 7.941 7.945" />
-  <path d="M15 6v3h3l3 -3h-3v-3z" />
-  <path d="M15 9l-3 3" />
-</svg></div>
+            <a href="{{ url_for('main.home') }}" class="logo">
+                <div class="logo-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+                        <path d="M12 7a5 5 0 1 0 5 5"></path>
+                        <path d="M13 3.055a9 9 0 1 0 7.941 7.945"></path>
+                        <path d="M15 6v3h3l3 -3h-3v-3z"></path>
+                        <path d="M15 9l-3 3"></path>
+                    </svg>
+                </div>
                 <span>SkillMap</span>
             </a>
             <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#about">About</a></li>
+                <li><a href="{{ url_for('main.home') }}">Home</a></li>
             </ul>
         </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="container">
         <div class="header">
-            <p class="welcome-text">Choose Your Path Forward</p>
+            <p class="welcome-text">✦ Choose Your Path Forward ✦</p>
             <h1 class="main-heading">SELECT YOUR POSITION</h1>
         </div>
 
         <div class="cards-container">
-            <!-- Job Seeker Card -->
             <div class="role-card">
-                <div class="card-icon"><svg width="45" height="45" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M11.0065 21.0001H9.60546C6.02021 21.0001 4.22759 21.0001 3.11379 19.8652C2 18.7302 2 16.9035 2 13.2501C2 9.59674 2 7.77004 3.11379 6.63508C4.22759 5.50012 6.02021 5.50012 9.60546 5.50012H13.4082C16.9934 5.50012 18.7861 5.50012 19.8999 6.63508C20.7568 7.50831 20.9544 8.79102 21 11.0001" stroke="#2563EB" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M20.0167 20.0233L21.9998 22M21.0528 17.5265C21.0528 15.5789 19.4739 14 17.5263 14C15.5786 14 13.9998 15.5789 13.9998 17.5265C13.9998 19.4742 15.5786 21.0531 17.5263 21.0531C19.4739 21.0531 21.0528 19.4742 21.0528 17.5265Z" stroke="#2563EB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M15.9998 5.5L15.9004 5.19094C15.4054 3.65089 15.1579 2.88087 14.5686 2.44043C13.9794 2 13.1967 2 11.6313 2H11.3682C9.8028 2 9.02011 2 8.43087 2.44043C7.84162 2.88087 7.59411 3.65089 7.0991 5.19094L6.99976 5.5" stroke="#2563EB" stroke-width="1.5"/>
-</svg></div>
-                <h2 class="card-title">Find a Job</h2>
-                <p class="card-description">
-                    I'm looking for opportunities and want to grow my skills
-                </p>
-                <ul class="benefits-list">
-                    <li>Get resume analysis & feedback</li>
-                    <li>Match with perfect jobs</li>
-                    <li>Personalized learning roadmaps</li>
-                </ul>
-                <button class="continue-btn" onclick="selectRole('Job Seeker')">
-                    Continue as Job Seeker →
-                </button>
+                <div class="card-inner">
+                    <div class="card-icon">
+                        <svg width="45" height="45" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11.0065 21.0001H9.60546C6.02021 21.0001 4.22759 21.0001 3.11379 19.8652C2 18.7302 2 16.9035 2 13.2501C2 9.59674 2 7.77004 3.11379 6.63508C4.22759 5.50012 6.02021 5.50012 9.60546 5.50012H13.4082C16.9934 5.50012 18.7861 5.50012 19.8999 6.63508C20.7568 7.50831 20.9544 8.79102 21 11.0001" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M20.0167 20.0233L21.9998 22M21.0528 17.5265C21.0528 15.5789 19.4739 14 17.5263 14C15.5786 14 13.9998 15.5789 13.9998 17.5265C13.9998 19.4742 15.5786 21.0531 17.5263 21.0531C19.4739 21.0531 21.0528 19.4742 21.0528 17.5265Z" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M15.9998 5.5L15.9004 5.19094C15.4054 3.65089 15.1579 2.88087 14.5686 2.44043C13.9794 2 13.1967 2 11.6313 2H11.3682C9.8028 2 9.02011 2 8.43087 2.44043C7.84162 2.88087 7.59411 3.65089 7.0991 5.19094L6.99976 5.5" stroke="#ffffff" stroke-width="1.5"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title">Find a Job</h2>
+                    <p class="card-description">
+                        I'm looking for opportunities and want to grow my skills.
+                    </p>
+                    <ul class="benefits-list">
+                        <li>Get resume analysis & feedback</li>
+                        <li>Match with perfect jobs</li>
+                        <li>Personalized learning roadmaps</li>
+                    </ul>
+                    <button class="continue-btn" onclick="selectRole('Job Seeker', this)">
+                        Continue as Job Seeker →
+                    </button>
+                </div>
             </div>
 
-            <!-- Recruiter Card -->
             <div class="role-card">
-                <div class="card-icon"><svg height="45" width="45" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="#2563EB"><path d="M248,208H232V96a8,8,0,0,0,0-16H184V48a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16V208H24a8,8,0,0,0,0,16H248a8,8,0,0,0,0-16ZM216,96V208H184V96ZM56,48H168V208H144V160a8,8,0,0,0-8-8H88a8,8,0,0,0-8,8v48H56Zm72,160H96V168h32ZM72,80a8,8,0,0,1,8-8H96a8,8,0,0,1,0,16H80A8,8,0,0,1,72,80Zm48,0a8,8,0,0,1,8-8h16a8,8,0,0,1,0,16H128A8,8,0,0,1,120,80ZM72,120a8,8,0,0,1,8-8H96a8,8,0,0,1,0,16H80A8,8,0,0,1,72,120Zm48,0a8,8,0,0,1,8-8h16a8,8,0,0,1,0,16H128A8,8,0,0,1,120,120Z"/></svg></div>
-                <h2 class="card-title">Hire Talent</h2>
-                <p class="card-description">
-                    I'm looking for the best candidates for my company
-                </p>
-                <ul class="benefits-list">
-                    <li>Post unlimited jobs</li>
-                    <li>Smart candidate matching</li>
-                    <li>Easy applicant management</li>
-                </ul>
-                <button class="continue-btn" onclick="selectRole('Recruiter')">
-                    Continue as Recruiter →
-                </button>
+                <div class="card-inner">
+                    <div class="card-icon">
+                        <svg height="45" width="45" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="#ffffff">
+                            <path d="M248,208H232V96a8,8,0,0,0,0-16H184V48a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16V208H24a8,8,0,0,0,0,16H248a8,8,0,0,0,0-16ZM216,96V208H184V96ZM56,48H168V208H144V160a8,8,0,0,0-8-8H88a8,8,0,0,0-8,8v48H56Zm72,160H96V168h32ZM72,80a8,8,0,0,1,8-8H96a8,8,0,0,1,0,16H80A8,8,0,0,1,72,80Zm48,0a8,8,0,0,1,8-8h16a8,8,0,0,1,0,16H128A8,8,0,0,1,120,80ZM72,120a8,8,0,0,1,8-8H96a8,8,0,0,1,0,16H80A8,8,0,0,1,72,120Zm48,0a8,8,0,0,1,8-8h16a8,8,0,0,1,0,16H128A8,8,0,0,1,120,120Z" fill="#ffffff"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title">Hire Talent</h2>
+                    <p class="card-description">
+                        I'm looking for the best candidates for my company.
+                    </p>
+                    <ul class="benefits-list">
+                        <li>Post unlimited jobs</li>
+                        <li>Smart candidate matching</li>
+                        <li>Easy applicant management</li>
+                    </ul>
+                    <button class="continue-btn" onclick="selectRole('Recruiter', this)">
+                        Continue as Recruiter →
+                    </button>
+                </div>
             </div>
         </div>
 
-        <p class="bottom-note">You can change this later in settings</p>
+        <p class="bottom-note">✦ You can change this later in settings ✦</p>
     </div>
 
     <script>
-        function selectRole(role) {
-            // Visual feedback
-            const card = event.currentTarget; 
+        function selectRole(role, btnElement) {
+            // Visual feedback on click
+            const card = btnElement.closest('.role-card');
+            
             card.style.transform = 'scale(0.95)';
+            btnElement.style.transform = 'scale(0.95)';
+            
             setTimeout(() => {
-                card.style.transform = 'scale(1)';
+                card.style.transform = '';
+                btnElement.style.transform = '';
             }, 100);
 
             // LOGIC: Send to Login Page, but in "Sign Up" mode
