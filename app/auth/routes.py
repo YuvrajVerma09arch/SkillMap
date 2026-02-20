@@ -108,7 +108,7 @@ def google_login():
         return redirect(url_for('auth.login'))
 
     redirect_uri = url_for('auth.google_callback', _external=True)
-    return client.authorize_redirect(redirect_uri)
+    return client.authorize_redirect(redirect_uri,prompt='select_account')
 
 @auth.route('/google/callback')
 def google_callback():

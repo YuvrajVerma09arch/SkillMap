@@ -2,119 +2,193 @@
 
 {% block content %}
 <style>
-    /* --- THEME BASE --- */
+    /* --- QUANTUM THEME --- */
+    :root {
+        --primary-dark: #0A1929;
+        --accent-blue: #3b82f6;
+        --accent-pink: #ec4899;
+        --accent-purple: #8b5cf6;
+    }
+
     body {
-        /* SkillMap Blue Gradient */
-        background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%) !important;
+        background: #050505 !important;
         min-height: 100vh;
         color: white;
-        font-family: 'Segoe UI', sans-serif;
+        font-family: 'Inter', sans-serif;
     }
 
-    /* --- FLOATING BUBBLES --- */
-    .bg-shape {
-        position: fixed;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        backdrop-filter: blur(5px);
-        z-index: -1;
-        animation: float 20s infinite ease-in-out;
+    /* --- QUANTUM BACKGROUND LAYERS --- */
+    .quantum-bg { position: fixed; inset: 0; z-index: -2; pointer-events: none; }
+    
+    .bg-layer-1 {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at 50% 50%, rgba(30,27,75,0.8) 0%, #050505 70%);
     }
-    .shape-1 { width: 300px; height: 300px; top: -10%; left: -10%; }
-    .shape-2 { width: 200px; height: 200px; bottom: 10%; right: -5%; animation-delay: -5s; }
+    
+    .bg-layer-2 {
+        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.4) 0%, transparent 50%),
+                    radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.4) 0%, transparent 50%);
+        animation: plasma-move 30s infinite alternate ease-in-out;
+        filter: blur(80px); opacity: 0.5;
+    }
+    
+    @keyframes plasma-move {
+        0% { transform: rotate(0deg) translate(0,0); }
+        100% { transform: rotate(45deg) translate(-10%, -10%); }
+    }
+
+    /* --- FLOATING SHAPES --- */
+    .bg-shape {
+        position: fixed; 
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
+        border-radius: 50%; filter: blur(60px); opacity: 0.15; z-index: -1;
+        animation: float 20s infinite ease-in-out; pointer-events: none;
+    }
+    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; animation-delay: 0s; }
+    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -5%; animation-delay: 2s; }
 
     @keyframes float {
-        0%, 100% { transform: translate(0, 0); }
-        50% { transform: translate(20px, -20px); }
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
     }
 
-    /* --- GLASS CARDS --- */
+    /* --- QUANTUM GLASS CARDS --- */
     .glass-card {
-        background: rgba(255, 255, 255, 0.15); 
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 20px;
-        padding: 24px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        transition: transform 0.2s;
-        overflow: hidden;
+        background: rgba(10, 10, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; padding: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        overflow: hidden; position: relative;
     }
-    .glass-card:hover {
-        transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.25);
+
+    .glass-card::after {
+        content: ''; position: absolute; inset: -200%;
+        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, var(--accent-blue) 25%, var(--accent-pink) 50%, var(--accent-purple) 75%, transparent 100%);
+        animation: spin-glow 8s linear infinite; opacity: 0; transition: opacity 0.4s ease; z-index: 0; pointer-events: none;
     }
+
+    @keyframes spin-glow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .glass-card:hover::after { opacity: 0.15; }
+    .glass-card:hover { transform: translateY(-8px); box-shadow: 0 30px 60px -12px rgba(236, 72, 153, 0.3); }
+    .glass-card > * { position: relative; z-index: 2; }
 
     /* --- TYPOGRAPHY --- */
-    h1, h2, h3, h5, h6 { color: #ffffff; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .text-white-50 { color: rgba(255, 255, 255, 0.8) !important; }
+    h1, h2, h3, h5, h6 { font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    h1 {
+        background: linear-gradient(135deg, #fff, var(--accent-pink));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.5rem; font-weight: 800;
+    }
+    .text-white-50 { color: rgba(255, 255, 255, 0.7) !important; }
     
     /* --- STATS --- */
     .stat-number {
-        font-size: 2.5rem;
-        font-weight: 800;
-        color: #fff;
+        font-size: 3rem; font-weight: 800;
+        background: linear-gradient(135deg, #fff, var(--accent-pink));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1;
     }
     
     /* --- JOB LIST --- */
     .job-item {
-        padding: 16px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: background 0.2s;
+        padding: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease;
     }
     .job-item:last-child { border-bottom: none; }
-    .job-item:hover { background: rgba(255, 255, 255, 0.1); }
+    .job-item:hover { background: rgba(59, 130, 246, 0.1); transform: translateX(5px); }
 
     .applicant-badge {
-        background: white;
-        color: #2563EB;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-weight: 700;
-        font-size: 0.85rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2));
+        backdrop-filter: blur(5px); color: white; padding: 5px 12px; border-radius: 20px;
+        font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.2);
     }
 
     /* --- GAUGE --- */
     .match-gauge {
-        width: 40px; height: 40px;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        background: conic-gradient(#10b981 var(--p), rgba(255,255,255,0.2) 0);
-        position: relative;
+        width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        background: conic-gradient(var(--accent-pink) calc(var(--p) * 1%), rgba(59, 130, 246, 0.2) 0);
+        position: relative; box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
     }
     .match-gauge::before {
-        content: ''; position: absolute; inset: 4px;
-        background: #3b82f6; border-radius: 50%;
+        content: ''; position: absolute; inset: 4px; background: rgba(10, 10, 20, 0.9);
+        border-radius: 50%; border: 1px solid rgba(255,255,255,0.1);
     }
-    .match-gauge span { position: relative; z-index: 1; font-size: 0.75rem; }
+    .match-gauge span { position: relative; z-index: 1; font-size: 0.85rem; font-weight: 700; color: white; text-shadow: 0 0 10px var(--accent-pink); }
 
     /* --- BUTTONS --- */
     .btn-create {
-        background: white;
-        color: #2563EB;
-        font-weight: 700;
-        padding: 10px 24px;
-        border-radius: 50px;
-        border: none;
-        transition: all 0.2s;
-        text-decoration: none;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2));
+        backdrop-filter: blur(10px); color: white; font-weight: 700; padding: 12px 28px;
+        border-radius: 50px; border: 1px solid rgba(255, 255, 255, 0.3); transition: all 0.3s ease;
+        text-decoration: none; display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden;
     }
-    .btn-create:hover { transform: scale(1.05); color: #1d4ed8; }
+    .btn-create::before {
+        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.2) 25%, transparent 50%);
+        animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s;
+    }
+    .btn-create:hover::before { opacity: 1; }
+    .btn-create:hover { 
+        transform: translateY(-3px) scale(1.02); 
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3));
+        border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 10px 30px rgba(236, 72, 153, 0.3); color: white;
+    }
+
+    .btn-outline-light {
+        background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white; transition: all 0.3s ease; position: relative; overflow: hidden; border-radius: 50px; padding: 8px 20px; font-weight: 500;
+    }
+    .btn-outline-light::before {
+        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.2) 25%, transparent 50%);
+        animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s;
+    }
+    .btn-outline-light:hover::before { opacity: 1; }
+    .btn-outline-light:hover {
+        background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.6); transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2); color: white;
+    }
+
+    /* --- ICONS --- */
+    .bi-people-fill, .bi-briefcase-fill, .bi-calendar-check-fill, .bi-code-slash { opacity: 0.5; }
+    .bg-opacity-20 {
+        background: rgba(59, 130, 246, 0.2); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
+        width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+    }
+    .rounded-circle { border-radius: 16px !important; }
+
+    /* --- CANDIDATE ITEMS --- */
+    .candidate-item {
+        background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; transition: all 0.3s ease;
+    }
+    .candidate-item:hover { background: rgba(236, 72, 153, 0.15); transform: translateX(5px); border-color: var(--accent-pink); }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 768px) {
+        h1 { font-size: 2rem; }
+        .glass-card { border-radius: 20px; padding: 20px; }
+        .stat-number { font-size: 2.2rem; }
+    }
 </style>
+
+<div class="quantum-bg">
+    <div class="bg-layer-1"></div>
+    <div class="bg-layer-2"></div>
+</div>
 
 <div class="bg-shape shape-1"></div>
 <div class="bg-shape shape-2"></div>
 
-<div class="container py-5">
+<div class="container py-5 position-relative z-10">
     
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h1 class="fw-bold mb-1">Hiring Command Center</h1>
-            <p class="text-white-50 mb-0">Welcome back, {{ current_user.name }}</p>
+            <p class="text-white-50 mb-0">Welcome back, <span style="color: var(--accent-pink); font-weight: 600;">{{ current_user.name }}</span></p>
         </div>
-        <a href="{{ url_for('jobs.post_job') }}" class="btn-create d-flex align-items-center gap-2">
+        <a href="{{ url_for('jobs.post_job') }}" class="btn-create">
             <i class="bi bi-plus-lg"></i> Post New Job
         </a>
     </div>
@@ -125,7 +199,7 @@
                 <p class="text-white-50 mb-1 fw-bold text-uppercase small">Total Applicants</p>
                 <div class="d-flex justify-content-between align-items-end">
                     <div class="stat-number">{{ stats.total_applicants }}</div>
-                    <i class="bi bi-people-fill fs-1 opacity-25"></i>
+                    <i class="bi bi-people-fill fs-1" style="color: var(--accent-pink);"></i>
                 </div>
             </div>
         </div>
@@ -134,7 +208,7 @@
                 <p class="text-white-50 mb-1 fw-bold text-uppercase small">Active Jobs</p>
                 <div class="d-flex justify-content-between align-items-end">
                     <div class="stat-number">{{ stats.active_jobs }}</div>
-                    <i class="bi bi-briefcase-fill fs-1 opacity-25"></i>
+                    <i class="bi bi-briefcase-fill fs-1" style="color: var(--accent-blue);"></i>
                 </div>
             </div>
         </div>
@@ -143,7 +217,7 @@
                 <p class="text-white-50 mb-1 fw-bold text-uppercase small">Interviews</p>
                 <div class="d-flex justify-content-between align-items-end">
                     <div class="stat-number">{{ stats.interviews }}</div>
-                    <i class="bi bi-calendar-check-fill fs-1 opacity-25"></i>
+                    <i class="bi bi-calendar-check-fill fs-1" style="color: var(--accent-purple);"></i>
                 </div>
             </div>
         </div>
@@ -153,33 +227,40 @@
         
         <div class="col-lg-8">
             <div class="glass-card h-100 p-0">
-                <div class="p-4 border-bottom border-white border-opacity-25 d-flex justify-content-between align-items-center">
-                    <h5 class="m-0"><i class="bi bi-list-task me-2"></i> Active Job Postings</h5>
+                <div class="p-4 border-bottom" style="border-color: rgba(255,255,255,0.05) !important;">
+                    <h5 class="m-0">
+                        <i class="bi bi-list-task me-2" style="color: var(--accent-pink);"></i> 
+                        Active Job Postings
+                    </h5>
                 </div>
                 
                 <div class="list-group list-group-flush bg-transparent">
                     {% for job in jobs %}
                     <div class="job-item">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="bg-blue bg-opacity-20 p-3 rounded-circle text-white">
-                                <i class="bi bi-code-slash fs-5"></i>
+                            <div class="bg-opacity-20 rounded-circle">
+                                <i class="bi bi-code-slash fs-5" style="color: var(--accent-blue);"></i>
                             </div>
                             <div>
                                 <h6 class="fw-bold mb-1 text-white">{{ job.title }}</h6>
                                 <p class="mb-0 small text-white-50">
                                     <i class="bi bi-geo-alt me-1"></i> {{ job.location }} • {{ job.posted_at.strftime('%d %b') }}
+                                    {% if job.applications %}
+                                        <span class="applicant-badge ms-2">{{ job.applications|length }} applicants</span>
+                                    {% endif %}
                                 </p>
                             </div>
                         </div>
                         <div class="text-end">
-                            <a href="{{ url_for('jobs.view_applicants', job_id=job.id) }}" class="btn btn-sm btn-outline-light rounded-pill">
+                            <a href="{{ url_for('jobs.view_applicants', job_id=job.id) }}" class="btn btn-outline-light rounded-pill btn-sm">
                                 Manage Candidates <i class="bi bi-chevron-right ms-1"></i>
                             </a>
                         </div>
                     </div>
                     {% else %}
-                    <div class="p-5 text-center text-white-50">
-                        <p>No active jobs. Post one to get started!</p>
+                    <div class="p-5 text-center">
+                        <i class="bi bi-briefcase display-1 opacity-25" style="color: var(--accent-pink);"></i>
+                        <p class="mt-3 text-white-50">No active jobs. Post one to get started!</p>
                     </div>
                     {% endfor %}
                 </div>
@@ -188,25 +269,30 @@
 
         <div class="col-lg-4">
             <div class="glass-card h-100 p-0">
-                <div class="p-4 border-bottom border-white border-opacity-25">
-                     <h5 class="m-0"><i class="bi bi-stars me-2"></i> Smart Match</h5>
+                <div class="p-4 border-bottom" style="border-color: rgba(255,255,255,0.05) !important;">
+                     <h5 class="m-0">
+                        <i class="bi bi-stars me-2" style="color: var(--accent-pink);"></i> 
+                        Smart Match
+                     </h5>
                      <p class="small text-white-50 mb-0 mt-1">Top candidates ranked by AI</p>
                 </div>
 
                 <div class="p-3">
                     {% for candidate in candidates %}
-                    <div class="d-flex align-items-center gap-3 p-3 rounded mb-2" style="background: rgba(255,255,255,0.1);">
-                        <div class="match-gauge" style="--p: {{ candidate.match_score }}%">
-                            <span>{{ candidate.match_score|int }}</span>
+                    <div class="candidate-item d-flex align-items-center gap-3 p-3 mb-2">
+                        <div class="match-gauge" style="--p: {{ candidate.match_score }}">
+                            <span>{{ candidate.match_score|int }}%</span>
                         </div>
                         <div class="flex-grow-1">
                             <h6 class="fw-bold mb-0 text-white">{{ candidate.name }}</h6>
                             <p class="small text-white-50 mb-0">{{ candidate.role }}</p>
                         </div>
+                        <i class="bi bi-chevron-right" style="color: var(--accent-pink); opacity: 0.5;"></i>
                     </div>
                     {% else %}
-                    <div class="text-center p-4 text-white-50">
-                        <small>No candidates yet.</small>
+                    <div class="text-center p-4">
+                        <i class="bi bi-people display-4 opacity-25" style="color: var(--accent-blue);"></i>
+                        <p class="mt-2 text-white-50 small">No candidates yet.</p>
                     </div>
                     {% endfor %}
                 </div>

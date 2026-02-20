@@ -1,549 +1,574 @@
-{% extends "base.html" %}
+{% extends "base.html" %} 
 
-{% block content %}
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+{% block content %} 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"> 
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script> 
 
-<style>
-    /* --- 1. CORE LAYOUT & ANIMATIONS --- */
-    :root {
-        --primary-blue: #2563EB;
-        --dark-blue: #1e40af;
-        --text-dark: #0f172a;
-        --text-grey: #64748b;
-    }
+<style> 
+/* --- 1. CORE LAYOUT & ANIMATIONS (DARK MODE) --- */ 
+:root { 
+    --primary-blue: #3b82f6; 
+    --dark-bg: #050505; 
+    --text-light: #f8fafc; 
+    --text-grey: #94a3b8; 
+    --border-glow: rgba(255, 255, 255, 0.1);
+} 
 
-    body {
-        font-family: 'Inter', sans-serif;
-        overflow-x: hidden;
-        background-color: #fff;
-        scroll-behavior: smooth;
-    }
-    
-    .container-custom {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-    }
+body { 
+    font-family: 'Inter', sans-serif; 
+    overflow-x: hidden; 
+    background-color: var(--dark-bg); 
+    color: var(--text-light);
+    scroll-behavior: smooth; 
+} 
+.container-custom { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    padding: 0 1.5rem; 
+    position: relative;
+    z-index: 10;
+} 
 
-    /* Scroll Reveal Animation */
-    .reveal {
-        opacity: 0;
-        transform: translateY(40px);
-        transition: all 1s cubic-bezier(0.5, 0, 0, 1);
-    }
-    .reveal.active {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* Scroll Reveal Animation */ 
+.reveal { 
+    opacity: 0; 
+    transform: translateY(40px); 
+    transition: all 1s cubic-bezier(0.5, 0, 0, 1); 
+} 
+.reveal.active { 
+    opacity: 1; 
+    transform: translateY(0); 
+} 
 
-    /* --- 2. HERO SECTION --- */
-    .hero-section {
-        position: relative;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        /* Deep Blue Gradient */
-        background: radial-gradient(circle at top right, #3b82f6 0%, #1d4ed8 40%, #1e3a8a 100%);
-        color: white;
-        padding-top: 80px;
-        overflow: hidden;
-    }
+/* TEAMMATE'S ANIMATIONS */
+@keyframes plasma-move { 0% { transform: rotate(0deg) translate(0,0); } 100% { transform: rotate(45deg) translate(-10%, -10%); } } 
+@keyframes spin-glow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } 
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } } 
+@keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } } 
+@keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(20px, -20px); } }
 
-    /* Background Shapes */
-    .hero-bg-shapes .shape {
-        position: absolute;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 50%;
-        backdrop-filter: blur(3px);
-        animation: float 20s infinite ease-in-out;
-    }
-    .shape-1 { width: 500px; height: 500px; top: -150px; left: -100px; }
-    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -50px; animation-delay: -5s; }
-    
-    @keyframes float {
-        0%, 100% { transform: translate(0, 0); }
-        50% { transform: translate(40px, -40px); }
-    }
+.animate-plasma { animation: plasma-move 30s infinite alternate ease-in-out; } 
 
-    .hero-content {
-        position: relative;
-        z-index: 10;
-        text-align: center;
-        max-width: 900px;
-    }
+/* Plasma Background Base */
+.quantum-bg {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none;
+    background: radial-gradient(circle at 50% 50%, rgba(30,27,75,0.8) 0%, #050505 70%);
+}
+.quantum-plasma {
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; opacity: 0.4; filter: blur(80px);
+    background: radial-gradient(circle at 0% 0%, rgba(56,189,248,0.4) 0%, transparent 50%),
+                radial-gradient(circle at 100% 0%, rgba(236,72,153,0.4) 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(99,102,241,0.4) 0%, transparent 50%);
+    animation: plasma-move 30s infinite alternate ease-in-out;
+}
 
-    .hero-badge {
-        display: inline-block;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 8px 16px;
-        border-radius: 30px;
-        font-size: 0.85rem;
-        font-weight: 500;
-        margin-bottom: 1.5rem;
-        backdrop-filter: blur(5px);
-        animation: fadeInDown 0.8s ease-out;
-    }
+/* --- 2. HERO SECTION --- */ 
+.hero-section { 
+    position: relative; 
+    min-height: 100vh; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    padding-top: 80px; 
+    overflow: hidden; 
+} 
 
-    .hero-title {
-        font-size: 4rem;
-        font-weight: 800;
-        letter-spacing: -2px;
-        line-height: 1.1;
-        margin-bottom: 1.5rem;
-        animation: fadeInUp 0.8s ease-out 0.2s forwards;
-        opacity: 0;
-    }
+.hero-content { 
+    position: relative; 
+    z-index: 10; 
+    text-align: center; 
+    max-width: 900px; 
+} 
 
-    .hero-subtitle {
-        font-size: 1.2rem;
-        font-weight: 300;
-        color: rgba(255, 255, 255, 0.9);
-        max-width: 650px;
-        margin: 0 auto 3rem auto;
-        line-height: 1.6;
-        animation: fadeInUp 0.8s ease-out 0.4s forwards;
-        opacity: 0;
-    }
+.hero-badge { 
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(56, 189, 248, 0.1); 
+    border: 1px solid rgba(56, 189, 248, 0.3); 
+    padding: 8px 20px; 
+    border-radius: 30px; 
+    font-size: 0.85rem; 
+    font-weight: 600; 
+    margin-bottom: 1.5rem; 
+    backdrop-filter: blur(5px); 
+    color: #38bdf8;
+    animation: fadeInDown 0.8s ease-out; 
+} 
 
-    .hero-btns {
-        animation: fadeInUp 0.8s ease-out 0.6s forwards;
-        opacity: 0;
-    }
+.hero-title { 
+    font-size: 4rem; 
+    font-weight: 800; 
+    letter-spacing: -2px; 
+    line-height: 1.1; 
+    margin-bottom: 1.5rem; 
+    animation: fadeInUp 0.8s ease-out 0.2s forwards; 
+    opacity: 0; 
+} 
+.hero-title span {
+    background: linear-gradient(to right, #38bdf8, #ec4899);
+    -webkit-background-clip: text; color: transparent;
+}
 
-    /* --- 3. ABOUT / PROBLEM SECTION --- */
-    .section-about {
-        padding: 7rem 0;
-        background: white;
-    }
+.hero-subtitle { 
+    font-size: 1.2rem; 
+    font-weight: 300; 
+    color: rgba(255, 255, 255, 0.7); 
+    max-width: 650px; 
+    margin: 0 auto 3rem auto; 
+    line-height: 1.6; 
+    animation: fadeInUp 0.8s ease-out 0.4s forwards; 
+    opacity: 0; 
+} 
 
-    .about-grid {
-        display: grid;
-        grid-template-columns: 1.2fr 0.8fr;
-        gap: 5rem;
-        align-items: center;
-    }
+.hero-btns { 
+    animation: fadeInUp 0.8s ease-out 0.6s forwards; 
+    opacity: 0; 
+} 
+.btn-quantum {
+    background: linear-gradient(to right, #3b82f6, #ec4899); 
+    color: white; 
+    border: none;
+}
+.btn-quantum:hover {
+    color: white;
+    box-shadow: 0 0 20px rgba(236,72,153,0.5);
+}
 
-    .about-text h2 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--text-dark);
-        margin-bottom: 1.5rem;
-        letter-spacing: -1px;
-    }
+/* --- 3. ABOUT / PROBLEM SECTION --- */ 
+.section-about { 
+    padding: 7rem 0; 
+    background: transparent; 
+    position: relative;
+    z-index: 10;
+} 
 
-    .about-text p {
-        font-size: 1.1rem;
-        line-height: 1.8;
-        color: var(--text-grey);
-        margin-bottom: 1.5rem;
-    }
+.about-grid { 
+    display: grid; 
+    grid-template-columns: 1.2fr 0.8fr; 
+    gap: 5rem; 
+    align-items: center; 
+} 
 
-    /* Card visual */
-    .about-visual {
-        position: relative;
-        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-        border-radius: 24px;
-        padding: 2rem;
-        border: 1px solid #bfdbfe;
-    }
+.about-text h2 { 
+    font-size: 2.5rem; 
+    font-weight: 800; 
+    color: white; 
+    margin-bottom: 1.5rem; 
+    letter-spacing: -1px; 
+} 
 
-    .floating-badge {
-        position: absolute;
-        background: white;
-        padding: 0.8rem 1.2rem;
-        border-radius: 12px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        font-weight: 600;
-        font-size: 0.9rem;
-        color: var(--text-dark);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        z-index: 2;
-        transition: transform 0.3s ease;
-    }
-    .floating-badge:hover { transform: scale(1.05); }
+.about-text p { 
+    font-size: 1.1rem; 
+    line-height: 1.8; 
+    color: var(--text-grey); 
+    margin-bottom: 1.5rem; 
+} 
 
-    /* --- 4. SERVICES GRID --- */
-    .section-services {
-        padding: 6rem 0;
-        background: #f8fafc;
-        border-top: 1px solid #e2e8f0;
-    }
+/* Card visual */ 
+.about-visual { 
+    position: relative; 
+    background: rgba(15, 15, 20, 0.5); 
+    backdrop-filter: blur(10px);
+    border-radius: 24px; 
+    padding: 2rem; 
+    border: 1px solid rgba(255,255,255,0.1); 
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+} 
 
-    .section-header { text-align: center; max-width: 700px; margin: 0 auto 4rem auto; }
-    .section-header h2 { font-size: 2.5rem; font-weight: 700; color: var(--text-dark); margin-bottom: 1rem; }
-    .section-header p { font-size: 1.1rem; color: var(--text-grey); }
+.floating-badge { 
+    position: absolute; 
+    background: rgba(10, 10, 15, 0.9); 
+    padding: 0.8rem 1.2rem; 
+    border-radius: 12px; 
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
+    font-weight: 600; 
+    font-size: 0.9rem; 
+    color: white; 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    z-index: 2; 
+    transition: transform 0.3s ease; 
+    border: 1px solid rgba(255,255,255,0.05);
+} 
+.floating-badge:hover { transform: scale(1.05); } 
 
-    .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-    }
+/* --- 4. SERVICES GRID (WITH RULER) --- */ 
+.section-services { 
+    padding: 6rem 0; 
+    background: rgba(0,0,0,0.3); 
+    border-top: 1px solid var(--border-glow); /* THE RULER */
+    position: relative;
+    z-index: 10;
+} 
 
-    .service-card {
-        background: white;
-        border-radius: 20px;
-        padding: 2.5rem;
-        border: 1px solid #e2e8f0;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        text-decoration: none;
-        display: block;
-        position: relative;
-        overflow: hidden;
-    }
+.section-header { text-align: center; max-width: 700px; margin: 0 auto 4rem auto; } 
+.section-header h2 { font-size: 2.5rem; font-weight: 800; color: white; margin-bottom: 1rem; } 
+.section-header p { font-size: 1.1rem; color: var(--text-grey); } 
 
-    .service-card:hover {
-        transform: translateY(-8px);
-        border-color: var(--primary-blue);
-        box-shadow: 0 20px 30px -10px rgba(37, 99, 235, 0.15);
-    }
+.feature-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+    gap: 2rem; 
+} 
 
-    .service-icon {
-        width: 56px; height: 56px;
-        background: #eff6ff;
-        color: var(--primary-blue);
-        border-radius: 14px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.5rem;
-        margin-bottom: 1.5rem;
-        transition: background 0.3s, color 0.3s;
-    }
+.service-card { 
+    position: relative;
+    background: rgba(15, 15, 20, 0.7); 
+    border-radius: 24px; 
+    padding: 2px; 
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); 
+    display: block;
+    transition: all 0.4s; 
+    text-decoration: none; 
+} 
+.service-card::before {
+    content: ''; position: absolute; inset: -200%;
+    background: conic-gradient(from 90deg at 50% 50%, transparent 0%, #3b82f6 25%, #ec4899 50%, #8b5cf6 75%, transparent 100%);
+    animation: spin-glow 8s linear infinite; opacity: 0; transition: opacity 0.3s ease;
+}
+.service-card:hover::before { opacity: 1; }
+.service-card:hover { transform: translateY(-8px); } 
 
-    .service-card:hover .service-icon { background: var(--primary-blue); color: white; }
+.service-card-content {
+    position: relative; background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(20px);
+    border-radius: 22px; z-index: 1; height: 100%; padding: 2.5rem; transition: all 0.3s ease;
+}
+.service-card:hover .service-card-content { background: rgba(20, 20, 30, 0.95); }
 
-    .service-title { font-size: 1.35rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem; }
-    .service-desc { color: var(--text-grey); line-height: 1.6; font-size: 0.95rem; }
+.service-icon { 
+    width: 56px; height: 56px; 
+    background: linear-gradient(135deg, #3b82f6, #ec4899); 
+    color: white; 
+    border-radius: 14px; 
+    display: flex; align-items: center; justify-content: center; 
+    font-size: 1.5rem; 
+    margin-bottom: 1.5rem; 
+} 
 
-    .badge-live {
-        position: absolute; top: 20px; right: 20px;
-        background: #dcfce7; color: #166534;
-        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-        padding: 4px 10px; border-radius: 20px;
-    }
-    
-    .badge-hot {
-        position: absolute; top: 20px; right: 20px;
-        background: #fee2e2; color: #dc2626;
-        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-        padding: 4px 10px; border-radius: 20px;
-    }
+.service-title { font-size: 1.35rem; font-weight: 700; color: white; margin-bottom: 0.5rem; } 
+.service-desc { color: var(--text-grey); line-height: 1.6; font-size: 0.95rem; } 
 
-    /* --- 5. CTA SECTION --- */
-    .cta-section {
-        background: var(--primary-blue);
-        padding: 6rem 0;
-        text-align: center;
-        color: white;
-        background-image: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
-    }
+.badge-live { 
+    position: absolute; top: 20px; right: 20px; z-index: 10;
+    background: rgba(16, 185, 129, 0.2); color: #34d399; 
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase; 
+    padding: 4px 10px; border-radius: 20px; 
+} 
+.badge-hot { 
+    position: absolute; top: 20px; right: 20px; z-index: 10;
+    background: rgba(245, 158, 11, 0.2); color: #fbbf24; 
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase; 
+    padding: 4px 10px; border-radius: 20px; 
+} 
 
-    .cta-btn {
-        background: white;
-        color: var(--primary-blue);
-        padding: 1rem 3rem;
-        font-weight: 700;
-        border-radius: 50px;
-        text-decoration: none;
-        display: inline-block;
-        margin-top: 2.5rem;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        transition: transform 0.2s;
-    }
-    .cta-btn:hover { transform: scale(1.05); }
+/* --- 5. CTA SECTION (WITH RULER) --- */ 
+.cta-section { 
+    background: transparent; 
+    padding: 6rem 0; 
+    text-align: center; 
+    color: white; 
+    position: relative;
+    z-index: 10;
+    border-top: 1px solid var(--border-glow); /* THE RULER */
+} 
 
-    /* --- 6. FOOTER --- */
-    .footer { background: #0f172a; color: #94a3b8; padding: 5rem 0 2rem 0; font-size: 0.95rem; }
-    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem; margin-bottom: 4rem; }
-    .footer h3 { color: white; font-weight: 700; margin-bottom: 1rem; }
-    .footer a { color: #94a3b8; text-decoration: none; transition: color 0.2s; }
-    .footer a:hover { color: white; }
-    .footer-bottom { border-top: 1px solid #334155; padding-top: 2rem; display: flex; justify-content: space-between; }
+.cta-btn { 
+    background: white; 
+    color: black; 
+    padding: 1rem 3rem; 
+    font-weight: 800; 
+    border-radius: 50px; 
+    text-decoration: none; 
+    display: inline-block; 
+    margin-top: 2.5rem; 
+    box-shadow: 0 0 30px rgba(255,255,255,0.2); 
+    transition: transform 0.2s; 
+} 
+.cta-btn:hover { transform: scale(1.05); color: black;} 
 
-    /* Animations */
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+/* --- 6. FOOTER (DARK MODE + RULER) --- */ 
+.footer { 
+    background: #020202; 
+    color: #94a3b8; 
+    padding: 5rem 0 2rem 0; 
+    font-size: 0.95rem; 
+    position: relative;
+    z-index: 10;
+    border-top: 1px solid var(--border-glow); /* THE RULER */
+} 
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem; margin-bottom: 4rem; } 
+.footer h3, .footer h4 { color: white; font-weight: 700; margin-bottom: 1rem; } 
+.footer a { color: #94a3b8; text-decoration: none; transition: color 0.2s; } 
+.footer a:hover { color: white; } 
+.footer-bottom { 
+    border-top: 1px solid rgba(255,255,255,0.1); /* BOTTOM RULER */
+    padding-top: 2rem; 
+    display: flex; justify-content: space-between; 
+} 
 
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-        .hero-title { font-size: 2.8rem; }
-        .about-grid { grid-template-columns: 1fr; gap: 3rem; }
-        .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
-        .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
-    }
-</style>
+/* Mobile Responsive */ 
+@media (max-width: 768px) { 
+    .hero-title { font-size: 2.8rem; } 
+    .about-grid { grid-template-columns: 1fr; gap: 3rem; } 
+    .footer-grid { grid-template-columns: 1fr; gap: 2rem; } 
+    .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; } 
+} 
+</style> 
 
-<div class="hero-section">
-    <div class="hero-bg-shapes">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-    </div>
-    
-    <div class="hero-content container-custom">
-        <div class="hero-badge">✨ AI-Powered Career Guidance</div>
-        
-        <h1 class="hero-title">
-            Architect Your <br>
-            <span style="color: #93c5fd;">Ideal Career Path.</span>
-        </h1>
-        
-        <p class="hero-subtitle">
-            Don't just guess your next move. SkillMap uses AI to analyze your resume, build personalized roadmaps, and simulate real interviews.
-        </p>
-        
-        <div class="hero-btns d-flex justify-content-center gap-3 flex-wrap">
-            <a href="#services" class="btn btn-light text-primary fw-bold px-4 py-3 rounded-pill shadow-lg">Explore Tools</a>
-            {% if not current_user.is_authenticated %}
-                <a href="{{ url_for('auth.role_select') }}" class="btn btn-outline-light fw-bold px-4 py-3 rounded-pill">Get Started</a>
-            {% elif current_user.role == 'seeker' %}
-                <a href="{{ url_for('main.roadmap') }}" class="btn btn-outline-light fw-bold px-4 py-3 rounded-pill">Start Roadmap</a>
-            {% else %}
-                <a href="{{ url_for('main.recruiter_dashboard') }}" class="btn btn-outline-light fw-bold px-4 py-3 rounded-pill">Dashboard</a>
-            {% endif %}
-        </div>
-    </div>
-</div>
+<div class="quantum-bg"><div class="quantum-plasma"></div></div>
 
-<section class="section-about">
-    <div class="container-custom">
-        <div class="about-grid">
-            <div class="about-text reveal">
-                <h2>Stop guessing.<br>Start strategizing.</h2>
-                <p>
-                    Navigating the job market is overwhelming. Generic advice doesn't work, and skill gaps are hard to identify until it's too late.
-                </p>
-                <p>
-                    <strong>SkillMap is your personal Career Architect.</strong> We don't just list jobs; we reverse-engineer the requirements and give you a turn-by-turn navigation system to get hired.
-                </p>
-                
-                <div class="d-flex flex-column gap-3 mt-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary"><i class="bi bi-check-lg"></i></div>
-                        <span class="fw-semibold text-secondary">ATS-Friendly Resume Optimization</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary"><i class="bi bi-check-lg"></i></div>
-                        <span class="fw-semibold text-secondary">Step-by-Step Skill Roadmaps</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary"><i class="bi bi-check-lg"></i></div>
-                        <span class="fw-semibold text-secondary">Smart Matching Algorithm</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="about-image reveal">
-                <div class="about-visual text-center">
+<div class="hero-section"> 
+    <div class="hero-content container-custom"> 
+        <div class="hero-badge"><i class="bi bi-stars"></i> Intelligence · Not Instinct</div> 
+        <h1 class="hero-title"> 
+            Architect Your <br> 
+            <span>Ideal Career Path.</span> 
+        </h1> 
+        <p class="hero-subtitle"> 
+            Don't just guess your next move. SkillMap uses AI to analyze your resume, build personalized roadmaps, and simulate real interviews. 
+        </p> 
+        <div class="hero-btns d-flex justify-content-center gap-3 flex-wrap"> 
+            <a href="#services" class="btn btn-outline-light fw-bold px-4 py-3 rounded-pill">Explore Tools</a> 
+            {% if not current_user.is_authenticated %} 
+                <a href="{{ url_for('auth.role_select') }}" class="btn btn-quantum fw-bold px-4 py-3 rounded-pill">Get Started</a> 
+            {% elif current_user.role == 'seeker' %} 
+                <a href="{{ url_for('main.roadmap') }}" class="btn btn-quantum fw-bold px-4 py-3 rounded-pill">Start Roadmap</a> 
+            {% else %} 
+                <a href="{{ url_for('main.recruiter_dashboard') }}" class="btn btn-quantum fw-bold px-4 py-3 rounded-pill">Dashboard</a> 
+            {% endif %} 
+        </div> 
+    </div> 
+</div> 
+
+<section class="section-about"> 
+    <div class="container-custom"> 
+        <div class="about-grid"> 
+            <div class="about-text reveal"> 
+                <h2>Stop guessing.<br>Start strategizing.</h2> 
+                <p> 
+                    Navigating the job market is overwhelming. Generic advice doesn't work, and skill gaps are hard to identify until it's too late. 
+                </p> 
+                <p> 
+                    <strong class="text-white">SkillMap is your personal Career Architect.</strong> We don't just list jobs; we reverse-engineer the requirements and give you a turn-by-turn navigation system to get hired. 
+                </p> 
+                <div class="d-flex flex-column gap-3 mt-4"> 
+                    <div class="d-flex align-items-center gap-3"> 
+                        <div class="bg-primary bg-opacity-25 p-2 rounded-circle text-primary"><i class="bi bi-check-lg"></i></div> 
+                        <span class="fw-semibold text-white">ATS-Friendly Resume Optimization</span> 
+                    </div> 
+                    <div class="d-flex align-items-center gap-3"> 
+                        <div class="bg-primary bg-opacity-25 p-2 rounded-circle text-primary"><i class="bi bi-check-lg"></i></div> 
+                        <span class="fw-semibold text-white">Step-by-Step Skill Roadmaps</span> 
+                    </div> 
+                    <div class="d-flex align-items-center gap-3"> 
+                        <div class="bg-primary bg-opacity-25 p-2 rounded-circle text-primary"><i class="bi bi-check-lg"></i></div> 
+                        <span class="fw-semibold text-white">Smart Matching Algorithm</span> 
+                    </div> 
+                </div> 
+            </div> 
+            <div class="about-image reveal"> 
+                <div class="about-visual text-center"> 
                     <lottie-player 
                         src="https://lottie.host/25f42891-037e-448b-8e01-7032134a207c/FAUrnjuwjv.json" 
                         background="transparent" 
                         speed="1" 
                         style="width: 100%; max-width: 380px; margin: 0 auto;" 
                         loop 
-                        autoplay>
-                    </lottie-player>
+                        autoplay> 
+                    </lottie-player> 
 
-                    <div class="floating-badge" style="top: 15%; right: -10px; animation: float 6s ease-in-out infinite;">
-                        <i class="bi bi-bullseye text-danger fs-5"></i>
-                        <div>
-                            <div style="font-size: 0.7rem; color: #94a3b8;">Target Role</div>
-                            <div id="dynamic-role" style="font-weight: 600; min-width: 120px; transition: opacity 0.5s ease;">Software Engineer</div>
-                        </div>
-                    </div>
+                    <div class="floating-badge" style="top: 15%; right: -10px; animation: float 6s ease-in-out infinite; border-left-color: #3b82f6;"> 
+                        <i class="bi bi-bullseye text-primary fs-5"></i> 
+                        <div class="text-start"> 
+                            <div style="font-size: 0.7rem; color: #94a3b8;">Target Role</div> 
+                            <div id="dynamic-role" style="font-weight: 600; min-width: 120px; transition: opacity 0.5s ease;">Software Engineer</div> 
+                        </div> 
+                    </div> 
 
-                    <div class="floating-badge" style="bottom: 20%; left: -10px; animation: float 7s ease-in-out infinite reverse;">
-                        <i class="bi bi-graph-up-arrow text-success fs-5"></i>
-                        <div>
-                            <div style="font-size: 0.7rem; color: #94a3b8;">Progress</div>
-                            <div>Top 5% Candidate</div>
-                        </div>
-                    </div>
+                    <div class="floating-badge" style="bottom: 20%; left: -10px; animation: float 7s ease-in-out infinite reverse; border-left-color: #10b981;"> 
+                        <i class="bi bi-graph-up-arrow text-success fs-5"></i> 
+                        <div class="text-start"> 
+                            <div style="font-size: 0.7rem; color: #94a3b8;">Progress</div> 
+                            <div>Top 5% Candidate</div> 
+                        </div> 
+                    </div> 
+                </div> 
+            </div> 
+        </div> 
+    </div> 
+</section> 
+
+<section id="services" class="section-services"> 
+    <div class="container-custom"> 
+        <div class="section-header reveal"> 
+            <h2>Your Career Toolkit</h2> 
+            <p>Everything you need to go from "Applicant" to "Hired".</p> 
+        </div> 
+
+        <div class="feature-grid"> 
+            <a href="{{ url_for('main.resume_checker') }}" class="service-card reveal"> 
+                <span class="badge-live">Live</span> 
+                <div class="service-card-content">
+                    <div class="service-icon"><i class="bi bi-file-earmark-bar-graph"></i></div> 
+                    <h3 class="service-title">Resume Analyst</h3> 
+                    <p class="service-desc"> 
+                        Don't let an ATS reject you. Get a detailed score and keyword analysis against your target job description. 
+                    </p> 
                 </div>
-            </div>
-        </div>
-    </div>
-</section>
+            </a> 
 
-<section id="services" class="section-services">
-    <div class="container-custom">
-        <div class="section-header reveal">
-            <h2>Your Career Toolkit</h2>
-            <p>Everything you need to go from "Applicant" to "Hired".</p>
-        </div>
-
-        <div class="feature-grid">
-            
-            <a href="{{ url_for('main.resume_checker') }}" class="service-card reveal">
-                <span class="badge-live">Live</span>
-                <div class="service-icon">
-                    <i class="bi bi-file-earmark-bar-graph"></i>
+            <a href="{{ url_for('main.roadmap') }}" class="service-card reveal"> 
+                <span class="badge-live">Live</span> 
+                <div class="service-card-content">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #ec4899, #8b5cf6);"><i class="bi bi-map"></i></div> 
+                    <h3 class="service-title">Career Architect</h3> 
+                    <p class="service-desc"> 
+                        Tell us where you are and where you want to go. We generate a month-by-month learning plan to bridge the gap. 
+                    </p> 
                 </div>
-                <h3 class="service-title">Resume Analyst</h3>
-                <p class="service-desc">
-                    Don't let an ATS reject you. Get a detailed score and keyword analysis against your target job description.
-                </p>
-            </a>
+            </a> 
 
-            <a href="{{ url_for('main.roadmap') }}" class="service-card reveal">
-                <span class="badge-live">Live</span>
-                <div class="service-icon">
-                    <i class="bi bi-map"></i>
+            <a href="{{ url_for('main.interview') }}" class="service-card reveal"> 
+                <span class="badge-hot">Beta</span> 
+                <div class="service-card-content">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #f59e0b, #ef4444);"><i class="bi bi-mic-fill"></i></div> 
+                    <h3 class="service-title">Mock Interviewer</h3> 
+                    <p class="service-desc"> 
+                        Speak to our AI Agent. It asks role-specific questions, listens to your voice, and gives instant feedback on your answers. 
+                    </p> 
                 </div>
-                <h3 class="service-title">Career Architect</h3>
-                <p class="service-desc">
-                    Tell us where you are and where you want to go. We generate a month-by-month learning plan to bridge the gap.
-                </p>
-            </a>
+            </a> 
 
-            <a href="{{ url_for('main.interview') }}" class="service-card reveal">
-                <span class="badge-live">New</span>
-                <div class="service-icon" style="background: #eef2ff; color: #4f46e5;">
-                    <i class="bi bi-mic-fill"></i>
-                </div>
-                <h3 class="service-title">Mock Interviewer</h3>
-                <p class="service-desc">
-                    Speak to our AI Agent. It asks role-specific questions, listens to your voice, and gives instant feedback on your answers.
-                </p>
-            </a>
-
-            {% if current_user.is_authenticated and current_user.role == 'recruiter' %}
-                <a href="{{ url_for('main.recruiter_dashboard') }}" class="service-card reveal">
-                    <span class="badge-hot">Recruiter</span>
-                    <div class="service-icon" style="background: #f0fdf4; color: #16a34a;">
-                        <i class="bi bi-briefcase-fill"></i>
+            {% if current_user.is_authenticated and current_user.role == 'recruiter' %} 
+                <a href="{{ url_for('main.recruiter_dashboard') }}" class="service-card reveal"> 
+                    <span class="badge-hot">Recruiter</span> 
+                    <div class="service-card-content">
+                        <div class="service-icon" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6);"><i class="bi bi-briefcase-fill"></i></div> 
+                        <h3 class="service-title">Smart Dashboard</h3> 
+                        <p class="service-desc"> 
+                            Post jobs and watch our Heap Algorithm sort candidates by <strong>Match Score</strong> automatically. 
+                        </p> 
                     </div>
-                    <h3 class="service-title">Smart Dashboard</h3>
-                    <p class="service-desc">
-                        Post jobs and watch our Heap Algorithm sort candidates by <strong>Match Score</strong> automatically.
-                    </p>
-                </a>
-            {% elif current_user.is_authenticated and current_user.role == 'seeker' %}
-                <a href="{{ url_for('jobs.job_feed') }}" class="service-card reveal">
-                    <span class="badge-live">Live</span>
-                    <div class="service-icon" style="background: #f0fdf4; color: #16a34a;">
-                        <i class="bi bi-stars"></i>
+                </a> 
+            {% elif current_user.is_authenticated and current_user.role == 'seeker' %} 
+                <a href="{{ url_for('jobs.job_feed') }}" class="service-card reveal"> 
+                    <span class="badge-live">Live</span> 
+                    <div class="service-card-content">
+                        <div class="service-icon" style="background: linear-gradient(135deg, #10b981, #3b82f6);"><i class="bi bi-stars"></i></div> 
+                        <h3 class="service-title">Smart Job Feed</h3> 
+                        <p class="service-desc"> 
+                            Apply to jobs where your skills match. Your profile is automatically ranked for recruiters. 
+                        </p> 
                     </div>
-                    <h3 class="service-title">Smart Job Feed</h3>
-                    <p class="service-desc">
-                        Apply to jobs where your skills match. Your profile is automatically ranked for recruiters.
-                    </p>
-                </a>
-            {% else %}
-                <a href="{{ url_for('auth.role_select') }}" class="service-card reveal">
-                    <span class="badge-live">Live</span>
-                    <div class="service-icon" style="background: #f0fdf4; color: #16a34a;">
-                        <i class="bi bi-stars"></i>
+                </a> 
+            {% else %} 
+                <a href="{{ url_for('auth.role_select') }}" class="service-card reveal"> 
+                    <span class="badge-live">Live</span> 
+                    <div class="service-card-content">
+                        <div class="service-icon" style="background: linear-gradient(135deg, #10b981, #3b82f6);"><i class="bi bi-lightning-charge"></i></div> 
+                        <h3 class="service-title">Smart Match</h3> 
+                        <p class="service-desc"> 
+                            Our algorithm matches verified skills directly to active listings. Skip the noise. 
+                        </p> 
                     </div>
-                    <h3 class="service-title">Smart Match</h3>
-                    <p class="service-desc">
-                        Our algorithm matches verified skills directly to active listings. Skip the noise.
-                    </p>
-                </a>
-            {% endif %}
+                </a> 
+            {% endif %} 
+        </div> 
+    </div> 
+</section> 
 
-        </div>
-    </div>
-</section>
+<section class="cta-section"> 
+    <div class="container-custom reveal"> 
+        <h2 class="fw-bold display-6 mb-3">Ready to upgrade your career?</h2> 
+        <p class="text-pink-400 fs-5 mb-4 fw-bold">3 FREE CREDITS UPON SIGNUP!</p> 
+        <a href="{{ url_for('auth.role_select') }}" class="cta-btn">Create Your Profile Now</a> 
+    </div> 
+</section> 
 
-<section class="cta-section">
-    <div class="container-custom reveal">
-        <h2 class="fw-bold display-6 mb-3">Ready to upgrade your career?</h2>
-        <p class="opacity-90 fs-5 mb-4">Join the students using AI to land their dream roles.</p>
-        <a href="{{ url_for('auth.role_select') }}" class="cta-btn">Get Started for Free</a>
-    </div>
-</section>
+<footer class="footer"> 
+    <div class="container-custom"> 
+        <div class="footer-grid"> 
+            <div class="footer-brand"> 
+                <h3>SkillMap</h3> 
+                <p> 
+                    Building the next generation of career tools. <br>Based in Ahmedabad, India. 
+                </p> 
+            </div> 
+            <div class="footer-col"> 
+                <h4 class="text-white mb-3 fw-bold">Platform</h4> 
+                <ul class="list-unstyled"> 
+                    <li class="mb-2"><a href="{{ url_for('main.resume_checker') }}">Resume Analyst</a></li> 
+                    <li class="mb-2"><a href="{{ url_for('main.roadmap') }}">Roadmap Gen</a></li> 
+                    <li class="mb-2"><a href="{{ url_for('main.interview') }}">Mock Interview</a></li> 
+                </ul> 
+            </div> 
 
-<footer class="footer">
-    <div class="container-custom">
-        <div class="footer-grid">
-            <div class="footer-brand">
-                <h3>SkillMap</h3>
-                <p>
-                    Building the next generation of career tools. <br>Based in Ahmedabad, India.
-                </p>
-            </div>
-            
-            <div class="footer-col">
-                <h4 class="text-white mb-3 fw-bold">Platform</h4>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><a href="{{ url_for('main.resume_checker') }}">Resume Analyst</a></li>
-                    <li class="mb-2"><a href="{{ url_for('main.roadmap') }}">Roadmap Gen</a></li>
-                    <li class="mb-2"><a href="{{ url_for('main.interview') }}">Mock Interview</a></li>
-                </ul>
-            </div>
+            <div class="footer-col"> 
+                <h4 class="text-white mb-3 fw-bold">Legal</h4> 
+                <ul class="list-unstyled"> 
+                    <li class="mb-2"><a href="#">Privacy Policy</a></li> 
+                    <li class="mb-2"><a href="#">Terms of Service</a></li> 
+                </ul> 
+            </div> 
 
-            <div class="footer-col">
-                <h4 class="text-white mb-3 fw-bold">Legal</h4>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><a href="#">Privacy Policy</a></li>
-                    <li class="mb-2"><a href="#">Terms of Service</a></li>
-                </ul>
-            </div>
+            <div class="footer-col"> 
+                <h4 class="text-white mb-3 fw-bold">Social</h4> 
+                <div class="d-flex gap-3"> 
+                    <a href="#" class="fs-5"><i class="bi bi-linkedin"></i></a> 
+                    <a href="#" class="fs-5"><i class="bi bi-github"></i></a> 
+                    <a href="#" class="fs-5"><i class="bi bi-twitter"></i></a> 
+                </div> 
+            </div> 
+        </div> 
 
-            <div class="footer-col">
-                <h4 class="text-white mb-3 fw-bold">Social</h4>
-                <div class="d-flex gap-3">
-                    <a href="#" class="fs-5"><i class="bi bi-linkedin"></i></a>
-                    <a href="#" class="fs-5"><i class="bi bi-github"></i></a>
-                    <a href="#" class="fs-5"><i class="bi bi-twitter"></i></a>
-                </div>
-            </div>
-        </div>
+        <div class="footer-bottom"> 
+            <span>© 2026 SkillMap. All rights reserved.</span> 
+            <span>Built with <i class="bi bi-lightning-fill text-warning"></i> in India</span> 
+        </div> 
+    </div> 
+</footer> 
 
-        <div class="footer-bottom">
-            <span>© 2026 SkillMap. All rights reserved.</span>
-            <span>Designed with Precision.</span>
-        </div>
-    </div>
-</footer>
+<script> 
+    // 1. Scroll Reveal Logic 
+    function reveal() { 
+        var reveals = document.querySelectorAll(".reveal"); 
+        for (var i = 0; i < reveals.length; i++) { 
+            var windowHeight = window.innerHeight; 
+            var elementTop = reveals[i].getBoundingClientRect().top; 
+            var elementVisible = 100; 
+            if (elementTop < windowHeight - elementVisible) { 
+                reveals[i].classList.add("active"); 
+            } 
+        } 
+    } 
+    window.addEventListener("scroll", reveal); 
+    setTimeout(reveal, 100); 
 
-<script>
-    // 1. Scroll Reveal Logic
-    function reveal() {
-        var reveals = document.querySelectorAll(".reveal");
-        for (var i = 0; i < reveals.length; i++) {
-            var windowHeight = window.innerHeight;
-            var elementTop = reveals[i].getBoundingClientRect().top;
-            var elementVisible = 100;
-            if (elementTop < windowHeight - elementVisible) {
-                reveals[i].classList.add("active");
-            }
-        }
-    }
-    window.addEventListener("scroll", reveal);
-    reveal(); // Trigger on load
-
-    // 2. DYNAMIC ROLE SWITCHER
-    const roles = [
+    // 2. DYNAMIC ROLE SWITCHER 
+    const roles = [ 
         "Software Engineer", 
         "Product Manager", 
         "Data Scientist", 
         "Digital Marketer", 
-        "UX Designer",
-        "Financial Analyst"
-    ];
-    let roleIndex = 0;
-    const roleElement = document.getElementById('dynamic-role');
+        "UX Designer", 
+        "Financial Analyst" 
+    ]; 
+    let roleIndex = 0; 
+    const roleElement = document.getElementById('dynamic-role'); 
 
-    if(roleElement) {
-        setInterval(() => {
-            // Fade Out
-            roleElement.style.opacity = '0';
-            
-            setTimeout(() => {
-                // Change Text
-                roleIndex = (roleIndex + 1) % roles.length;
-                roleElement.innerText = roles[roleIndex];
-                
-                // Fade In
-                roleElement.style.opacity = '1';
-            }, 800); 
-            
-        }, 1500); 
-    }
-</script>
+    if(roleElement) { 
+        setInterval(() => { 
+            roleElement.style.opacity = '0'; 
+            setTimeout(() => { 
+                roleIndex = (roleIndex + 1) % roles.length; 
+                roleElement.innerText = roles[roleIndex]; 
+                roleElement.style.opacity = '1'; 
+            }, 500); 
+        }, 2500); 
+    } 
+</script> 
 
 {% endblock %}

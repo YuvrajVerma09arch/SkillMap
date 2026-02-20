@@ -43,4 +43,8 @@ SkillMap is an AI-powered career accelerator that connects job seekers with recr
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
+<<<<<<< HEAD
 Built with by Team SkillMap
+=======
+Built with ❤️ by Team SkillMap
+>>>>>>> origin/payment-Integration
