@@ -1,11 +1,6 @@
-import smtplib
-import ssl
 import os
 import re
-import socket
-import certifi 
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 from dotenv import load_dotenv
 
 # 1. LOAD .ENV
@@ -20,66 +15,54 @@ def is_valid_email(email):
     pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     return re.match(pattern, email) is not None
 
-# --- CORE HELPER: SENDING LOGIC ---
-def _send_smtp_email(user_email, subject, html_content):
-    sender_email = os.environ.get('MAIL_USERNAME')
-    sender_password = os.environ.get('MAIL_PASSWORD')
+# --- CORE HELPER: SENDING LOGIC (NOW USING BREVO API) ---
+def _send_email(user_email, subject, html_content):
+    api_key = os.environ.get('BREVO_API_KEY')
+    # Fallback to your email if MAIL_USERNAME isn't set
+    sender_email = os.environ.get('MAIL_USERNAME', 'vermayuvraj896@gmail.com') 
     
-    if not sender_email or not sender_password:
-        return False, "Email configuration missing."
-
-    message = MIMEMultipart("alternative")
-    message["Subject"] = subject
-    message["From"] = f"SkillMap AI <{sender_email}>"
-    message["To"] = user_email
-    
-    part = MIMEText(html_content, "html")
-    message.attach(part)
-
-    context = ssl.create_default_context()
+    if not api_key:
+        print("❌ BREVO_API_KEY not found in environment variables.")
+        return False, "BREVO_API_KEY missing."
 
     print(f"📨 STARTING EMAIL SEND PROCESS...")
     print(f"   To: {user_email}")
+    print(f"   Using Brevo API over HTTPS (Port 443)")
+
+    url = "https://api.brevo.com/v3/smtp/email"
+    
+    headers = {
+        "accept": "application/json",
+        "api-key": api_key,
+        "content-type": "application/json"
+    }
+
+    payload = {
+        "sender": {
+            "name": "SkillMap AI", 
+            "email": sender_email
+        },
+        "to": [{"email": user_email}],
+        "subject": subject,
+        "htmlContent": html_content
+    }
 
     try:
-        # --- THE FIX: Force IPv4 Resolution ---
-        # 1. Get the IPv4 address for smtp.gmail.com
-        #    AF_INET means "IPv4 only"
-        gmail_ip_info = socket.getaddrinfo('smtp.gmail.com', 587, family=socket.AF_INET, proto=socket.IPPROTO_TCP)
-        gmail_ip_address = gmail_ip_info[0][4][0] # Extract the IP "142.250.x.x"
+        response = requests.post(url, json=payload, headers=headers)
         
-        print(f"   Resolved Gmail to IPv4: {gmail_ip_address}")
-        print("   Connecting via Port 587...")
-
-        # 2. Connect using the IP address, NOT the domain name
-        with smtplib.SMTP(gmail_ip_address, 587, timeout=30) as server:
-            server.ehlo()
-            server.starttls(context=context)
-            server.ehlo()
+        if response.status_code in [200, 201, 202]:
+            print("✅ EMAIL SENT SUCCESSFULLY!")
+            return True, "Email sent successfully."
+        else:
+            print(f"❌ API Error: {response.text}")
+            return False, f"API Error: {response.text}"
             
-            print("   Logging in...")
-            server.login(sender_email, sender_password)
-            
-            print("   Sending email...")
-            server.sendmail(sender_email, user_email, message.as_string())
-            
-        print("✅ EMAIL SENT SUCCESSFULLY!")
-        return True, "Email sent successfully."
-
     except Exception as e:
-        print(f"❌ FAILED TO SEND EMAIL: {str(e)}")
-        # If IPv4 fails, try one last desperation fallback to standard
-        try:
-             print("   ⚠️ Retrying with standard connection...")
-             with smtplib.SMTP('smtp.gmail.com', 587, timeout=30) as server:
-                server.starttls(context=context)
-                server.login(sender_email, sender_password)
-                server.sendmail(sender_email, user_email, message.as_string())
-             return True, "Sent on retry."
-        except:
-             return False, f"Network Error: {str(e)}"
+        print(f"❌ Request failed: {str(e)}")
+        return False, f"Request failed: {str(e)}"
 
-# --- 1. ROADMAP EMAIL (Keep Existing) ---
+
+# --- 1. ROADMAP EMAIL (Kept Exactly As Is) ---
 def format_roadmap_html(user_name, target_role, roadmap):
     html = f"""
     <div style="font-family: 'Helvetica', sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
@@ -112,9 +95,10 @@ def format_roadmap_html(user_name, target_role, roadmap):
 def send_roadmap_email(user_email, user_name, target_role, roadmap_data):
     subject = f"Your Career Roadmap: {target_role} 🚀"
     html_content = format_roadmap_html(user_name, target_role, roadmap_data)
-    return _send_smtp_email(user_email, subject, html_content)
+    return _send_email(user_email, subject, html_content)
 
-# --- 2. NEW: RECRUITER EMAILS ---
+
+# --- 2. NEW: RECRUITER EMAILS (Kept Exactly As Is) ---
 
 def send_interview_invite(candidate_email, candidate_name, job_title, recruiter_email):
     subject = f"Interview Invitation: {job_title}"
@@ -131,7 +115,7 @@ def send_interview_invite(candidate_email, candidate_name, job_title, recruiter_
         <p>Best regards,<br>The Hiring Team</p>
     </div>
     """
-    return _send_smtp_email(candidate_email, subject, html)
+    return _send_email(candidate_email, subject, html)
 
 def send_job_offer(candidate_email, candidate_name, job_title):
     subject = f"🎉 Job Offer: {job_title}"
@@ -144,7 +128,7 @@ def send_job_offer(candidate_email, candidate_name, job_title):
         <p>Welcome aboard! 🚀</p>
     </div>
     """
-    return _send_smtp_email(candidate_email, subject, html)
+    return _send_email(candidate_email, subject, html)
 
 def send_rejection(candidate_email, candidate_name, job_title):
     subject = f"Update on your application for {job_title}"
@@ -158,4 +142,4 @@ def send_rejection(candidate_email, candidate_name, job_title):
         <p>Best wishes in your job search.</p>
     </div>
     """
-    return _send_smtp_email(candidate_email, subject, html)
+    return _send_email(candidate_email, subject, html)
