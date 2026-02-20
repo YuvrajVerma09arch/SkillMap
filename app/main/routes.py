@@ -53,6 +53,7 @@ def setup_profile():
                 pass # Fallback to empty if format is weird
 
         return render_template('seeker/questionnaire.html', profile=profile, parsed_edu=parsed_edu)
+
 # --- 2. SAVE SEEKER ---
 @main.route('/save-seeker-profile', methods=['POST'])
 @login_required
@@ -284,13 +285,15 @@ def my_profile():
 @main.route('/company/<int:recruiter_id>')
 @login_required
 def view_company(recruiter_id):
+    # SECURITY FIX: Only the owner OR a job seeker can view a company profile.
+    # Recruiter A cannot view Recruiter B's profile.
+    if current_user.id != recruiter_id and current_user.role != 'seeker':
+        abort(403)
+
     profile = RecruiterProfile.query.filter_by(user_id=recruiter_id).first_or_404()
     jobs = JobPost.query.filter_by(recruiter_id=profile.id, is_active=True).all()
     is_owner = (current_user.id == recruiter_id)
     
-    # We pass 'profile' as the RecruiterProfile object
-    # We pass 'recruiter_name' from the User table join if needed, or assume it's stored in profile
-    # For now, let's assume the profile object has everything we need
     return render_template('recruiter/profile.html', profile=profile, jobs=jobs, is_owner=is_owner)
 
 @main.route('/my-company')
@@ -311,7 +314,6 @@ def talent_feed():
     return render_template('recruiter/talent_feed.html', seekers=seekers)
 
 # --- 9. OTHER TOOLS (Roadmap, Resume, Interview) ---
-# ... (Keep existing code for roadmap, resume_checker, interview, trigger_email) ...
 @main.route('/roadmap', methods=['GET', 'POST'])
 @login_required 
 def roadmap():
@@ -355,10 +357,10 @@ def resume_checker():
         save_path = None
         is_temp_file = False
         
-        # --- THE FIX: ENSURE FOLDER EXISTS ---
+        # --- ENSURE FOLDER EXISTS ---
         upload_folder = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static', 'uploads'))
         if not os.path.exists(upload_folder):
-            os.makedirs(upload_folder, exist_ok=True) # Creates the folder safely
+            os.makedirs(upload_folder, exist_ok=True) 
 
         try:
             # CASE A: Use Profile Resume
@@ -375,7 +377,7 @@ def resume_checker():
                 if file and file.filename != '':
                     filename = secure_filename(file.filename)
                     save_path = os.path.join(upload_folder, f"temp_{uuid.uuid4().hex[:6]}_{filename}")
-                    file.save(save_path) # Now this will work because the folder exists!
+                    file.save(save_path) 
                     is_temp_file = True
             
             # 2. Run Analysis
