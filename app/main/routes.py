@@ -449,3 +449,7 @@ def trigger_email():
         flash(f"Failed to send email: {msg}", "danger")
         
     return redirect(url_for('main.roadmap'))
+
+@main.route('/legal')
+def legal():
+    return render_template('payments/legal.html')

@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- QUANTUM THEME FOR LEGAL PAGE --- */
+    :root {
+        --primary-dark: #0A1929;
+        --accent-blue: #3b82f6;
+        --accent-pink: #ec4899;
+        --accent-purple: #8b5cf6;
+    }
+
+    /* --- BACKGROUND LAYERS --- */
+    .quantum-bg { position: fixed; inset: 0; z-index: -2; pointer-events: none;}
+    .bg-layer-1 { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(30,27,75,0.8) 0%, #050505 70%); }
+    .bg-layer-2 {
+        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.15) 0%, transparent 50%);
+        animation: plasma-move 30s infinite alternate ease-in-out; filter: blur(80px);
+    }
+    
+    @keyframes plasma-move {
+        0% { transform: rotate(0deg) translate(0,0); }
+        100% { transform: rotate(45deg) translate(-10%, -10%); }
+    }
+
+    /* --- FLOATING SHAPES --- */
+    .bg-shape {
+        position: fixed; background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
+        border-radius: 50%; filter: blur(60px); opacity: 0.1; z-index: -1;
+        animation: float 20s infinite ease-in-out; pointer-events: none;
+    }
+    .shape-1 { width: 400px; height: 400px; top: 10%; left: -10%; }
+    .shape-2 { width: 300px; height: 300px; bottom: 20%; right: -5%; animation-delay: 2s; }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(30px, -50px) scale(1.1); }
+    }
+
+    /* --- TYPOGRAPHY & GRADIENTS --- */
+    .text-gradient {
+        background: linear-gradient(135deg, #fff 0%, var(--accent-pink) 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    
+    .text-gradient-blue {
+        background: linear-gradient(135deg, #fff 0%, var(--accent-blue) 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    p, li { color: rgba(255, 255, 255, 0.8); line-height: 1.8; }
+    strong { color: white; font-weight: 600; }
+    
+    /* Custom List Bullets */
+    .quantum-list { list-style: none; padding-left: 1.5rem; }
+    .quantum-list li { position: relative; margin-bottom: 0.75rem; }
+    .quantum-list li::before {
+        content: '▹'; position: absolute; left: -1.5rem; color: var(--accent-pink); font-weight: bold; font-size: 1.2rem; line-height: 1;
+    }
+
+    /* --- GLASS CARDS --- */
+    .glass-card {
+        background: rgba(10, 10, 20, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        padding: 3rem; margin-bottom: 3rem; transition: all 0.4s ease; position: relative; overflow: hidden;
+    }
+    .glass-card:hover { border-color: rgba(236, 72, 153, 0.4); transform: translateY(-3px); box-shadow: 0 30px 60px -12px rgba(236, 72, 153, 0.2); }
+    
+    /* Top accent line on cards */
+    .glass-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, var(--accent-blue), var(--accent-pink), transparent); opacity: 0.5;
+    }
+
+    /* --- UI ELEMENTS --- */
+    .icon-box {
+        width: 50px; height: 50px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center;
+        background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--accent-blue);
+        font-size: 1.5rem; margin-right: 15px; box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+    }
+
+    .highlight-box {
+        background: rgba(236, 72, 153, 0.05); border-left: 4px solid var(--accent-pink); border-radius: 0 12px 12px 0;
+        padding: 1.5rem; margin: 2rem 0;
+    }
+
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+    
+    .info-item {
+        background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px;
+        padding: 1.5rem; transition: all 0.3s ease;
+    }
+    .info-item:hover { background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.3); transform: translateY(-5px); }
+    .info-item h4 { font-size: 1.1rem; color: white; margin-bottom: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 10px;}
+
+    .last-updated {
+        background: rgba(245, 158, 11, 0.1); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3);
+        padding: 6px 16px; border-radius: 50px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; margin-bottom: 2rem;
+    }
+
+    .section-divider {
+        height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); margin: 4rem 0;
+    }
+
+    @media (max-width: 768px) {
+        .glass-card { padding: 2rem 1.5rem; }
+        .hero-title { font-size: 2.5rem !important; }
+    }
+</style>
+
+<div class="quantum-bg">
+    <div class="bg-layer-1"></div>
+    <div class="bg-layer-2"></div>
+</div>
+<div class="bg-shape shape-1"></div>
+<div class="bg-shape shape-2"></div>
+
+<div class="container py-5" style="padding-top: 120px !important; max-width: 1000px;">
+    
+    <div class="text-center mb-5 pb-3">
+        <h1 class="hero-title text-gradient display-3 fw-bold mb-3">Legal & Transparency</h1>
+        <p class="text-white-50 fs-5 mx-auto" style="max-width: 700px;">
+            Building trust through clarity. Here is everything you need to know about how SkillMap operates.
+        </p>
+    </div>
+
+    <div id="about-section" class="glass-card animate-slideIn">
+        <h2 class="d-flex align-items-center mb-4 fw-bold text-white">
+            <div class="icon-box"><i class="bi bi-rocket-takeoff"></i></div>
+            About SkillMap
+        </h2>
+        <p>
+            <strong>SkillMap</strong> is more than just a job portal — it's your personal Career Architect. We exist because the traditional job hunt is broken. Applicants spray resumes into the void, and recruiters drown in unqualified candidates.
+        </p>
+        <p>
+            Our mission? <strong class="text-gradient">Bridge the gap between ambition and opportunity using AI.</strong>
+        </p>
+
+        <h3 class="text-white fw-bold mt-5 mb-3">🎯 Our Story</h3>
+        <p>
+            Born out of frustration during college placements in Ahmedabad, SkillMap was built by students who were tired of generic career advice. We realized three critical problems:
+        </p>
+        <ul class="quantum-list">
+            <li><strong>Resume Black Holes:</strong> Most resumes get rejected by ATS systems before a human even sees them.</li>
+            <li><strong>Unclear Career Paths:</strong> Students know where they want to go, but not HOW to get there.</li>
+            <li><strong>Skill-Job Mismatch:</strong> Talented people apply to wrong-fit roles, and recruiters miss hidden gems.</li>
+        </ul>
+        <p class="mt-3">
+            So we built tools that solve these exact problems — powered by AI, designed for real people.
+        </p>
+
+        <h3 class="text-white fw-bold mt-5 mb-3">🚀 What Makes Us Different</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <h4><i class="bi bi-robot" style="color: var(--accent-blue);"></i> AI-First Approach</h4>
+                <p class="mb-0 text-white-50 fs-6">Every feature — from resume scoring to interview prep — uses state-of-the-art LLMs to give you personalized, actionable insights.</p>
+            </div>
+            <div class="info-item">
+                <h4><i class="bi bi-bar-chart-line" style="color: #10b981;"></i> Smart Matching</h4>
+                <p class="mb-0 text-white-50 fs-6">Our backend ranks candidates using a custom MaxHeap algorithm. Skills, not luck, get you to the top.</p>
+            </div>
+            <div class="info-item">
+                <h4><i class="bi bi-gem" style="color: #f59e0b;"></i> Built for Students</h4>
+                <p class="mb-0 text-white-50 fs-6">We understand the struggle. SkillMap is designed natively for students and early-career professionals.</p>
+            </div>
+            <div class="info-item">
+                <h4><i class="bi bi-shield-check" style="color: var(--accent-pink);"></i> Core Tools Free</h4>
+                <p class="mb-0 text-white-50 fs-6">Resume analysis, roadmaps, and mock interviews have accessible tiers. Career growth shouldn't be gatekept.</p>
+            </div>
+        </div>
+
+        <h3 class="text-white fw-bold mt-5 mb-3">🛠️ Our Tech Stack</h3>
+        <p>SkillMap is built with modern, production-grade technologies:</p>
+        <div class="highlight-box">
+            <p class="mb-0">
+                <strong>Backend:</strong> Python, Flask, SQLAlchemy, Celery<br>
+                <strong>Frontend:</strong> HTML5, CSS3, Tailwind, JS, Web Speech API<br>
+                <strong>AI Engine:</strong> Groq API (Llama-3-70B-Versatile)<br>
+                <strong>Database:</strong> Neon (Serverless PostgreSQL)<br>
+                <strong>Infrastructure:</strong> Render Web Services, AWS S3
+            </p>
+        </div>
+    </div>
+
+    <div id="privacy-section" class="glass-card animate-slideIn" style="animation-delay: 0.1s; animation-fill-mode: both;">
+        <div class="last-updated"><i class="bi bi-clock-history"></i> Last Updated: February 21, 2026</div>
+        
+        <h2 class="d-flex align-items-center mb-4 fw-bold text-white">
+            <div class="icon-box" style="color: #10b981; border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);"><i class="bi bi-shield-lock"></i></div>
+            Privacy Policy
+        </h2>
+        <p>
+            At SkillMap, your privacy is not a checkbox — it's a commitment. This policy explains what data we collect, how we use it, and your rights.
+        </p>
+
+        <h3 class="text-white fw-bold mt-5 mb-3">📋 Information We Collect</h3>
+        <p><strong>1. Information You Provide:</strong></p>
+        <ul class="quantum-list mb-4">
+            <li><strong>Account Details:</strong> Name, email, password (encrypted), role (seeker/recruiter)</li>
+            <li><strong>Resume Data:</strong> Uploaded PDFs, extracted text, skills, experience</li>
+            <li><strong>Career Information:</strong> Current role, target role, learning preferences</li>
+            <li><strong>Application Data:</strong> Jobs you apply to, interview responses (audio transcripts)</li>
+        </ul>
+
+        <p><strong>2. Automatically Collected Data:</strong></p>
+        <ul class="quantum-list">
+            <li><strong>Usage Analytics:</strong> Pages visited, features used, time spent</li>
+            <li><strong>Device Information:</strong> Browser type, IP address, operating system</li>
+            <li><strong>Performance Data:</strong> Error logs, API response times (for debugging)</li>
+        </ul>
+
+        <h3 class="text-white fw-bold mt-5 mb-3">🔒 How We Use Your Data</h3>
+        <ol class="text-white-50" style="padding-left: 1.2rem;">
+            <li class="mb-2"><strong>Core Functionality:</strong> To provide AI-powered resume analysis, roadmap generation, and matching.</li>
+            <li class="mb-2"><strong>Personalization:</strong> To customize your dashboard and recommend relevant jobs.</li>
+            <li class="mb-2"><strong>Communication:</strong> To send application updates and account-related alerts via Brevo API.</li>
+            <li class="mb-2"><strong>Security:</strong> To prevent fraud, detect spam, and protect against malicious activity.</li>
+        </ol>
+
+        <div class="highlight-box" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.05);">
+            <p class="text-white mb-2"><strong>🛑 What We DON'T Do:</strong></p>
+            <ul class="quantum-list mb-0">
+                <li>We <strong>never sell</strong> your personal data to third parties.</li>
+                <li>We <strong>never share</strong> your resume with anyone except recruiters you explicitly apply to.</li>
+                <li>We <strong>never train</strong> open-source AI models on your private data.</li>
+            </ul>
+        </div>
+
+        <h3 class="text-white fw-bold mt-5 mb-3">🤝 Data Sharing</h3>
+        <p><strong>When Recruiters See Your Data:</strong></p>
+        <ul class="quantum-list mb-4">
+            <li>When you <strong>apply to a job</strong>, the recruiter sees: your name, resume, skills, and AI match score.</li>
+            <li>Recruiters <strong>cannot</strong> see your interview practice sessions or other jobs you've applied to.</li>
+        </ul>
+
+        <p><strong>Third-Party Services We Use:</strong></p>
+        <ul class="quantum-list">
+            <li><strong>Groq API:</strong> For AI inference. Prompts are processed temporarily but not permanently stored by Groq.</li>
+            <li><strong>Cloud Services:</strong> Render for hosting and Neon DB for secure database storage.</li>
+            <li><strong>Razorpay:</strong> Securely processes payment data. We do not store credit card info on our servers.</li>
+        </ul>
+
+        <h3 class="text-white fw-bold mt-5 mb-3">✅ Your Rights</h3>
+        <p>You have the right to request a copy of your data, correct inaccuracies, or request total account and data deletion within 30 days. To exercise these rights, email us at <strong class="text-gradient-blue">privacy@skillmap.com</strong>.</p>
+    </div>
+
+    <div id="terms-section" class="glass-card animate-slideIn" style="animation-delay: 0.2s; animation-fill-mode: both;">
+        <div class="last-updated"><i class="bi bi-clock-history"></i> Last Updated: February 21, 2026</div>
+        
+        <h2 class="d-flex align-items-center mb-4 fw-bold text-white">
+            <div class="icon-box" style="color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.1);"><i class="bi bi-file-earmark-text"></i></div>
+            Terms & Conditions
+        </h2>
+        <p>
+            By using SkillMap, you agree to these terms. Please read them carefully — they are here to protect both you and the integrity of the platform.
+        </p>
+
+        <h3 class="text-white fw-bold mt-5 mb-3">1. User Roles & Responsibilities</h3>
+        <p><strong>Job Seekers:</strong></p>
+        <ul class="quantum-list mb-4">
+            <li>You are responsible for the accuracy of your resume and profile data.</li>
+            <li>Do not misrepresent your skills, experience, or qualifications.</li>
+            <li>Do not use automated tools to spam job applications.</li>
+        </ul>
+
+        <p><strong>Recruiters:</strong></p>
+        <ul class="quantum-list">
+            <li>You must post real, legitimate job openings.</li>
+            <li>Do not harvest candidate data for purposes outside recruitment.</li>
+            <li>Do not discriminate against candidates based on protected characteristics.</li>
+        </ul>
+
+        <h3 class="text-white fw-bold mt-5 mb-3">2. AI-Generated Content Disclaimer</h3>
+        <div class="highlight-box">
+            <p class="mb-2 text-white"><strong>Important:</strong> SkillMap uses LLMs to generate roadmaps and feedback. While our AI is state-of-the-art:</p>
+            <ul class="quantum-list mb-0">
+                <li>AI suggestions are <strong>guidance, not absolute guarantees</strong>. Always verify critical career moves.</li>
+                <li>AI responses may occasionally be incomplete or subject to hallucination.</li>
+                <li>You are solely responsible for your final decisions (career paths, interview answers, etc.).</li>
+            </ul>
+        </div>
+
+        <h3 class="text-white fw-bold mt-5 mb-3">3. Intellectual Property</h3>
+        <ul class="quantum-list">
+            <li><strong>Your Content:</strong> You retain ownership of your resume and responses. You grant SkillMap a license to process them to provide the service.</li>
+            <li><strong>Our Content:</strong> SkillMap's code, UI design (Quantum), AI prompts, and algorithms (MaxHeap Matcher) are our intellectual property.</li>
+        </ul>
+
+        <h3 class="text-white fw-bold mt-5 mb-3">4. Disclaimers & Limitations</h3>
+        <p><strong>No Job Guarantees:</strong> SkillMap acts as a catalyst to improve your chances and streamline recruiting, but we cannot guarantee employment outcomes.</p>
+        <p><strong>Limitation of Liability:</strong> To the fullest extent permitted by law, SkillMap is not liable for lost opportunities, missed interviews, or technical glitches preventing application submissions.</p>
+        
+        <h3 class="text-white fw-bold mt-5 mb-3">5. Governing Law</h3>
+        <p>These Terms are governed by the laws of <strong>India</strong>. Any disputes will be resolved in courts located in Ahmedabad, Gujarat.</p>
+
+        <div class="text-center mt-5 pt-4 border-top border-secondary border-opacity-25">
+            <p class="fs-5 text-white-50">Questions or Legal Inquiries?</p>
+            <a href="mailto:support@skillmap.com" class="btn btn-premium rounded-pill px-4 py-2 fw-bold text-white text-decoration-none" style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));">Contact Support</a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
