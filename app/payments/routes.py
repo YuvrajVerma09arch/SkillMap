@@ -18,14 +18,13 @@ def pricing():
 def create_payment():
     try:
         data = request.get_json()
-        plan_type = data.get('plan') # 'pro' or 'enterprise'
+        plan_type = data.get('plan') 
 
-        # DEFINE PRICING LOGIC HERE
-        amount = 499 # Default Pro Price
+        amount = 299 # Default Pro Price
         credits = 50 # Credits given for Pro
         
         if plan_type == 'enterprise':
-            amount = 999
+            amount = 499
             credits = 200
         
         # 1. Create Razorpay Order
@@ -80,7 +79,7 @@ def verify_payment():
         
         # 3. Add Credits to User
         current_user.credits += txn.credits_purchased
-        if txn.amount >= 999: # Example logic for Tier upgrade
+        if txn.amount >= 499: 
             current_user.tier = 'Enterprise'
         else:
             current_user.tier = 'Pro'
