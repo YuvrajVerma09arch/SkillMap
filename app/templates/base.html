@@ -138,7 +138,7 @@
                             <a href="{{ url_for('main.resume_checker') }}" class="nav-link-custom text-white/90 px-4 py-2">Resume Analyst</a>
                             <a href="{{ url_for('main.roadmap') }}" class="nav-link-custom text-white/90 px-4 py-2">Roadmap Gen</a>
                             <a href="{{ url_for('main.interview') }}" class="nav-link-custom text-white/90 px-4 py-2">Mock Interview</a>
-                            <a href="{{ url_for('jobs.job_feed') }}" class="nav-link-custom text-white/90 px-4 py-2">Jobs</a>
+                            <a href="{{ url_for('jobs.live_jobs') }}" class="nav-link-custom text-white/90 px-4 py-2">Jobs</a>
                         {% elif current_user.role == 'recruiter' %}
                             <a href="{{ url_for('main.recruiter_dashboard') }}" class="nav-link-custom text-white/90 px-4 py-2">Dashboard</a>
                             <a href="{{ url_for('main.talent_feed') }}" class="nav-link-custom text-white/90 px-4 py-2">Find Talent</a>
@@ -192,7 +192,7 @@
                             <a href="{{ url_for('main.resume_checker') }}" class="text-white/90 hover:text-white">Resume Analyst</a>
                             <a href="{{ url_for('main.roadmap') }}" class="text-white/90 hover:text-white">Roadmap Gen</a>
                             <a href="{{ url_for('main.interview') }}" class="text-white/90 hover:text-white">Mock Interview</a>
-                            <a href="{{ url_for('jobs.job_feed') }}" class="text-white/90 hover:text-white">Jobs</a>
+                            <a href="{{ url_for('jobs.live_jobs') }}" class="text-white/90 hover:text-white">Jobs</a>
                             <div class="border-t border-white/20 my-2"></div>
                             
                             <a href="{{ url_for('payments.pricing') }}" class="text-yellow-400 font-bold flex items-center gap-2 hover:text-yellow-300">

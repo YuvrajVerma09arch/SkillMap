@@ -191,6 +191,11 @@
 <div class="cursor-glow" id="cursorGlow"></div>
 
 <div class="container" style="padding-top: 100px; position: relative; z-index: 10;">
+
+    <div class="d-flex justify-content-center gap-3 mb-4">
+        <a href="{{ url_for('jobs.job_feed') }}" class="btn-action btn-apply px-4 py-2" style="border-radius: 50px;">Internal Jobs</a>
+        <a href="{{ url_for('jobs.live_jobs') }}" class="btn-action btn-match px-4 py-2" style="border-radius: 50px;"><i class="bi bi-globe me-2"></i>Live Global Feed</a>
+    </div>
     <div class="header">
         <h1 class="main-heading">Find Jobs Here</h1>
         <p class="sub-heading">Discover opportunities that match your skills</p>

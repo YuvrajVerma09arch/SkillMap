@@ -453,3 +453,4 @@ def trigger_email():
 @main.route('/legal')
 def legal():
     return render_template('payments/legal.html')
+

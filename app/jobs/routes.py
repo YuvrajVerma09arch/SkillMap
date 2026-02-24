@@ -1,10 +1,12 @@
 # app/jobs/routes.py
-
+import os
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_required, current_user
 from app import db
 from app.models import JobPost, Application, User, SeekerProfile
 from datetime import datetime
+from bs4 import BeautifulSoup
+import requests
 # --- CRITICAL IMPORT ---
 from app.utils.matcher import calculate_match_score 
 from app.utils.email_service import send_interview_invite, send_job_offer, send_rejection
@@ -249,3 +251,111 @@ def update_status(app_id, status):
             flash(f"Candidate rejected, but email failed: {msg}", "warning")
     
     return redirect(url_for('jobs.view_applicants', job_id=job.id))
+
+@jobs.route('/live-jobs')
+@login_required
+def live_jobs():
+    if current_user.role != 'seeker':
+        return redirect(url_for('main.recruiter_dashboard'))
+    
+    # Get the requested feed source (default to 'remote')
+    source = request.args.get('feed', 'india')
+    
+    # Fetch based on selection
+    if source == 'global':
+        raw_jobs = fetch_arbeitnow()
+    elif source == 'remote':
+        raw_jobs = fetch_remotive()
+    else: 
+        raw_jobs = fetch_indian_jobs()
+        source = 'india'
+    
+    # Clean HTML Descriptions into pure text for the Groq AI
+    for job in raw_jobs:
+        if job.get('description'):
+            soup = BeautifulSoup(job['description'], "html.parser")
+            job['clean_description'] = soup.get_text(separator=' ')
+        else:
+            job['clean_description'] = "No description available."
+            
+    return render_template('seeker/live_jobs.html', jobs=raw_jobs, current_feed=source)
+    
+    
+@jobs.route('/analyze-external-fit', methods=['POST'])
+@login_required
+def analyze_external_fit():
+    # External jobs don't have an ID in our DB, so we get the text directly from the form
+    job_desc = request.form.get('job_description')
+    
+    if job_desc:
+        session['prefill_job_description'] = job_desc
+        session['analyzing_job_id'] = 'external'
+    
+    return redirect(url_for('main.resume_checker'))
+
+
+def fetch_remotive():
+    try:
+        url = "https://remotive.com/api/remote-jobs?category=software-dev&limit=20"
+        resp = requests.get(url, timeout=5).json()
+        jobs = []
+        for j in resp.get('jobs', []):
+            jobs.append({
+                'title': j.get('title'),
+                'company': j.get('company_name'),
+                'location': j.get('candidate_required_location'),
+                'url': j.get('url'),
+                'description': j.get('description'), # Raw HTML for Analyze Fit
+                'logo': j.get('company_logo'),
+                'source': 'Remotive'
+            })
+        return jobs
+    except Exception as e: 
+        print(f"Remotive Error: {e}")
+        return []
+
+def fetch_arbeitnow():
+    try:
+        url = "https://www.arbeitnow.com/api/job-board-api"
+        resp = requests.get(url, timeout=5).json()
+        jobs = []
+        for j in resp.get('data', [])[:20]: # Limit to 20
+            jobs.append({
+                'title': j.get('title'),
+                'company': j.get('company_name'),
+                'location': j.get('location'),
+                'url': j.get('url'),
+                'description': j.get('description'),
+                'logo': None, # Arbeitnow does not provide logos
+                'source': 'Arbeitnow'
+            })
+        return jobs
+    except Exception as e: 
+        print(f"Arbeitnow Error: {e}")
+        return []
+    
+def fetch_indian_jobs():
+    try:
+        # Put your real Adzuna keys here!
+        APP_ID = os.environ.get("APP_ID")
+        APP_KEY = os.environ.get("APP_KEY")
+        
+        # We target 'in' (India), category 'it-jobs', keyword 'software'
+        url = f"https://api.adzuna.com/v1/api/jobs/in/search/1?app_id={APP_ID}&app_key={APP_KEY}&results_per_page=15&what=software&category=it-jobs&content-type=application/json"
+        
+        resp = requests.get(url, timeout=5).json()
+        jobs = []
+        for j in resp.get('results', []):
+            jobs.append({
+                'title': j.get('title'),
+                'company': j.get('company', {}).get('display_name'),
+                'location': j.get('location', {}).get('display_name'), # E.g., Bangalore, Pune, Ahmedabad!
+                'url': j.get('redirect_url'),
+                'description': j.get('description'),
+                'logo': None, 
+                'source': 'Adzuna (India)'
+            })
+        return jobs
+    except Exception as e:
+        print(f"Adzuna Error: {e}")
+        return []
