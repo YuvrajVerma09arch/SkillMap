@@ -211,11 +211,7 @@ body {
            <i class="bi bi-wifi me-2"></i>Remote Tech (Remotive)
         </a>
 
-        <a href="{{ url_for('jobs.live_jobs', feed='global') }}" 
-           class="btn-action px-4 py-2 {% if current_feed == 'global' %}btn-applied{% else %}btn-match{% endif %}" 
-           style="border-radius: 50px; min-width: 180px;">
-           <i class="bi bi-globe2 me-2"></i>Global IT (Arbeitnow)
-        </a>
+        
 
         <a href="{{ url_for('jobs.live_jobs', feed='india') }}" 
    class="btn-action px-4 py-2 {% if current_feed == 'india' %}btn-applied{% else %}btn-match{% endif %}" 

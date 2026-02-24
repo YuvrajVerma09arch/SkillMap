@@ -262,9 +262,7 @@ def live_jobs():
     source = request.args.get('feed', 'india')
     
     # Fetch based on selection
-    if source == 'global':
-        raw_jobs = fetch_arbeitnow()
-    elif source == 'remote':
+    if source == 'remote':
         raw_jobs = fetch_remotive()
     else: 
         raw_jobs = fetch_indian_jobs()
@@ -314,25 +312,7 @@ def fetch_remotive():
         print(f"Remotive Error: {e}")
         return []
 
-def fetch_arbeitnow():
-    try:
-        url = "https://www.arbeitnow.com/api/job-board-api"
-        resp = requests.get(url, timeout=5).json()
-        jobs = []
-        for j in resp.get('data', [])[:20]: # Limit to 20
-            jobs.append({
-                'title': j.get('title'),
-                'company': j.get('company_name'),
-                'location': j.get('location'),
-                'url': j.get('url'),
-                'description': j.get('description'),
-                'logo': None, # Arbeitnow does not provide logos
-                'source': 'Arbeitnow'
-            })
-        return jobs
-    except Exception as e: 
-        print(f"Arbeitnow Error: {e}")
-        return []
+
     
 def fetch_indian_jobs():
     try:
