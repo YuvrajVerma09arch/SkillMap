@@ -1,242 +1,203 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block extra_head %}
 <style>
-    /* --- QUANTUM THEME --- */
-    :root {
-        --primary-dark: #0A1929;
-        --accent-blue: #3b82f6;
-        --accent-pink: #ec4899;
-        --accent-purple: #8b5cf6;
+    /* ─── APPLICANTS TABLE — ORBITAL INTERFACE ──────────────────────────
+       Clean table with row-level status indicators and action buttons.
+    ──────────────────────────────────────────────────────────────────── */
+    .app-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--ink-2);
+        border: 1px solid var(--wire);
     }
+    .app-table thead { border-bottom: 2px solid var(--wire); }
+    .app-table th {
+        padding: 14px 16px;
+        text-align: left;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--chalk-3);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        background: var(--ink-3);
+    }
+    .app-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--wire);
+        font-size: 13px;
+        color: var(--chalk-2);
+    }
+    .app-table tbody tr:hover { background: var(--ink-3); }
+    .app-table tbody tr.locked { opacity: 0.6; }
 
-    body {
-        background: #050505 !important;
-        min-height: 100vh;
-        color: white;
-        font-family: 'Inter', sans-serif;
-    }
-
-    /* --- QUANTUM BACKGROUND LAYERS --- */
-    .quantum-bg { position: fixed; inset: 0; z-index: -2; pointer-events: none; }
-    
-    .bg-layer-1 {
-        position: absolute; inset: 0;
-        background: radial-gradient(circle at 50% 50%, rgba(30,27,75,0.8) 0%, #050505 70%);
-    }
-    
-    .bg-layer-2 {
-        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.4) 0%, transparent 50%),
-                    radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
-                    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.4) 0%, transparent 50%);
-        animation: plasma-move 30s infinite alternate ease-in-out;
-        filter: blur(80px); opacity: 0.5;
-    }
-    
-    @keyframes plasma-move {
-        0% { transform: rotate(0deg) translate(0,0); }
-        100% { transform: rotate(45deg) translate(-10%, -10%); }
-    }
-
-    /* --- FLOATING SHAPES --- */
-    .bg-shape {
-        position: fixed; 
-        background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
-        border-radius: 50%; filter: blur(60px); opacity: 0.15; z-index: -1;
-        animation: float 20s infinite ease-in-out; pointer-events: none;
-    }
-    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; animation-delay: 0s; }
-    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -5%; animation-delay: 2s; }
-
-    @keyframes float {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(30px, -50px) scale(1.1); }
-        66% { transform: translate(-20px, 20px) scale(0.9); }
-    }
-
-    /* --- QUANTUM GLASS CARD --- */
-    .glass-card {
-        background: rgba(10, 10, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden; position: relative;
-    }
-
-    .glass-card::after {
-        content: ''; position: absolute; inset: -200%;
-        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, var(--accent-blue) 25%, var(--accent-pink) 50%, var(--accent-purple) 75%, transparent 100%);
-        animation: spin-glow 8s linear infinite; opacity: 0.15; z-index: 0; pointer-events: none;
-    }
-
-    @keyframes spin-glow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .glass-card > * { position: relative; z-index: 2; }
-
-    /* --- TABLE STYLING --- */
-    .custom-table { margin-bottom: 0; width: 100%; border-collapse: separate; border-spacing: 0; --bs-table-bg: transparent; }
-    .custom-table th {
-        background: rgba(59, 130, 246, 0.15) !important; color: white !important; border: none; padding: 16px; 
-        font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .custom-table td {
-        border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 16px; color: white !important;
-        background-color: transparent !important; vertical-align: middle; font-weight: 500;
-    }
-    .custom-table tr:hover td { background-color: rgba(59, 130, 246, 0.1) !important; transition: background-color 0.3s ease; }
-
-    /* --- AVATAR & BADGES --- */
-    .avatar-circle {
-        width: 45px; height: 45px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2));
-        backdrop-filter: blur(5px); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-        font-weight: 800; font-size: 1.2rem; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
+    .candidate-name { font-weight: 600; color: var(--chalk); }
+    .candidate-email { font-size: 11px; color: var(--chalk-3); }
 
     .skill-badge {
-        background: rgba(59, 130, 246, 0.2); backdrop-filter: blur(5px); color: white; 
-        border: 1px solid rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; 
-        margin-right: 4px; display: inline-block; margin-bottom: 4px; transition: all 0.3s ease;
+        display: inline-block;
+        background: var(--ink-3);
+        border: 1px solid var(--wire-2);
+        padding: 3px 8px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        color: var(--chalk-2);
+        margin-right: 4px;
+        margin-bottom: 2px;
     }
-    .skill-badge:hover { background: rgba(236, 72, 153, 0.3); border-color: var(--accent-pink); transform: translateY(-1px); }
 
-    /* --- STATUS BADGES --- */
     .status-badge {
-        padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
-        text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        display: inline-block;
+        padding: 4px 10px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border-radius: 2px;
     }
-    .status-applied { background: rgba(59, 130, 246, 0.3); color: white; border: 1px solid rgba(59, 130, 246, 0.3); }
-    .status-shortlisted { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); border: 1px solid rgba(255,255,255,0.2); }
-    .status-accepted { background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); border: 1px solid rgba(255,255,255,0.2); }
-    .status-rejected { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); border: 1px solid rgba(255,255,255,0.2); }
+    .status-pending { background: var(--ink-3); color: var(--chalk-2); border: 1px solid var(--wire-2); }
+    .status-shortlisted { background: var(--signal-dim); color: var(--signal); border: 1px solid var(--signal); }
+    .status-accepted { background: #4ade8022; color: #4ade80; border: 1px solid #4ade8055; }
+    .status-rejected { background: #ef444422; color: #ef4444; border: 1px solid #ef444455; }
 
-    /* --- ACTION BUTTONS --- */
-    .btn-action {
-        width: 38px; height: 38px; border-radius: 12px; border: none; display: flex; align-items: center; justify-content: center; 
-        transition: all 0.3s ease; cursor: pointer; margin-left: 8px; position: relative; overflow: hidden;
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: var(--ink-3);
+        border: 1px solid var(--wire-2);
+        color: var(--chalk-2);
+        cursor: pointer;
+        transition: all 0.15s;
+        font-size: 12px;
+        margin-left: 6px;
     }
-    .btn-action::before {
-        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.3) 25%, transparent 50%);
-        animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s;
-    }
-    .btn-action:hover::before { opacity: 1; }
-    .btn-action:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
-    
-    .btn-shortlist { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
-    .btn-accept { background: linear-gradient(135deg, #10b981, #059669); color: white; }
-    .btn-reject { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
-
-    /* --- HEADER TEXT --- */
-    .display-6 { background: linear-gradient(135deg, #fff, var(--accent-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; }
-    .text-warning { color: var(--accent-pink) !important; text-shadow: 0 0 15px var(--accent-pink); }
+    .action-btn:hover { border-color: var(--wire); color: var(--chalk); }
+    .action-btn.shortlist:hover { border-color: var(--signal); color: var(--signal); }
+    .action-btn.accept:hover { border-color: #4ade80; color: #4ade80; }
+    .action-btn.reject:hover { border-color: #ef4444; color: #ef4444; }
 </style>
+{% endblock %}
 
-<div class="quantum-bg">
-    <div class="bg-layer-1"></div>
-    <div class="bg-layer-2"></div>
-</div>
+{% block content %}
+<div style="max-width:1200px; margin:0 auto; padding:48px 24px; position:relative; z-index:1;">
 
-<div class="bg-shape shape-1"></div>
-<div class="bg-shape shape-2"></div>
-
-<div class="container py-5 position-relative z-10">
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <!-- Header -->
+    <div class="animate-fade-up" style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:32px;">
         <div>
-            <h2 class="fw-bold display-6 mb-0">Applicants</h2>
-            <p class="opacity-75 mb-0 text-white">For Role: <span class="fw-bold text-warning">{{ job.title }}</span></p>
+            <div class="label-signal" style="margin-bottom:8px;">Applicants</div>
+            <h1 class="display" style="font-size:clamp(24px,3vw,40px); color:var(--chalk);">
+                {{ job.title }}
+            </h1>
+            <p style="font-size:13px; color:var(--chalk-3); margin-top:6px; font-family:'JetBrains Mono',monospace;">
+                {{ applicants|length if applicants else 0 }} application{{ 's' if (applicants|length if applicants else 0) != 1 else '' }}
+            </p>
         </div>
-        <a href="{{ url_for('main.recruiter_dashboard') }}" class="btn btn-outline-light rounded-pill px-4 border border-white border-opacity-25 text-white hover:bg-white hover:bg-opacity-10 transition">
-            <i class="bi bi-arrow-left me-2"></i> Dashboard
+        <a href="{{ url_for('main.recruiter_dashboard') }}" class="btn-ghost" style="padding:10px 20px; font-size:12px;">
+            ← Dashboard
         </a>
     </div>
 
-    <div class="glass-card">
-        {% if applicants %}
-        <div class="table-responsive">
-            <table class="table custom-table mb-0">
-                <thead>
-                    <tr>
-                        <th>Candidate</th>
-                        <th>Experience</th>
-                        <th>Top Skills</th>
-                        <th>Applied</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for app_data in applicants %}
-                    <tr class="{% if app_data.status in ['Accepted', 'Rejected'] %}opacity-50{% endif %}">
-                        
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="avatar-circle me-3">{{ app_data.name[0] | upper }}</div>
-                                <div>
-                                    <div class="fw-bold text-white">{{ app_data.name }}</div>
-                                    <div class="small text-white-50">{{ app_data.email }}</div>
-                                </div>
+    <!-- Table -->
+    {% if applicants %}
+    <div class="animate-fade-up" style="animation-delay:0.05s; overflow-x:auto;">
+        <table class="app-table">
+            <thead>
+                <tr>
+                    <th>Candidate</th>
+                    <th>Experience</th>
+                    <th>Skills</th>
+                    <th>Applied</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app_data in applicants %}
+                <tr class="{% if app_data.status in ['Accepted', 'Rejected'] %}locked{% endif %}">
+                    
+                    <!-- Candidate -->
+                    <td>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="width:32px; height:32px; background:var(--ink); border:1px solid var(--wire-2); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--signal); flex-shrink:0;">
+                                {{ app_data.name[0]|upper if app_data.name else '?' }}
                             </div>
-                        </td>
-
-                        <td><span class="fw-bold text-white">{{ app_data.experience }}</span></td>
-
-                        <td style="max-width: 300px;">
-                            {% for skill in app_data.skills[:3] %}
-                                <span class="skill-badge">{{ skill }}</span>
-                            {% endfor %}
-                            {% if app_data.skills|length > 3 %}
-                                <span class="skill-badge">+{{ app_data.skills|length - 3 }}</span>
-                            {% endif %}
-                        </td>
-
-                        <td class="text-white-50 small">{{ app_data.applied_at }}</td>
-
-                        <td>
-                            <span class="status-badge status-{{ app_data.status|lower }}">
-                                {{ app_data.status }}
-                            </span>
-                        </td>
-
-                        <td class="text-end">
-                            <div class="d-flex justify-content-end align-items-center">
-                                
-                                {% if app_data.status not in ['Accepted', 'Rejected'] %}
-                                    <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Shortlisted') }}" method="POST" class="d-inline">
-                                        <button class="btn-action btn-shortlist" title="Shortlist / Interview">
-                                            <i class="bi bi-star-fill"></i>
-                                        </button>
-                                    </form>
-
-                                    <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Accepted') }}" method="POST" class="d-inline">
-                                        <button class="btn-action btn-accept" title="Hire / Accept">
-                                            <i class="bi bi-check-lg"></i>
-                                        </button>
-                                    </form>
-
-                                    <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Rejected') }}" method="POST" class="d-inline">
-                                        <button class="btn-action btn-reject" title="Reject">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                    </form>
-                                {% else %}
-                                    <span class="text-white small fst-italic opacity-75">
-                                        Decision Locked <i class="bi bi-lock-fill ms-1"></i>
-                                    </span>
-                                {% endif %}
-
+                            <div style="min-width:0;">
+                                <div class="candidate-name">{{ app_data.name }}</div>
+                                <div class="candidate-email">{{ app_data.email }}</div>
                             </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-people display-1 opacity-25 text-white mb-3 d-block"></i>
-                <h3 class="mt-3 opacity-75 text-white">No applicants yet.</h3>
-                <p class="text-white-50">Applications will appear here when candidates apply.</p>
-            </div>
-        {% endif %}
+                        </div>
+                    </td>
+
+                    <!-- Experience -->
+                    <td style="font-weight:600; color:var(--chalk);">{{ app_data.experience }}</td>
+
+                    <!-- Skills -->
+                    <td>
+                        {% for skill in app_data.skills[:3] %}
+                        <span class="skill-badge">{{ skill }}</span>
+                        {% endfor %}
+                        {% if app_data.skills|length > 3 %}
+                        <span class="skill-badge">+{{ app_data.skills|length - 3 }}</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Applied -->
+                    <td style="font-size:12px; color:var(--chalk-3); font-family:'JetBrains Mono',monospace;">{{ app_data.applied_at }}</td>
+
+                    <!-- Status -->
+                    <td>
+                        <span class="status-badge status-{{ app_data.status|lower }}">
+                            {{ app_data.status }}
+                        </span>
+                    </td>
+
+                    <!-- Actions -->
+                    <td style="text-align:right;">
+                        {% if app_data.status not in ['Accepted', 'Rejected'] %}
+                        <div style="display:flex; justify-content:flex-end; gap:0;">
+                            <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Shortlisted') }}" method="POST" style="display:inline;">
+                                <button type="submit" class="action-btn shortlist" title="Shortlist for Interview">
+                                    <i class="bi bi-star-fill"></i>
+                                </button>
+                            </form>
+                            <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Accepted') }}" method="POST" style="display:inline;">
+                                <button type="submit" class="action-btn accept" title="Accept / Hire">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </form>
+                            <form action="{{ url_for('jobs.update_status', app_id=app_data.id, status='Rejected') }}" method="POST" style="display:inline;">
+                                <button type="submit" class="action-btn reject" title="Reject">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <span style="font-size:11px; color:var(--chalk-3); font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:4px; justify-content:flex-end;">
+                            <i class="bi bi-lock-fill"></i> Locked
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="animate-fade-up" style="text-align:center; padding:80px 24px; background:var(--ink-2); border:1px solid var(--wire);">
+        <i class="bi bi-inbox" style="font-size:48px; color:var(--chalk-3); margin-bottom:16px; display:block; opacity:0.5;"></i>
+        <h3 style="font-size:18px; font-weight:600; color:var(--chalk-2); margin-bottom:8px;">No applicants yet</h3>
+        <p style="font-size:13px; color:var(--chalk-3); line-height:1.6;">
+            Applications will appear here when candidates apply to this job posting.
+        </p>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}

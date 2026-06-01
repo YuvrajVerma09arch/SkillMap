@@ -1,235 +1,70 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block extra_head %}
 <style>
-    /* --- QUANTUM THEME --- */
-    :root {
-        --primary-dark: #0A1929;
-        --accent-blue: #3b82f6;
-        --accent-pink: #ec4899;
-        --accent-purple: #8b5cf6;
+    /* ─── RECRUITER SETUP — ORBITAL INTERFACE ──────────────────────────
+       Company profile setup form with size and industry selection.
+    ──────────────────────────────────────────────────────────────────── */
+    .size-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        background: var(--ink-3);
+        border: 1px solid var(--wire-2);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--chalk-2);
+        cursor: pointer;
+        transition: all 0.15s;
+        user-select: none;
     }
-
-    body {
-        background: #050505 !important;
-        min-height: 100vh;
-        color: white;
-        font-family: 'Inter', sans-serif;
-        overflow-x: hidden;
-    }
-
-    /* --- QUANTUM BACKGROUND LAYERS --- */
-    .quantum-bg { position: fixed; inset: 0; z-index: -2; pointer-events: none;}
-    
-    .bg-layer-1 {
-        position: absolute; inset: 0;
-        background: radial-gradient(circle at 50% 50%, rgba(30,27,75,0.8) 0%, #050505 70%);
-    }
-    
-    .bg-layer-2 {
-        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.4) 0%, transparent 50%),
-                    radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
-                    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.4) 0%, transparent 50%);
-        animation: plasma-move 30s infinite alternate ease-in-out;
-        filter: blur(80px); opacity: 0.5;
-    }
-    
-    @keyframes plasma-move {
-        0% { transform: rotate(0deg) translate(0,0); }
-        100% { transform: rotate(45deg) translate(-10%, -10%); }
-    }
-    
-    .noise-overlay {
-        position: fixed; inset: 0; z-index: -1;
-        background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-        pointer-events: none; mix-blend-mode: overlay; opacity: 0.2;
-    }
-
-    /* --- FLOATING SHAPES --- */
-    .bg-shape {
-        position: fixed; background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
-        border-radius: 50%; filter: blur(60px); opacity: 0.15; z-index: -1;
-        animation: float 20s infinite ease-in-out; pointer-events: none;
-    }
-    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; animation-delay: 0s; }
-    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -5%; animation-delay: 2s; }
-
-    @keyframes float {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(30px, -50px) scale(1.1); }
-        66% { transform: translate(-20px, 20px) scale(0.9); }
-    }
-
-    /* --- QUANTUM GLASS CONTAINER --- */
-    .glass-container {
-        max-width: 800px; margin: 40px auto;
-        background: rgba(10, 10, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 32px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden; color: white; position: relative; z-index: 10;
-    }
-
-    .glass-container::after {
-        content: ''; position: absolute; inset: -200%;
-        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, var(--accent-blue) 25%, var(--accent-pink) 50%, var(--accent-purple) 75%, transparent 100%);
-        animation: spin-glow 8s linear infinite; opacity: 0.15; z-index: 0; pointer-events: none;
-    }
-
-    @keyframes spin-glow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .glass-container > * { position: relative; z-index: 2; }
-
-    /* --- HEADER SECTION --- */
-    .header-section {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3));
-        backdrop-filter: blur(10px); padding: 40px; text-align: center; color: white;
-        border-bottom: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden;
-    }
-    .header-section::before {
-        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.1) 25%, transparent 50%);
-        animation: spin-glow 8s linear infinite; opacity: 0.3;
-    }
-    .header-section h1 {
-        background: linear-gradient(135deg, #fff, var(--accent-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        font-weight: 800; font-size: 2.5rem; position: relative; z-index: 2;
-    }
-
-    /* --- PROGRESS WRAPPER --- */
-    .progress-wrapper {
-        padding: 20px 40px; background: rgba(0, 0, 0, 0.2); border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .progress-steps {
-        display: flex; justify-content: space-between; color: rgba(255,255,255,0.6);
-        font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;
-    }
-    .progress-steps span.active { color: var(--accent-pink); text-shadow: 0 0 10px var(--accent-pink); transition: color 0.3s ease; }
-    .progress { height: 6px; border-radius: 10px; background: rgba(255,255,255,0.1); overflow: hidden; }
-    .progress-bar {
-        background: linear-gradient(90deg, var(--accent-blue), var(--accent-pink)); transition: width 0.4s ease;
-        border-radius: 10px; position: relative; overflow: hidden;
-    }
-    .progress-bar::after {
-        content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmer 2s infinite;
-    }
-    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-
-    /* --- FORM SECTIONS --- */
-    .form-section { padding: 40px; display: none; animation: slideIn 0.5s ease; }
-    .form-section.active { display: block; }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-    label { font-weight: 600; color: rgba(255,255,255,0.9); margin-bottom: 8px; font-size: 0.95rem; }
-    .text-danger { color: var(--accent-pink) !important; }
-
-    .form-control, .form-select {
-        padding: 14px; border-radius: 16px; border: 1px solid rgba(59, 130, 246, 0.3);
-        background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px); color: white; transition: all 0.3s ease;
-    }
-    .form-control:focus, .form-select:focus {
-        border-color: var(--accent-pink); box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
-        background: rgba(0, 0, 0, 0.4); color: white; outline: none;
-    }
-    .form-control::placeholder { color: rgba(255,255,255,0.4); }
-    .form-select option { background: #0A1929; color: white; }
-    .form-control.bg-light { background: rgba(0, 0, 0, 0.5) !important; border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
-
-    /* --- SUGGESTIONS LIST --- */
-    .suggestions-list {
-        background: rgba(10, 10, 20, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(59, 130, 246, 0.3);
-        border-radius: 16px; max-height: 200px; overflow-y: auto; position: absolute; width: 90%;
-        z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none;
-    }
-    .suggestion-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); color: white; transition: all 0.2s; }
-    .suggestion-item:hover { background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2)); padding-left: 20px; }
-
-    /* --- OPTION CHIPS --- */
-    .option-chip {
-        display: inline-flex; padding: 10px 20px; margin: 5px; background: rgba(59, 130, 246, 0.15);
-        backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1); border-radius: 50px;
-        cursor: pointer; transition: all 0.3s ease; font-weight: 500; color: white; user-select: none;
-    }
-    .option-chip input { display: none; }
-    .option-chip.selected {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3));
-        border-color: var(--accent-pink); color: white; font-weight: 700; box-shadow: 0 0 20px rgba(236, 72, 153, 0.3); transform: translateY(-2px);
-    }
-    .option-chip:hover { background: rgba(236, 72, 153, 0.25); border-color: var(--accent-pink); transform: translateY(-2px); }
-
-    /* --- BUTTONS --- */
-    .btn-nav { padding: 12px 30px; border-radius: 50px; font-weight: 600; transition: all 0.3s ease; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
-    .btn-primary { background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2)); backdrop-filter: blur(10px); color: white; border: 1px solid rgba(255,255,255,0.3); }
-    .btn-primary::before {
-        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.2) 25%, transparent 50%);
-        animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s;
-    }
-    .btn-primary:hover::before { opacity: 1; }
-    .btn-primary:hover {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3));
-        border-color: var(--accent-pink); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3); color: white;
-    }
-
-    .btn-light { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); color: white; border: 1px solid rgba(255,255,255,0.2); }
-    .btn-light:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); transform: translateY(-2px); color: white; }
-
-    .btn-success { background: linear-gradient(135deg, #10b981, #059669); border: none; color: white; }
-    .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3); }
-
-    /* --- INVALID INPUT --- */
-    .is-invalid { border-color: var(--accent-pink) !important; box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1) !important; }
-    .shake { animation: shake 0.3s; border-color: var(--accent-pink) !important; }
-    @keyframes shake { 0%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
-
-    .text-muted { color: rgba(255,255,255,0.5) !important; }
-    .bi-lock-fill { color: var(--accent-pink); }
-
-    @media (max-width: 768px) { .glass-container { margin: 20px; border-radius: 24px; } .header-section { padding: 30px; } .header-section h1 { font-size: 2rem; } .form-section { padding: 30px; } }
+    .size-chip:hover { border-color: var(--wire); color: var(--chalk); }
+    .size-chip input { display: none; }
+    .size-chip.selected { background: var(--signal-dim); border-color: var(--signal); color: var(--signal); }
 </style>
+{% endblock %}
 
-<div class="quantum-bg">
-    <div class="bg-layer-1"></div>
-    <div class="bg-layer-2"></div>
-</div>
-<div class="noise-overlay"></div>
+{% block content %}
+<div style="max-width:700px; margin:0 auto; padding:60px 24px; position:relative; z-index:1;">
 
-<div class="bg-shape shape-1"></div>
-<div class="bg-shape shape-2"></div>
-
-<div class="glass-container">
-    
-    <div class="header-section">
-        <h1 class="fw-bold mb-2">Company Setup</h1>
-        <p class="opacity-75 mb-0" style="position: relative; z-index: 2;">Let's set up your hiring profile.</p>
+    <!-- Header -->
+    <div class="animate-fade-up" style="margin-bottom:48px;">
+        <div class="label-signal" style="margin-bottom:8px;">Profile Setup</div>
+        <h1 class="display" style="font-size:clamp(28px,4vw,44px); color:var(--chalk); margin-bottom:12px;">
+            Company Profile
+        </h1>
+        <p style="font-size:13px; color:var(--chalk-3); line-height:1.6;">
+            Complete your company profile to help candidates understand your organization and attract top talent.
+        </p>
     </div>
 
-    <div class="progress-wrapper">
-        <div class="progress-steps">
-            <span id="step1Label" class="active">Company Info</span>
-            <span id="step2Label">Recruiter Info</span>
-            <span id="step3Label">Finish</span>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" id="progressBar" style="width: 33%"></div>
-        </div>
-    </div>
+    <form id="recruiterForm" method="POST" action="{{ url_for('main.save_recruiter_profile') }}" class="animate-fade-up" style="animation-delay:0.1s;">
 
-    <form id="recruiterForm" method="POST" action="{{ url_for('main.save_recruiter_profile') }}">
-        
-        <div class="form-section active" id="step1">
-            <h4 class="mb-4" style="color: var(--accent-pink); font-weight: 700;">1. Company Details</h4>
-            
-            <div class="mb-3">
-                <label>Company Name <span class="text-danger">*</span></label>
-                <input type="text" name="company_name" class="form-control" 
+        <div style="display:flex; flex-direction:column; gap:28px;">
+
+            <!-- Company Name -->
+            <div>
+                <label class="label" style="display:block; margin-bottom:8px;">Company Name</label>
+                <input type="text" name="company_name" class="input-field" 
                        value="{{ profile.company_name if profile else '' }}" 
-                       placeholder="e.g. Acme Corp" required minlength="2">
+                       placeholder="e.g. Acme Corporation" required>
             </div>
 
-            <div class="mb-3">
-                <label>Industry <span class="text-danger">*</span></label>
-                <select name="industry" class="form-select" required>
-                    <option value="" disabled selected>Select Industry</option>
+            <!-- Website -->
+            <div>
+                <label class="label" style="display:block; margin-bottom:8px;">Website (optional)</label>
+                <input type="url" name="website" class="input-field" 
+                       value="{{ profile.website if profile else '' }}" 
+                       placeholder="https://example.com">
+            </div>
+
+            <!-- Industry -->
+            <div>
+                <label class="label" style="display:block; margin-bottom:12px;">Industry</label>
+                <select name="industry" class="input-field" style="cursor:pointer;" required>
+                    <option value="">Select an industry</option>
                     <option value="Tech" {% if profile and profile.industry == 'Tech' %}selected{% endif %}>Technology / Software</option>
                     <option value="Finance" {% if profile and profile.industry == 'Finance' %}selected{% endif %}>Finance & Banking</option>
                     <option value="Healthcare" {% if profile and profile.industry == 'Healthcare' %}selected{% endif %}>Healthcare</option>
@@ -240,184 +75,44 @@
                 </select>
             </div>
 
-            <div class="mb-3">
-                <label>Company Size</label>
-                <div class="d-flex flex-wrap">
+            <!-- Company Size -->
+            <div>
+                <label class="label" style="display:block; margin-bottom:12px;">Company Size</label>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">
                     {% set size = profile.company_size if profile else '' %}
-                    <label class="option-chip {% if size == '1-10' %}selected{% endif %}">
-                        <input type="radio" name="size" value="1-10" {% if size == '1-10' %}checked{% endif %} required> 1-10
+                    {% for option in ['1-10', '11-50', '51-200', '200-500', '500+'] %}
+                    <label class="size-chip {% if size == option %}selected{% endif %}">
+                        <input type="radio" name="size" value="{{ option }}" {% if size == option %}checked{% endif %} required onchange="this.parentElement.classList.add('selected'); document.querySelectorAll('.size-chip').forEach(c => { if (c !== this.parentElement) c.classList.remove('selected'); });">
+                        {{ option }}
                     </label>
-                    <label class="option-chip {% if size == '11-50' %}selected{% endif %}">
-                        <input type="radio" name="size" value="11-50" {% if size == '11-50' %}checked{% endif %}> 11-50
-                    </label>
-                    <label class="option-chip {% if size == '51-200' %}selected{% endif %}">
-                        <input type="radio" name="size" value="51-200" {% if size == '51-200' %}checked{% endif %}> 51-200
-                    </label>
-                    <label class="option-chip {% if size == '200-500' %}selected{% endif %}">
-                        <input type="radio" name="size" value="200-500" {% if size == '200-500' %}checked{% endif %}> 200-500
-                    </label>
-                    <label class="option-chip {% if size == '500+' %}selected{% endif %}">
-                        <input type="radio" name="size" value="500+" {% if size == '500+' %}checked{% endif %}> 500+
-                    </label>
+                    {% endfor %}
                 </div>
             </div>
-            
-            <div class="mb-3 position-relative">
-                <label>Location (HQ) <span class="text-danger">*</span></label>
-                <input type="text" name="location" id="locationInput" class="form-control" 
-                       value="{{ profile.location if profile else '' }}"
-                       placeholder="Start typing city..." autocomplete="off" required>
-                <div id="locationSuggestions" class="suggestions-list"></div>
-            </div>
-            
-            <div class="mb-3">
-                <label>Website (Optional)</label>
-                <input type="url" name="website" class="form-control" 
-                       value="{{ profile.website if profile else '' }}"
-                       placeholder="https://example.com">
+
+            <!-- Description -->
+            <div>
+                <label class="label" style="display:block; margin-bottom:8px;">Company Description (optional)</label>
+                <textarea name="description" class="input-field" rows="4" placeholder="Tell candidates about your company, culture, and mission...">{{ profile.description if profile else '' }}</textarea>
             </div>
 
-            <div class="mt-4 text-end">
-                <button type="button" class="btn btn-primary btn-nav" onclick="validateAndNext(1)">
-                    Next <i class="bi bi-arrow-right ms-2"></i>
+            <!-- Submit -->
+            <div style="display:flex; gap:12px; padding-top:8px; border-top:1px solid var(--wire); margin-top:8px;">
+                <button type="submit" class="btn-signal" style="padding:14px 32px;">
+                    Save Profile →
                 </button>
+                <a href="{{ url_for('main.recruiter_dashboard') }}" class="btn-ghost" style="padding:14px 24px;">
+                    Cancel
+                </a>
             </div>
         </div>
-
-        <div class="form-section" id="step2">
-            <h4 class="mb-4" style="color: var(--accent-pink); font-weight: 700;">2. Your Details</h4>
-            
-            <div class="mb-3">
-                <label>Your Name <span class="text-danger">*</span></label>
-                <input type="text" name="recruiter_name" class="form-control" 
-                       value="{{ profile.recruiter_name if profile and profile.recruiter_name else current_user.name }}" 
-                       required minlength="2">
-            </div>
-
-            <div class="mb-3">
-                <label>Your Role <span class="text-danger">*</span></label>
-                <select name="role_title" class="form-select" required>
-                    <option value="" disabled selected>Select Role</option>
-                    <option value="HR Manager" {% if profile and profile.role_title == 'HR Manager' %}selected{% endif %}>HR Manager</option>
-                    <option value="Talent Acquisition" {% if profile and profile.role_title == 'Talent Acquisition' %}selected{% endif %}>Talent Acquisition</option>
-                    <option value="Founder" {% if profile and profile.role_title == 'Founder' %}selected{% endif %}>Founder / CEO</option>
-                    <option value="Recruiter" {% if profile and profile.role_title == 'Recruiter' %}selected{% endif %}>Recruiter</option>
-                    <option value="Hiring Manager" {% if profile and profile.role_title == 'Hiring Manager' %}selected{% endif %}>Hiring Manager</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label>Work Email</label>
-                <input type="email" name="work_email" class="form-control bg-light" 
-                       value="{{ profile.work_email if profile and profile.work_email else current_user.email }}" 
-                       readonly>
-                <small class="text-muted mt-2 d-block">
-                    <i class="bi bi-lock-fill me-1"></i> Linked to account.
-                </small>
-            </div>
-
-            <div class="mt-4 d-flex justify-content-between">
-                <button type="button" class="btn btn-light btn-nav" onclick="prevStep(2)">
-                    <i class="bi bi-arrow-left me-2"></i>Back
-                </button>
-                <button type="submit" class="btn btn-success btn-nav px-5 shadow">
-                    Finish Setup <i class="bi bi-check-lg ms-2"></i>
-                </button>
-            </div>
-        </div>
-
     </form>
 </div>
 
 <script>
-    // --- 1. LOCAL DATA (Top Indian Cities) ---
-    const cities = [
-        "Ahmedabad", "Bangalore", "Mumbai", "Delhi", "Pune", "Hyderabad", "Chennai", "Kolkata", 
-        "Surat", "Vadodara", "Rajkot", "Gandhinagar", "Jaipur", "Lucknow", "Indore", "Bhopal", 
-        "Chandigarh", "Gurgaon", "Noida", "Coimbatore", "Kochi"
-    ];
-
-    // --- 2. SEARCH LOGIC ---
-    function setupSearch(inputId, listId, dataArray) {
-        const input = document.getElementById(inputId);
-        const list = document.getElementById(listId);
-
-        input.addEventListener('input', function() {
-            const val = this.value.toLowerCase();
-            list.innerHTML = '';
-            if (!val) { list.style.display = 'none'; return; }
-
-            const matches = dataArray.filter(item => item.toLowerCase().includes(val));
-            if (matches.length > 0) {
-                list.style.display = 'block';
-                matches.slice(0, 6).forEach(match => {
-                    const div = document.createElement('div');
-                    div.className = 'suggestion-item';
-                    div.innerText = match;
-                    div.onclick = () => {
-                        input.value = match;
-                        list.style.display = 'none';
-                    };
-                    list.appendChild(div);
-                });
-            } else { list.style.display = 'none'; }
-        });
-
-        document.addEventListener('click', function(e) {
-            if (e.target !== input) list.style.display = 'none';
-        });
-    }
-
-    setupSearch('locationInput', 'locationSuggestions', cities);
-
-    // --- VALIDATION & NAVIGATION ---
-    function validateAndNext(currentStep) {
-        const section = document.getElementById('step' + currentStep);
-        const inputs = section.querySelectorAll('input[required], select[required]');
-        let valid = true;
-        
-        inputs.forEach(input => {
-            if (!input.value) {
-                valid = false;
-                input.classList.add('shake');
-                input.classList.add('is-invalid');
-                setTimeout(() => input.classList.remove('shake'), 500);
-                input.addEventListener('input', () => input.classList.remove('is-invalid'));
-            }
-        });
-
-        if (valid) {
-            nextStep(currentStep + 1);
-        }
-    }
-
-    function nextStep(step) {
-        document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
-        document.getElementById('step' + step).classList.add('active');
-        
-        // Update progress bar
-        const percent = (step / 2) * 100;
-        document.getElementById('progressBar').style.width = percent + '%';
-        
-        // Update step labels
-        document.querySelectorAll('.progress-steps span').forEach((el, index) => {
-            if (index < step) {
-                el.classList.add('active');
-            } else {
-                el.classList.remove('active');
-            }
-        });
-    }
-
-    function prevStep(step) {
-        nextStep(step - 1);
-    }
-
-    // Radio Button Logic
-    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+    // Handle size chip selection
+    document.querySelectorAll('.size-chip input').forEach(radio => {
         radio.addEventListener('change', function() {
-            const container = this.closest('.d-flex');
-            container.querySelectorAll('.option-chip').forEach(l => l.classList.remove('selected'));
+            document.querySelectorAll('.size-chip').forEach(chip => chip.classList.remove('selected'));
             this.parentElement.classList.add('selected');
         });
     });

@@ -1,337 +1,459 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkillMap | AI Career Architect</title>
-    
-    <!-- Fonts -->
+    <title>SkillMap — Career Intelligence System</title>
+
+    <!-- Fonts: Space Grotesk (display) + JetBrains Mono (data/labels) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- CSS Libraries -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    
+
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        sans: ['Space Grotesk', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
-                        brand: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            200: '#bae0fd',
-                            300: '#7cc8fb',
-                            400: '#36adf7',
-                            500: '#0c92eb',
-                            600: '#0074ca',
-                            700: '#005ca3',
-                            800: '#004f86',
-                            900: '#06426f',
-                            950: '#042a4a',
-                        },
+                        ink: '#0a0a0a',
+                        'ink-2': '#111111',
+                        'ink-3': '#1a1a1a',
+                        wire: 'rgba(255,255,255,0.06)',
+                        'wire-2': 'rgba(255,255,255,0.12)',
+                        signal: '#e63946',
+                        'signal-dim': 'rgba(230,57,70,0.15)',
+                        chalk: '#f0f0f0',
+                        'chalk-2': '#a0a0a0',
+                        'chalk-3': '#505050',
                     },
-                    animation: {
-                        'gradient': 'gradient 8s linear infinite',
-                        'float': 'float 6s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        gradient: {
-                            '0%, 100%': { 'background-size': '200% 200%', 'background-position': 'left center' },
-                            '50%': { 'background-size': '200% 200%', 'background-position': 'right center' },
-                        },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-20px)' },
-                        }
-                    }
                 }
             }
         }
     </script>
 
     <style>
+        /* ─── ORBITAL INTERFACE DESIGN SYSTEM ───────────────────────────────
+           Philosophy: Pure black canvas, hairline grid, monospace data labels,
+           red signal accent, orbital SVG decorations, brutalist-minimal cards.
+           Inspired by NASA mission-control / space-debris visualization UI.
+        ──────────────────────────────────────────────────────────────────── */
+
+        *, *::before, *::after { box-sizing: border-box; }
+
         :root {
-            --bg-dark: #020617;
-            --glass-bg: rgba(15, 23, 42, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --ink: #0a0a0a;
+            --ink-2: #111111;
+            --ink-3: #1a1a1a;
+            --wire: rgba(255,255,255,0.06);
+            --wire-2: rgba(255,255,255,0.12);
+            --signal: #e63946;
+            --signal-dim: rgba(230,57,70,0.12);
+            --chalk: #f0f0f0;
+            --chalk-2: #a0a0a0;
+            --chalk-3: #505050;
         }
+
+        html { scroll-behavior: smooth; }
 
         body {
-            background-color: var(--bg-dark);
-            color: #f8fafc;
+            background: var(--ink);
+            color: var(--chalk);
+            font-family: 'Space Grotesk', sans-serif;
             overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        .glass {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-        }
-
-        .glass-card {
-            background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .glass-card:hover {
-            background: rgba(30, 41, 59, 0.6);
-            border-color: rgba(54, 173, 247, 0.3);
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
-        }
-
-        .text-gradient {
-            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .bg-mesh {
+        /* Hairline grid overlay — the signature element */
+        body::before {
+            content: '';
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(12, 146, 235, 0.15) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, rgba(192, 132, 252, 0.15) 0, transparent 50%), 
-                radial-gradient(at 100% 100%, rgba(12, 146, 235, 0.15) 0, transparent 50%), 
-                radial-gradient(at 0% 100%, rgba(192, 132, 252, 0.15) 0, transparent 50%);
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 48px 48px;
         }
 
-        .video-bg {
+        /* Subtle radial vignette */
+        body::after {
+            content: '';
             position: fixed;
-            top: 0;
-            left: 0;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(230,57,70,0.04) 0%, transparent 70%);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--chalk-3); border-radius: 2px; }
+
+        /* ─── TYPOGRAPHY ──────────────────────────────────────────────────── */
+        .label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--chalk-3);
+        }
+
+        .label-signal {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--signal);
+        }
+
+        .display {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.05;
+        }
+
+        /* ─── CARDS ───────────────────────────────────────────────────────── */
+        .card {
+            background: var(--ink-2);
+            border: 1px solid var(--wire);
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: var(--wire-2);
+            background: var(--ink-3);
+        }
+
+        .card-signal {
+            background: var(--ink-2);
+            border: 1px solid var(--wire);
+            border-left: 2px solid var(--signal);
+        }
+
+        /* ─── BUTTONS ─────────────────────────────────────────────────────── */
+        .btn-signal {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--signal);
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.01em;
+            padding: 11px 24px;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+        .btn-signal:hover { opacity: 0.88; transform: translateY(-1px); }
+        .btn-signal:active { transform: scale(0.98); }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            color: var(--chalk-2);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 10px 24px;
+            border: 1px solid var(--wire-2);
+            cursor: pointer;
+            transition: color 0.15s ease, border-color 0.15s ease;
+        }
+        .btn-ghost:hover { color: var(--chalk); border-color: var(--chalk-3); }
+
+        /* ─── INPUTS ──────────────────────────────────────────────────────── */
+        .input-field {
             width: 100%;
-            height: 100%;
-            z-index: -2;
-            object-fit: cover;
-            opacity: 0.3;
-            filter: saturate(1.5) brightness(0.8);
+            background: var(--ink-3);
+            border: 1px solid var(--wire-2);
+            color: var(--chalk);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            padding: 12px 16px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        .input-field::placeholder { color: var(--chalk-3); }
+        .input-field:focus { border-color: var(--signal); }
+
+        /* ─── NAVIGATION ──────────────────────────────────────────────────── */
+        .nav-root {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            background: rgba(10,10,10,0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--wire);
         }
 
         .nav-link {
-            position: relative;
-            transition: color 0.3s ease;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--chalk-3);
+            padding: 6px 0;
+            border-bottom: 1px solid transparent;
+            transition: color 0.15s ease, border-color 0.15s ease;
+        }
+        .nav-link:hover { color: var(--chalk); border-bottom-color: var(--signal); }
+        .nav-link.active { color: var(--chalk); border-bottom-color: var(--signal); }
+
+        /* ─── FLASH MESSAGES ──────────────────────────────────────────────── */
+        .flash-msg {
+            background: var(--ink-3);
+            border: 1px solid var(--wire);
+            border-left: 2px solid var(--signal);
+            padding: 12px 16px;
+            font-size: 13px;
         }
 
-        .nav-link::after {
-            content: '';
+        /* ─── ORBITAL SVG DECORATION ──────────────────────────────────────── */
+        .orbital-ring {
             position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -4px;
-            left: 0;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
-            transition: width 0.3s ease;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.04);
+            pointer-events: none;
         }
 
-        .nav-link:hover::after {
-            width: 100%;
+        /* ─── DIVIDER ─────────────────────────────────────────────────────── */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--wire);
+            margin: 0;
         }
 
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
+        /* ─── SECTION HEADER ──────────────────────────────────────────────── */
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 48px;
+        }
+        .section-label::before {
+            content: '';
+            display: block;
+            width: 24px;
+            height: 1px;
+            background: var(--signal);
         }
 
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
+        /* ─── ANIMATIONS ──────────────────────────────────────────────────── */
+        @keyframes orbit {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
         }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0; }
+        }
+        .animate-fade-up { animation: fade-up 0.6s cubic-bezier(0.23,1,0.32,1) both; }
+        .animate-blink    { animation: blink 1.2s step-end infinite; }
 
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.2);
+        @media (prefers-reduced-motion: reduce) {
+            .animate-fade-up, .animate-blink { animation: none; }
         }
     </style>
+
     {% block extra_head %}{% endblock %}
 </head>
-<body class="custom-scrollbar">
-    <!-- Dynamic Backgrounds -->
-    <div class="bg-mesh"></div>
-    <!-- Placeholder for Video Background - Users can replace this with a real video file -->
-    <video autoplay muted loop playsinline class="video-bg">
-        <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-blue-and-purple-gradient-background-9126-large.mp4" type="video/mp4">
-    </video>
+<body>
+    <!-- ─── NAVIGATION ─────────────────────────────────────────────────── -->
+    <nav class="nav-root">
+        <div class="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
 
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <div class="flex items-center">
-                    <a href="{{ url_for('main.home') }}" class="flex items-center space-x-3 group">
-                        <div class="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20 group-hover:rotate-12 transition-transform">
-                            <i class="bi bi-compass-fill text-white text-xl"></i>
-                        </div>
-                        <span class="text-2xl font-extrabold tracking-tight text-white">Skill<span class="text-brand-400">Map</span></span>
-                    </a>
-                </div>
+            <!-- Logo -->
+            <a href="{{ url_for('main.home') }}" class="flex items-center gap-3 group">
+                <!-- Orbital logo mark -->
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="14" cy="14" r="13" stroke="#e63946" stroke-width="1"/>
+                    <circle cx="14" cy="14" r="3" fill="#e63946"/>
+                    <ellipse cx="14" cy="14" rx="13" ry="5" stroke="rgba(255,255,255,0.2)" stroke-width="0.75"/>
+                    <line x1="14" y1="1" x2="14" y2="27" stroke="rgba(255,255,255,0.1)" stroke-width="0.75"/>
+                </svg>
+                <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; letter-spacing:-0.02em; color:#f0f0f0;">
+                    SKILL<span style="color:#e63946;">MAP</span>
+                </span>
+            </a>
 
-                <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-8">
-                        <a href="{{ url_for('main.home') }}" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Home</a>
-                        {% if current_user.is_authenticated %}
-                            {% if current_user.role == 'seeker' %}
-                                <a href="{{ url_for('main.resume_checker') }}" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Resume Analyst</a>
-                                <a href="{{ url_for('main.roadmap') }}" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Roadmaps</a>
-                                <a href="{{ url_for('main.interview') }}" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Mock Interview</a>
-                                <a href="{{ url_for('jobs.live_jobs') }}" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Jobs</a>
-                            {% elif current_user.role == 'recruiter' %}
-                                <a href="{{ url_for('main.recruiter_dashboard') }}" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Dashboard</a>
-                                <a href="{{ url_for('main.talent_feed') }}" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Talent</a>
-                                <a href="{{ url_for('main.resume_checker') }}" class="nav-link text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">Analysis</a>
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="hidden md:flex items-center space-x-4">
-                    {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('payments.pricing') }}" class="flex items-center space-x-2 bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full border border-white/10 transition-colors">
-                            <i class="bi bi-lightning-charge-fill text-yellow-400"></i>
-                            <span class="text-sm font-semibold">Pro</span>
-                        </a>
-                        <div class="relative group">
-                            <button class="flex items-center space-x-3 bg-white/5 hover:bg-white/10 p-1 pr-4 rounded-full border border-white/10 transition-colors">
-                                <div class="w-8 h-8 bg-gradient-to-tr from-brand-500 to-purple-500 rounded-full flex items-center justify-center">
-                                    <span class="text-xs font-bold">{{ current_user.name[:1].upper() }}</span>
-                                </div>
-                                <span class="text-sm font-medium">{{ current_user.name }}</span>
-                                <i class="bi bi-chevron-down text-xs text-gray-400"></i>
-                            </button>
-                            <!-- Dropdown -->
-                            <div class="absolute right-0 mt-2 w-48 py-2 glass rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform group-hover:translate-y-0 translate-y-2">
-                                {% if current_user.role == 'recruiter' %}
-                                    <a href="{{ url_for('main.my_company') }}" class="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5">Company Profile</a>
-                                {% else %}
-                                    <a href="{{ url_for('main.my_profile') }}" class="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5">My Profile</a>
-                                {% endif %}
-                                <hr class="my-1 border-white/5">
-                                <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/5">Sign out</a>
-                            </div>
-                        </div>
-                    {% else %}
-                        <a href="{{ url_for('auth.login') }}" class="text-gray-300 hover:text-white px-4 py-2 text-sm font-medium">Login</a>
-                        <a href="{{ url_for('auth.role_select') }}" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg shadow-brand-500/25 hover:scale-105">Get Started</a>
+            <!-- Desktop nav links -->
+            <div class="hidden md:flex items-center gap-8">
+                <a href="{{ url_for('main.home') }}" class="nav-link">Home</a>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'seeker' %}
+                        <a href="{{ url_for('main.resume_checker') }}" class="nav-link">Resume</a>
+                        <a href="{{ url_for('main.roadmap') }}" class="nav-link">Roadmap</a>
+                        <a href="{{ url_for('main.interview') }}" class="nav-link">Interview</a>
+                        <a href="{{ url_for('jobs.live_jobs') }}" class="nav-link">Jobs</a>
+                    {% elif current_user.role == 'recruiter' %}
+                        <a href="{{ url_for('main.recruiter_dashboard') }}" class="nav-link">Dashboard</a>
+                        <a href="{{ url_for('main.talent_feed') }}" class="nav-link">Talent</a>
+                        <a href="{{ url_for('main.resume_checker') }}" class="nav-link">Analysis</a>
                     {% endif %}
-                </div>
-
-                <!-- Mobile menu button -->
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-gray-400 hover:text-white p-2">
-                        <i class="bi bi-list text-3xl"></i>
-                    </button>
-                </div>
+                {% endif %}
             </div>
+
+            <!-- Right actions -->
+            <div class="hidden md:flex items-center gap-4">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('payments.pricing') }}" class="flex items-center gap-1.5 label-signal border border-signal/30 px-3 py-1.5 hover:bg-signal/10 transition-colors">
+                        <i class="bi bi-lightning-charge-fill" style="font-size:10px;"></i>
+                        CREDITS: {{ current_user.credits }}
+                    </a>
+                    <div class="relative group">
+                        <button class="flex items-center gap-2 btn-ghost" style="padding:7px 14px;">
+                            <div class="w-6 h-6 flex items-center justify-center" style="background:var(--signal); font-size:11px; font-weight:700; font-family:'JetBrains Mono',monospace;">
+                                {{ current_user.name[:1].upper() }}
+                            </div>
+                            <span class="label" style="color:var(--chalk-2); text-transform:none; letter-spacing:0; font-size:13px;">{{ current_user.name }}</span>
+                            <i class="bi bi-chevron-down" style="font-size:9px; color:var(--chalk-3);"></i>
+                        </button>
+                        <div class="absolute right-0 mt-1 w-44 py-1 hidden group-hover:block" style="background:var(--ink-2); border:1px solid var(--wire-2); z-index:200;">
+                            {% if current_user.role == 'recruiter' %}
+                                <a href="{{ url_for('main.my_company') }}" class="block px-4 py-2.5 label hover:bg-white/5 hover:text-chalk" style="text-transform:none; letter-spacing:0; font-size:12px; color:var(--chalk-2);">Company Profile</a>
+                            {% else %}
+                                <a href="{{ url_for('main.my_profile') }}" class="block px-4 py-2.5 label hover:bg-white/5 hover:text-chalk" style="text-transform:none; letter-spacing:0; font-size:12px; color:var(--chalk-2);">My Profile</a>
+                            {% endif %}
+                            <div class="divider my-1"></div>
+                            <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2.5 label" style="text-transform:none; letter-spacing:0; font-size:12px; color:var(--signal);">Sign out</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="nav-link" style="padding:6px 0;">Login</a>
+                    <a href="{{ url_for('auth.role_select') }}" class="btn-signal" style="padding:8px 20px; font-size:12px;">Get Started →</a>
+                {% endif %}
+            </div>
+
+            <!-- Mobile hamburger -->
+            <button id="mob-toggle" class="md:hidden" style="color:var(--chalk-2); background:none; border:none; cursor:pointer; padding:4px;">
+                <i class="bi bi-list" style="font-size:22px;"></i>
+            </button>
         </div>
 
         <!-- Mobile menu -->
-        <div id="mobile-menu" class="hidden md:hidden glass border-t border-white/5">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="{{ url_for('main.home') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white bg-white/5">Home</a>
-                <!-- Add other links similarly -->
-                {% if not current_user.is_authenticated %}
-                    <a href="{{ url_for('auth.login') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white">Login</a>
-                    <a href="{{ url_for('auth.role_select') }}" class="block px-3 py-2 rounded-md text-base font-medium text-brand-400">Get Started</a>
+        <div id="mob-menu" class="hidden md:hidden" style="background:var(--ink-2); border-top:1px solid var(--wire); padding:16px 24px;">
+            <div class="flex flex-col gap-4">
+                <a href="{{ url_for('main.home') }}" class="nav-link">Home</a>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'seeker' %}
+                        <a href="{{ url_for('main.resume_checker') }}" class="nav-link">Resume</a>
+                        <a href="{{ url_for('main.roadmap') }}" class="nav-link">Roadmap</a>
+                        <a href="{{ url_for('main.interview') }}" class="nav-link">Interview</a>
+                        <a href="{{ url_for('jobs.live_jobs') }}" class="nav-link">Jobs</a>
+                    {% elif current_user.role == 'recruiter' %}
+                        <a href="{{ url_for('main.recruiter_dashboard') }}" class="nav-link">Dashboard</a>
+                        <a href="{{ url_for('main.talent_feed') }}" class="nav-link">Talent</a>
+                    {% endif %}
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link" style="color:var(--signal);">Sign out</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
+                    <a href="{{ url_for('auth.role_select') }}" class="nav-link" style="color:var(--signal);">Get Started</a>
                 {% endif %}
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="pt-20 min-h-screen">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="fixed top-24 right-4 z-50 space-y-4 max-w-sm w-full">
-                    {% for category, message in messages %}
-                        <div class="animate__animated animate__fadeInRight p-4 rounded-2xl glass border-l-4 {% if category == 'error' %}border-red-500{% else %}border-brand-500{% endif %} flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <i class="bi {% if category == 'error' %}bi-exclamation-circle-fill text-red-500{% else %}bi-check-circle-fill text-brand-500{% endif %} text-xl"></i>
-                                <p class="text-sm font-medium text-white">{{ message }}</p>
-                            </div>
-                            <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-white">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
+    <!-- ─── FLASH MESSAGES ─────────────────────────────────────────────── -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed top-16 right-4 z-50 flex flex-col gap-2 max-w-xs w-full" style="z-index:500;">
+                {% for category, message in messages %}
+                    <div class="flash-msg flex items-center justify-between gap-3 animate-fade-up">
+                        <div class="flex items-center gap-2">
+                            <span class="animate-blink" style="color:{% if category == 'error' %}var(--signal){% else %}#4ade80{% endif %}; font-size:8px;">●</span>
+                            <p style="font-size:13px; color:var(--chalk);">{{ message }}</p>
                         </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+                        <button onclick="this.parentElement.remove()" style="color:var(--chalk-3); background:none; border:none; cursor:pointer; font-size:14px; padding:0;">✕</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
+    <!-- ─── MAIN CONTENT ───────────────────────────────────────────────── -->
+    <main style="padding-top:56px; min-height:100vh; position:relative; z-index:1;">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="glass border-t border-white/5 mt-20 py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
-                <div class="col-span-1 md:col-span-2">
-                    <a href="#" class="flex items-center space-x-3 mb-6">
-                        <div class="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
-                            <i class="bi bi-compass-fill text-white"></i>
-                        </div>
-                        <span class="text-xl font-bold text-white">SkillMap</span>
-                    </a>
-                    <p class="text-gray-400 max-w-sm">
-                        Revolutionizing career development through AI-driven insights, personalized roadmaps, and intelligent matching.
+    <!-- ─── FOOTER ─────────────────────────────────────────────────────── -->
+    <footer style="background:var(--ink-2); border-top:1px solid var(--wire); position:relative; z-index:1;">
+        <div class="max-w-screen-xl mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
+                <div class="md:col-span-2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+                            <circle cx="14" cy="14" r="13" stroke="#e63946" stroke-width="1"/>
+                            <circle cx="14" cy="14" r="3" fill="#e63946"/>
+                            <ellipse cx="14" cy="14" rx="13" ry="5" stroke="rgba(255,255,255,0.2)" stroke-width="0.75"/>
+                        </svg>
+                        <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; letter-spacing:-0.01em;">SKILL<span style="color:#e63946;">MAP</span></span>
+                    </div>
+                    <p style="font-size:13px; color:var(--chalk-3); line-height:1.7; max-width:280px;">
+                        AI-powered career intelligence system. Analyze, map, and accelerate your professional trajectory.
                     </p>
-                    <div class="flex space-x-4 mt-6">
-                        <a href="#" class="w-10 h-10 glass rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:border-brand-500 transition-all"><i class="bi bi-twitter-x"></i></a>
-                        <a href="#" class="w-10 h-10 glass rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:border-brand-500 transition-all"><i class="bi bi-linkedin"></i></a>
-                        <a href="#" class="w-10 h-10 glass rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:border-brand-500 transition-all"><i class="bi bi-github"></i></a>
+                    <div class="flex gap-3 mt-5">
+                        <a href="#" class="btn-ghost" style="padding:7px 10px; font-size:13px;"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="btn-ghost" style="padding:7px 10px; font-size:13px;"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="btn-ghost" style="padding:7px 10px; font-size:13px;"><i class="bi bi-github"></i></a>
                     </div>
                 </div>
                 <div>
-                    <h4 class="text-white font-bold mb-6">Product</h4>
-                    <ul class="space-y-4 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-white transition-colors">Resume Analyst</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Roadmap Gen</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Mock Interview</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Pricing</a></li>
-                    </ul>
+                    <p class="label mb-4">System</p>
+                    <div class="flex flex-col gap-2.5">
+                        <a href="{{ url_for('main.home') }}" style="font-size:13px; color:var(--chalk-3);" class="hover:text-chalk transition-colors">Home</a>
+                        <a href="{{ url_for('payments.pricing') }}" style="font-size:13px; color:var(--chalk-3);" class="hover:text-chalk transition-colors">Pricing</a>
+                        <a href="{{ url_for('payments.legal') }}" style="font-size:13px; color:var(--chalk-3);" class="hover:text-chalk transition-colors">Legal</a>
+                    </div>
                 </div>
                 <div>
-                    <h4 class="text-white font-bold mb-6">Company</h4>
-                    <ul class="space-y-4 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
-                    </ul>
+                    <p class="label mb-4">Status</p>
+                    <div class="flex flex-col gap-2.5">
+                        <div class="flex items-center gap-2">
+                            <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+                            <span style="font-size:12px; color:var(--chalk-3); font-family:'JetBrains Mono',monospace;">All systems operational</span>
+                        </div>
+                        <span style="font-size:11px; color:var(--chalk-3); font-family:'JetBrains Mono',monospace;">Powered by Groq · Llama 3</span>
+                        <span style="font-size:11px; color:var(--chalk-3); font-family:'JetBrains Mono',monospace;">Payments via Razorpay</span>
+                    </div>
                 </div>
             </div>
-            <div class="border-t border-white/5 mt-12 pt-8 text-center text-sm text-gray-500">
-                <p>&copy; 2026 SkillMap AI. All rights reserved.</p>
+            <div class="divider"></div>
+            <div class="flex flex-col md:flex-row items-center justify-between gap-3 mt-6">
+                <span class="label">© 2025 SkillMap AI. All rights reserved.</span>
+                <span class="label">BUILD · 2025.1 · ORBITAL-INTERFACE</span>
             </div>
         </div>
     </footer>
 
     <script>
         // Mobile menu toggle
-        const mobileMenuButton = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
-        if (mobileMenuButton && mobileMenu) {
-            mobileMenuButton.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-        }
+        document.getElementById('mob-toggle').addEventListener('click', function() {
+            const menu = document.getElementById('mob-menu');
+            menu.classList.toggle('hidden');
+        });
     </script>
-    {% block extra_scripts %}{% endblock %}
 </body>
 </html>
