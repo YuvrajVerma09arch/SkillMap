@@ -1,120 +1,140 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<style>
+    /* ─── PRICING — ORBITAL INTERFACE ───────────────────────────────────
+       Three-tier grid. Featured plan has signal-red left border.
+       No dummy reviews. Real plan data only.
+    ──────────────────────────────────────────────────────────────────── */
+    .plan-card {
+        background: var(--ink-2);
+        border: 1px solid var(--wire);
+        padding: 40px 32px;
+        display: flex;
+        flex-direction: column;
+        transition: border-color 0.2s, background 0.2s;
+        position: relative;
+    }
+    .plan-card:hover { border-color: var(--wire-2); background: var(--ink-3); }
+    .plan-card.featured { border-color: var(--signal); border-left-width: 2px; }
+
+    .feature-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--wire);
+        font-size: 13px;
+        color: var(--chalk-2);
+    }
+    .feature-row:last-child { border-bottom: none; }
+    .feature-row.off { color: var(--chalk-3); text-decoration: line-through; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 py-20">
-    <div class="text-center mb-16 animate__animated animate__fadeInDown">
-        <div class="inline-flex items-center space-x-2 bg-brand-500/10 border border-brand-500/20 px-4 py-2 rounded-full mb-6">
-            <span class="text-brand-400 text-sm font-bold tracking-widest uppercase">Pricing Plans</span>
+<div style="max-width:1100px; margin:0 auto; padding:80px 24px; position:relative; z-index:1;">
+
+    <!-- Header -->
+    <div class="animate-fade-up" style="margin-bottom:64px;">
+        <div class="section-label">
+            <span class="label-signal">Pricing</span>
         </div>
-        <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-6">Simple, Transparent Pricing</h1>
-        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
-            You have <strong class="text-white">{{ current_user.credits }} Credits</strong> remaining. Choose a plan that fits your career goals.
+        <h1 class="display" style="font-size:clamp(32px,5vw,56px); color:var(--chalk); margin-bottom:16px;">
+            Simple, transparent<br>credit pricing.
+        </h1>
+        <p style="font-size:15px; color:var(--chalk-3); max-width:400px; line-height:1.7;">
+            You currently have
+            <span style="font-family:'JetBrains Mono',monospace; color:var(--signal); font-weight:600;">{{ current_user.credits }} credits</span>
+            remaining. Each AI operation costs one credit.
         </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <!-- Starter Plan -->
-        <div class="glass-card p-8 rounded-[2.5rem] flex flex-col animate__animated animate__fadeInUp">
-            <div class="mb-8">
-                <span class="text-gray-500 text-sm font-bold uppercase tracking-widest">Starter</span>
-                <div class="mt-4 flex items-baseline">
-                    <span class="text-5xl font-extrabold text-white">₹0</span>
-                    <span class="ml-2 text-gray-500">/forever</span>
-                </div>
-                <p class="mt-4 text-gray-400 text-sm">Perfect for exploring the platform.</p>
-            </div>
-            
-            <ul class="space-y-4 mb-10 flex-grow">
-                <li class="flex items-center space-x-3 text-gray-300">
-                    <i class="bi bi-check2-circle text-brand-500"></i>
-                    <span>3 AI Free-Credits</span>
-                </li>
-                <li class="flex items-center space-x-3 text-gray-300">
-                    <i class="bi bi-check2-circle text-brand-500"></i>
-                    <span>Basic Job Search</span>
-                </li>
-                <li class="flex items-center space-x-3 text-gray-500 line-through">
-                    <i class="bi bi-x-circle"></i>
-                    <span>Mock Interview Access</span>
-                </li>
-            </ul>
+    <!-- Plan grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-px animate-fade-up" style="background:var(--wire); animation-delay:0.1s;">
 
-            <button disabled class="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-gray-500 font-bold">
+        <!-- ── STARTER ─────────────────────────────────────────────────── -->
+        <div class="plan-card">
+            <div class="label" style="margin-bottom:24px;">TIER · 01</div>
+            <h2 class="display" style="font-size:22px; color:var(--chalk); margin-bottom:4px;">Starter</h2>
+            <p style="font-size:12px; color:var(--chalk-3); margin-bottom:28px;">Explore the platform.</p>
+
+            <div style="margin-bottom:32px;">
+                <span style="font-family:'Space Grotesk',sans-serif; font-size:48px; font-weight:700; color:var(--chalk); letter-spacing:-0.03em;">₹0</span>
+                <span style="font-size:13px; color:var(--chalk-3); margin-left:6px;">/forever</span>
+            </div>
+
+            <div style="flex:1; margin-bottom:32px;">
+                <div class="feature-row"><span style="color:var(--signal); font-size:10px;">●</span> 3 AI Credits included</div>
+                <div class="feature-row"><span style="color:var(--signal); font-size:10px;">●</span> Basic job search</div>
+                <div class="feature-row off"><span style="font-size:10px;">○</span> Mock interview access</div>
+                <div class="feature-row off"><span style="font-size:10px;">○</span> Featured profile</div>
+            </div>
+
+            <button disabled class="btn-ghost" style="width:100%; justify-content:center; cursor:not-allowed; opacity:0.5;">
                 Current Plan
             </button>
         </div>
 
-        <!-- Pro Plan -->
-        <div class="glass-card p-8 rounded-[2.5rem] flex flex-col relative animate__animated animate__fadeInUp animate__delay-1s border-brand-500/30 ring-1 ring-brand-500/20">
-            <div class="absolute -top-5 left-1/2 -translate-x-1/2 bg-brand-500 text-white px-6 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
-                Most Popular
+        <!-- ── PRO ────────────────────────────────────────────────────── -->
+        <div class="plan-card featured">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px;">
+                <div class="label" style="color:var(--signal);">TIER · 02</div>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; background:var(--signal); color:#fff; padding:3px 8px;">POPULAR</span>
             </div>
-            <div class="mb-8">
-                <span class="text-brand-400 text-sm font-bold uppercase tracking-widest">Pro</span>
-                <div class="mt-4 flex items-baseline">
-                    <span class="text-5xl font-extrabold text-white">₹299</span>
-                    <span class="ml-2 text-gray-500">/month</span>
-                </div>
-                <p class="mt-4 text-gray-400 text-sm">For serious career builders.</p>
-            </div>
-            
-            <ul class="space-y-4 mb-10 flex-grow">
-                <li class="flex items-center space-x-3 text-gray-300">
-                    <i class="bi bi-check2-circle text-brand-500"></i>
-                    <span class="font-bold text-white">50 AI Credits</span>
-                </li>
-                <li class="flex items-center space-x-3 text-gray-300">
-                    <i class="bi bi-check2-circle text-brand-500"></i>
-                    <span>Unlimited Roadmaps</span>
-                </li>
-                <li class="flex items-center space-x-3 text-gray-300">
-                    <i class="bi bi-check2-circle text-brand-500"></i>
-                    <span>Mock Interview Access</span>
-                </li>
-                <li class="flex items-center space-x-3 text-gray-300">
-                    <i class="bi bi-check2-circle text-brand-500"></i>
-                    <span>Featured Profile</span>
-                </li>
-            </ul>
+            <h2 class="display" style="font-size:22px; color:var(--chalk); margin-bottom:4px;">Pro</h2>
+            <p style="font-size:12px; color:var(--chalk-3); margin-bottom:28px;">For serious career builders.</p>
 
-            <button onclick="buyPlan('pro')" class="w-full py-4 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold transition-all shadow-lg shadow-brand-500/25 hover:scale-[1.02]">
-                Upgrade to Pro
+            <div style="margin-bottom:32px;">
+                <span style="font-family:'Space Grotesk',sans-serif; font-size:48px; font-weight:700; color:var(--chalk); letter-spacing:-0.03em;">₹299</span>
+                <span style="font-size:13px; color:var(--chalk-3); margin-left:6px;">/month</span>
+            </div>
+
+            <div style="flex:1; margin-bottom:32px;">
+                <div class="feature-row"><span style="color:var(--signal); font-size:10px;">●</span> <strong style="color:var(--chalk);">50 AI Credits</strong></div>
+                <div class="feature-row"><span style="color:var(--signal); font-size:10px;">●</span> Unlimited roadmaps</div>
+                <div class="feature-row"><span style="color:var(--signal); font-size:10px;">●</span> Mock interview access</div>
+                <div class="feature-row"><span style="color:var(--signal); font-size:10px;">●</span> Featured profile</div>
+            </div>
+
+            <button onclick="buyPlan('pro')" class="btn-signal" style="width:100%; justify-content:center; padding:14px 24px;">
+                Upgrade to Pro →
             </button>
         </div>
 
-        <!-- Max Plan -->
-        <div class="glass-card p-8 rounded-[2.5rem] flex flex-col animate__animated animate__fadeInUp animate__delay-2s">
-            <div class="mb-8">
-                <span class="text-purple-400 text-sm font-bold uppercase tracking-widest">Max</span>
-                <div class="mt-4 flex items-baseline">
-                    <span class="text-5xl font-extrabold text-white">₹499</span>
-                    <span class="ml-2 text-gray-500">/month</span>
-                </div>
-                <p class="mt-4 text-gray-400 text-sm">The ultimate power user plan.</p>
-            </div>
-            
-            <ul class="space-y-4 mb-10 flex-grow">
-                <li class="flex items-center space-x-3 text-gray-300">
-                    <i class="bi bi-check2-circle text-purple-500"></i>
-                    <span class="font-bold text-white">200 AI Credits</span>
-                </li>
-                <li class="flex items-center space-x-3 text-gray-300">
-                    <i class="bi bi-check2-circle text-purple-500"></i>
-                    <span>Priority Support</span>
-                </li>
-                <li class="flex items-center space-x-3 text-gray-300">
-                    <i class="bi bi-check2-circle text-purple-500"></i>
-                    <span>Early Access Features</span>
-                </li>
-                <li class="flex items-center space-x-3 text-gray-300">
-                    <i class="bi bi-check2-circle text-purple-500"></i>
-                    <span>Featured Profile</span>
-                </li>
-            </ul>
+        <!-- ── MAX ────────────────────────────────────────────────────── -->
+        <div class="plan-card">
+            <div class="label" style="margin-bottom:24px;">TIER · 03</div>
+            <h2 class="display" style="font-size:22px; color:var(--chalk); margin-bottom:4px;">Max</h2>
+            <p style="font-size:12px; color:var(--chalk-3); margin-bottom:28px;">The ultimate power user plan.</p>
 
-            <button onclick="buyPlan('enterprise')" class="w-full py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold transition-all hover:scale-[1.02]">
-                Get Max
+            <div style="margin-bottom:32px;">
+                <span style="font-family:'Space Grotesk',sans-serif; font-size:48px; font-weight:700; color:var(--chalk); letter-spacing:-0.03em;">₹499</span>
+                <span style="font-size:13px; color:var(--chalk-3); margin-left:6px;">/month</span>
+            </div>
+
+            <div style="flex:1; margin-bottom:32px;">
+                <div class="feature-row"><span style="color:var(--signal); font-size:10px;">●</span> <strong style="color:var(--chalk);">200 AI Credits</strong></div>
+                <div class="feature-row"><span style="color:var(--signal); font-size:10px;">●</span> Priority support</div>
+                <div class="feature-row"><span style="color:var(--signal); font-size:10px;">●</span> Early access features</div>
+                <div class="feature-row"><span style="color:var(--signal); font-size:10px;">●</span> Featured profile</div>
+            </div>
+
+            <button onclick="buyPlan('enterprise')" class="btn-ghost" style="width:100%; justify-content:center; padding:14px 24px;">
+                Get Max →
             </button>
+        </div>
+    </div>
+
+    <!-- Credit info note -->
+    <div style="margin-top:48px; padding:20px 24px; background:var(--ink-2); border:1px solid var(--wire); border-left:2px solid var(--signal);" class="animate-fade-up" style="animation-delay:0.2s;">
+        <div style="display:flex; align-items:flex-start; gap:12px;">
+            <i class="bi bi-info-circle" style="color:var(--signal); font-size:16px; margin-top:1px; flex-shrink:0;"></i>
+            <div>
+                <p style="font-size:13px; color:var(--chalk-2); line-height:1.7;">
+                    Credits are consumed per AI operation: 1 credit per resume analysis, 1 per roadmap generation, 1 per mock interview session. Credits do not expire. Payments are processed securely via Razorpay.
+                </p>
+            </div>
         </div>
     </div>
 </div>
@@ -128,35 +148,21 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ plan: planType })
             });
-            
             const data = await response.json();
-            
-            if (data.error) {
-                alert("Error: " + data.error);
-                return;
-            }
-
+            if (data.error) { alert("Error: " + data.error); return; }
             var options = {
-                "key": data.key_id, 
-                "amount": data.amount, 
+                "key": data.key_id,
+                "amount": data.amount,
                 "currency": "INR",
                 "name": "SkillMap AI",
                 "description": planType.toUpperCase() + " Plan Upgrade",
-                "order_id": data.order_id, 
-                "handler": function (response){
-                    verifyPayment(response);
-                },
-                "prefill": {
-                    "name": data.user_name,
-                    "email": data.user_email
-                },
-                "theme": {
-                    "color": "#0c92eb"
-                }
+                "order_id": data.order_id,
+                "handler": function (response) { verifyPayment(response); },
+                "prefill": { "name": data.user_name, "email": data.user_email },
+                "theme": { "color": "#e63946" }
             };
             var rzp1 = new Razorpay(options);
             rzp1.open();
-            
         } catch (err) {
             console.error(err);
             alert("Something went wrong initializing payment.");
@@ -174,12 +180,10 @@
                     razorpay_signature: response.razorpay_signature
                 })
             });
-            
             const verifyData = await verifyRes.json();
-            
             if (verifyData.status === 'success') {
                 alert("Payment Successful! Credits Added.");
-                window.location.reload(); 
+                window.location.reload();
             } else {
                 alert("Payment Verification Failed.");
             }

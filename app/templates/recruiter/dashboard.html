@@ -1,304 +1,151 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block extra_head %}
 <style>
-    /* --- QUANTUM THEME --- */
-    :root {
-        --primary-dark: #0A1929;
-        --accent-blue: #3b82f6;
-        --accent-pink: #ec4899;
-        --accent-purple: #8b5cf6;
+    /* ─── RECRUITER DASHBOARD — ORBITAL INTERFACE ────────────────────────
+       Two-column layout: stat row on top, jobs list left, candidates right.
+    ──────────────────────────────────────────────────────────────────── */
+    .stat-tile {
+        background: var(--ink-2);
+        border: 1px solid var(--wire);
+        padding: 24px 28px;
+        transition: border-color 0.2s;
     }
+    .stat-tile:hover { border-color: var(--wire-2); }
 
-    body {
-        background: #050505 !important;
-        min-height: 100vh;
-        color: white;
-        font-family: 'Inter', sans-serif;
+    .job-row {
+        background: var(--ink-2);
+        border: 1px solid var(--wire);
+        border-left: 2px solid transparent;
+        padding: 20px 24px;
+        transition: border-color 0.2s, background 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
     }
+    .job-row:hover { border-left-color: var(--signal); background: var(--ink-3); }
 
-    /* --- QUANTUM BACKGROUND LAYERS --- */
-    .quantum-bg { position: fixed; inset: 0; z-index: -2; pointer-events: none; }
-    
-    .bg-layer-1 {
-        position: absolute; inset: 0;
-        background: radial-gradient(circle at 50% 50%, rgba(30,27,75,0.8) 0%, #050505 70%);
+    .candidate-card {
+        background: var(--ink-2);
+        border: 1px solid var(--wire);
+        padding: 20px;
+        transition: border-color 0.2s;
     }
-    
-    .bg-layer-2 {
-        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.4) 0%, transparent 50%),
-                    radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
-                    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.4) 0%, transparent 50%);
-        animation: plasma-move 30s infinite alternate ease-in-out;
-        filter: blur(80px); opacity: 0.5;
-    }
-    
-    @keyframes plasma-move {
-        0% { transform: rotate(0deg) translate(0,0); }
-        100% { transform: rotate(45deg) translate(-10%, -10%); }
-    }
-
-    /* --- FLOATING SHAPES --- */
-    .bg-shape {
-        position: fixed; 
-        background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
-        border-radius: 50%; filter: blur(60px); opacity: 0.15; z-index: -1;
-        animation: float 20s infinite ease-in-out; pointer-events: none;
-    }
-    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; animation-delay: 0s; }
-    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -5%; animation-delay: 2s; }
-
-    @keyframes float {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(30px, -50px) scale(1.1); }
-        66% { transform: translate(-20px, 20px) scale(0.9); }
-    }
-
-    /* --- QUANTUM GLASS CARDS --- */
-    .glass-card {
-        background: rgba(10, 10, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; padding: 24px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        overflow: hidden; position: relative;
-    }
-
-    .glass-card::after {
-        content: ''; position: absolute; inset: -200%;
-        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, var(--accent-blue) 25%, var(--accent-pink) 50%, var(--accent-purple) 75%, transparent 100%);
-        animation: spin-glow 8s linear infinite; opacity: 0; transition: opacity 0.4s ease; z-index: 0; pointer-events: none;
-    }
-
-    @keyframes spin-glow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-    .glass-card:hover::after { opacity: 0.15; }
-    .glass-card:hover { transform: translateY(-8px); box-shadow: 0 30px 60px -12px rgba(236, 72, 153, 0.3); }
-    .glass-card > * { position: relative; z-index: 2; }
-
-    /* --- TYPOGRAPHY --- */
-    h1, h2, h3, h5, h6 { font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-    h1 {
-        background: linear-gradient(135deg, #fff, var(--accent-pink));
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.5rem; font-weight: 800;
-    }
-    .text-white-50 { color: rgba(255, 255, 255, 0.7) !important; }
-    
-    /* --- STATS --- */
-    .stat-number {
-        font-size: 3rem; font-weight: 800;
-        background: linear-gradient(135deg, #fff, var(--accent-pink));
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1;
-    }
-    
-    /* --- JOB LIST --- */
-    .job-item {
-        padding: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease;
-    }
-    .job-item:last-child { border-bottom: none; }
-    .job-item:hover { background: rgba(59, 130, 246, 0.1); transform: translateX(5px); }
-
-    .applicant-badge {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2));
-        backdrop-filter: blur(5px); color: white; padding: 5px 12px; border-radius: 20px;
-        font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.2);
-    }
-
-    /* --- GAUGE --- */
-    .match-gauge {
-        width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        background: conic-gradient(var(--accent-pink) calc(var(--p) * 1%), rgba(59, 130, 246, 0.2) 0);
-        position: relative; box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
-    }
-    .match-gauge::before {
-        content: ''; position: absolute; inset: 4px; background: rgba(10, 10, 20, 0.9);
-        border-radius: 50%; border: 1px solid rgba(255,255,255,0.1);
-    }
-    .match-gauge span { position: relative; z-index: 1; font-size: 0.85rem; font-weight: 700; color: white; text-shadow: 0 0 10px var(--accent-pink); }
-
-    /* --- BUTTONS --- */
-    .btn-create {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2));
-        backdrop-filter: blur(10px); color: white; font-weight: 700; padding: 12px 28px;
-        border-radius: 50px; border: 1px solid rgba(255, 255, 255, 0.3); transition: all 0.3s ease;
-        text-decoration: none; display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden;
-    }
-    .btn-create::before {
-        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.2) 25%, transparent 50%);
-        animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s;
-    }
-    .btn-create:hover::before { opacity: 1; }
-    .btn-create:hover { 
-        transform: translateY(-3px) scale(1.02); 
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3));
-        border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 10px 30px rgba(236, 72, 153, 0.3); color: white;
-    }
-
-    .btn-outline-light {
-        background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3);
-        color: white; transition: all 0.3s ease; position: relative; overflow: hidden; border-radius: 50px; padding: 8px 20px; font-weight: 500;
-    }
-    .btn-outline-light::before {
-        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.2) 25%, transparent 50%);
-        animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s;
-    }
-    .btn-outline-light:hover::before { opacity: 1; }
-    .btn-outline-light:hover {
-        background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.6); transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2); color: white;
-    }
-
-    /* --- ICONS --- */
-    .bi-people-fill, .bi-briefcase-fill, .bi-calendar-check-fill, .bi-code-slash { opacity: 0.5; }
-    .bg-opacity-20 {
-        background: rgba(59, 130, 246, 0.2); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
-        width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
-    }
-    .rounded-circle { border-radius: 16px !important; }
-
-    /* --- CANDIDATE ITEMS --- */
-    .candidate-item {
-        background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; transition: all 0.3s ease;
-    }
-    .candidate-item:hover { background: rgba(236, 72, 153, 0.15); transform: translateX(5px); border-color: var(--accent-pink); }
-
-    /* --- RESPONSIVE --- */
-    @media (max-width: 768px) {
-        h1 { font-size: 2rem; }
-        .glass-card { border-radius: 20px; padding: 20px; }
-        .stat-number { font-size: 2.2rem; }
-    }
+    .candidate-card:hover { border-color: var(--wire-2); }
 </style>
+{% endblock %}
 
-<div class="quantum-bg">
-    <div class="bg-layer-1"></div>
-    <div class="bg-layer-2"></div>
-</div>
+{% block content %}
+<div style="max-width:1200px; margin:0 auto; padding:48px 24px; position:relative; z-index:1;">
 
-<div class="bg-shape shape-1"></div>
-<div class="bg-shape shape-2"></div>
-
-<div class="container py-5 position-relative z-10">
-    
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <!-- ── TOP BAR ─────────────────────────────────────────────────────── -->
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:48px;" class="animate-fade-up">
         <div>
-            <h1 class="fw-bold mb-1">Hiring Command Center</h1>
-            <p class="text-white-50 mb-0">Welcome back, <span style="color: var(--accent-pink); font-weight: 600;">{{ current_user.name }}</span></p>
+            <div class="label-signal" style="margin-bottom:8px;">Recruiter Dashboard</div>
+            <h1 class="display" style="font-size:clamp(24px,3vw,40px); color:var(--chalk);">
+                Welcome, {{ current_user.name }}
+            </h1>
         </div>
-        <a href="{{ url_for('jobs.post_job') }}" class="btn-create">
-            <i class="bi bi-plus-lg"></i> Post New Job
+        <a href="{{ url_for('jobs.post_job') }}" class="btn-signal">
+            + Post New Job
         </a>
     </div>
 
-    <div class="row g-4 mb-5">
-        <div class="col-md-4">
-            <div class="glass-card h-100">
-                <p class="text-white-50 mb-1 fw-bold text-uppercase small">Total Applicants</p>
-                <div class="d-flex justify-content-between align-items-end">
-                    <div class="stat-number">{{ stats.total_applicants }}</div>
-                    <i class="bi bi-people-fill fs-1" style="color: var(--accent-pink);"></i>
-                </div>
-            </div>
+    <!-- ── STATS ROW ───────────────────────────────────────────────────── -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-px animate-fade-up" style="background:var(--wire); margin-bottom:48px; animation-delay:0.05s;">
+        <div class="stat-tile">
+            <div class="label" style="margin-bottom:10px;">Total Applicants</div>
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:36px; font-weight:700; color:var(--chalk); letter-spacing:-0.03em;">{{ stats.total_applicants }}</div>
         </div>
-        <div class="col-md-4">
-            <div class="glass-card h-100">
-                <p class="text-white-50 mb-1 fw-bold text-uppercase small">Active Jobs</p>
-                <div class="d-flex justify-content-between align-items-end">
-                    <div class="stat-number">{{ stats.active_jobs }}</div>
-                    <i class="bi bi-briefcase-fill fs-1" style="color: var(--accent-blue);"></i>
-                </div>
-            </div>
+        <div class="stat-tile">
+            <div class="label" style="margin-bottom:10px;">Active Jobs</div>
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:36px; font-weight:700; color:var(--chalk); letter-spacing:-0.03em;">{{ stats.active_jobs }}</div>
         </div>
-        <div class="col-md-4">
-            <div class="glass-card h-100">
-                <p class="text-white-50 mb-1 fw-bold text-uppercase small">Interviews</p>
-                <div class="d-flex justify-content-between align-items-end">
-                    <div class="stat-number">{{ stats.interviews }}</div>
-                    <i class="bi bi-calendar-check-fill fs-1" style="color: var(--accent-purple);"></i>
-                </div>
+        <div class="stat-tile">
+            <div class="label" style="margin-bottom:10px;">Credits</div>
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:36px; font-weight:700; color:var(--signal); letter-spacing:-0.03em;">{{ current_user.credits }}</div>
+        </div>
+        <div class="stat-tile">
+            <div class="label" style="margin-bottom:10px;">Status</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+                <span style="width:8px; height:8px; border-radius:50%; background:#4ade80; display:inline-block;"></span>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--chalk-2);">Active</span>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        
-        <div class="col-lg-8">
-            <div class="glass-card h-100 p-0">
-                <div class="p-4 border-bottom" style="border-color: rgba(255,255,255,0.05) !important;">
-                    <h5 class="m-0">
-                        <i class="bi bi-list-task me-2" style="color: var(--accent-pink);"></i> 
-                        Active Job Postings
-                    </h5>
+    <!-- ── MAIN GRID ───────────────────────────────────────────────────── -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Jobs list (2/3 width) -->
+        <div class="lg:col-span-2 animate-fade-up" style="animation-delay:0.1s;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+                <div class="section-label" style="margin-bottom:0;">
+                    <span class="label-signal">Active Postings</span>
                 </div>
-                
-                <div class="list-group list-group-flush bg-transparent">
-                    {% for job in jobs %}
-                    <div class="job-item">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-opacity-20 rounded-circle">
-                                <i class="bi bi-code-slash fs-5" style="color: var(--accent-blue);"></i>
-                            </div>
-                            <div>
-                                <h6 class="fw-bold mb-1 text-white">{{ job.title }}</h6>
-                                <p class="mb-0 small text-white-50">
-                                    <i class="bi bi-geo-alt me-1"></i> {{ job.location }} • {{ job.posted_at.strftime('%d %b') }}
-                                    {% if job.applications %}
-                                        <span class="applicant-badge ms-2">{{ job.applications|length }} applicants</span>
-                                    {% endif %}
-                                </p>
-                            </div>
+                <a href="{{ url_for('jobs.post_job') }}" style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--signal); letter-spacing:0.08em; text-transform:uppercase; text-decoration:none;">+ New →</a>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:2px; background:var(--wire);">
+                {% for job in jobs %}
+                <div class="job-row">
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+                            <h3 style="font-size:15px; font-weight:600; color:var(--chalk); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ job.title }}</h3>
+                            {% if job.applications %}
+                            <span style="font-family:'JetBrains Mono',monospace; font-size:9px; background:var(--signal-dim); color:var(--signal); padding:2px 7px; letter-spacing:0.05em; flex-shrink:0;">{{ job.applications|length }} APPLICANTS</span>
+                            {% endif %}
                         </div>
-                        <div class="text-end">
-                            <a href="{{ url_for('jobs.view_applicants', job_id=job.id) }}" class="btn btn-outline-light rounded-pill btn-sm">
-                                Manage Candidates <i class="bi bi-chevron-right ms-1"></i>
-                            </a>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            <span class="label">{{ job.location }}</span>
+                            <span class="label">{{ job.job_type }}</span>
                         </div>
                     </div>
-                    {% else %}
-                    <div class="p-5 text-center">
-                        <i class="bi bi-briefcase display-1 opacity-25" style="color: var(--accent-pink);"></i>
-                        <p class="mt-3 text-white-50">No active jobs. Post one to get started!</p>
-                    </div>
-                    {% endfor %}
+                    <a href="{{ url_for('jobs.view_applicants', job_id=job.id) }}" class="btn-ghost" style="padding:7px 14px; font-size:12px; flex-shrink:0;">
+                        View →
+                    </a>
                 </div>
+                {% else %}
+                <div style="padding:48px 24px; text-align:center; background:var(--ink-2);">
+                    <p style="font-size:14px; color:var(--chalk-3);">No active jobs. <a href="{{ url_for('jobs.post_job') }}" style="color:var(--signal); text-decoration:none;">Post one →</a></p>
+                </div>
+                {% endfor %}
             </div>
         </div>
 
-        <div class="col-lg-4">
-            <div class="glass-card h-100 p-0">
-                <div class="p-4 border-bottom" style="border-color: rgba(255,255,255,0.05) !important;">
-                     <h5 class="m-0">
-                        <i class="bi bi-stars me-2" style="color: var(--accent-pink);"></i> 
-                        Smart Match
-                     </h5>
-                     <p class="small text-white-50 mb-0 mt-1">Top candidates ranked by AI</p>
-                </div>
+        <!-- Candidates sidebar (1/3 width) -->
+        <div class="animate-fade-up" style="animation-delay:0.15s;">
+            <div class="section-label" style="margin-bottom:20px;">
+                <span class="label-signal">Recent Candidates</span>
+            </div>
 
-                <div class="p-3">
-                    {% for candidate in candidates %}
-                    <div class="candidate-item d-flex align-items-center gap-3 p-3 mb-2">
-                        <div class="match-gauge" style="--p: {{ candidate.match_score }}">
-                            <span>{{ candidate.match_score|int }}%</span>
+            <div style="display:flex; flex-direction:column; gap:2px; background:var(--wire);">
+                {% for candidate in candidates %}
+                <div class="candidate-card">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                        <div style="width:32px; height:32px; background:var(--ink); border:1px solid var(--wire-2); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--signal); flex-shrink:0;">
+                            {{ candidate.name[:1].upper() if candidate.name else '?' }}
                         </div>
-                        <div class="flex-grow-1">
-                            <h6 class="fw-bold mb-0 text-white">{{ candidate.name }}</h6>
-                            <p class="small text-white-50 mb-0">{{ candidate.role }}</p>
+                        <div style="min-width:0;">
+                            <p style="font-size:14px; font-weight:600; color:var(--chalk); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ candidate.name }}</p>
+                            <p class="label" style="margin-top:2px;">{{ candidate.email }}</p>
                         </div>
-                        <i class="bi bi-chevron-right" style="color: var(--accent-pink); opacity: 0.5;"></i>
                     </div>
-                    {% else %}
-                    <div class="text-center p-4">
-                        <i class="bi bi-people display-4 opacity-25" style="color: var(--accent-blue);"></i>
-                        <p class="mt-2 text-white-50 small">No candidates yet.</p>
-                    </div>
-                    {% endfor %}
                 </div>
+                {% else %}
+                <div style="padding:32px 20px; text-align:center; background:var(--ink-2);">
+                    <p style="font-size:13px; color:var(--chalk-3);">No candidates yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div style="margin-top:16px;">
+                <a href="{{ url_for('main.talent_feed') }}" class="btn-ghost" style="width:100%; justify-content:center; padding:12px 20px; font-size:12px;">
+                    Browse Talent Feed →
+                </a>
             </div>
         </div>
-
     </div>
 </div>
 {% endblock %}

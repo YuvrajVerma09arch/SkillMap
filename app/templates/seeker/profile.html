@@ -1,420 +1,111 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block extra_head %}
 <style>
-    /* --- QUANTUM THEME --- */
-    :root {
-        --primary-dark: #0A1929;
-        --accent-blue: #3b82f6;
-        --accent-pink: #ec4899;
-        --accent-purple: #8b5cf6;
+    /* ─── SEEKER PROFILE — ORBITAL INTERFACE ──────────────────────────
+       User profile with headline, skills, and roadmap progress.
+    ──────────────────────────────────────────────────────────────────── */
+    .profile-header {
+        background: var(--ink-2);
+        border: 1px solid var(--wire);
+        padding: 32px;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 32px;
     }
-
-    body {
-        background: #050505 !important;
-        min-height: 100vh;
-        color: white;
-        font-family: 'Inter', sans-serif;
-        overflow-x: hidden;
-    }
-
-    /* --- QUANTUM BACKGROUND LAYERS --- */
-    .quantum-bg { position: fixed; inset: 0; z-index: -2; pointer-events: none;}
-    
-    .bg-layer-1 {
-        position: absolute; inset: 0;
-        background: radial-gradient(circle at 50% 50%, rgba(30,27,75,0.8) 0%, #050505 70%);
-    }
-    
-    .bg-layer-2 {
-        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.4) 0%, transparent 50%),
-                    radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
-                    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.4) 0%, transparent 50%);
-        animation: plasma-move 30s infinite alternate ease-in-out;
-        filter: blur(80px); opacity: 0.5;
-    }
-    
-    @keyframes plasma-move {
-        0% { transform: rotate(0deg) translate(0,0); }
-        100% { transform: rotate(45deg) translate(-10%, -10%); }
-    }
-    
-    .noise-overlay {
-        position: fixed; inset: 0; z-index: -1;
-        background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-        pointer-events: none; mix-blend-mode: overlay; opacity: 0.2;
-    }
-
-    /* --- FLOATING SHAPES --- */
-    .bg-shape {
-        position: fixed; background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
-        border-radius: 50%; filter: blur(60px); opacity: 0.15; z-index: -1;
-        animation: float 20s infinite ease-in-out; pointer-events: none;
-    }
-    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; animation-delay: 0s; }
-    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -5%; animation-delay: 2s; }
-
-    @keyframes float {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(30px, -50px) scale(1.1); }
-        66% { transform: translate(-20px, 20px) scale(0.9); }
-    }
-
-    /* --- CURSOR GLOW --- */
-    .cursor-glow {
-        width: 400px; height: 400px;
-        background: radial-gradient(circle, rgba(236, 72, 153, 0.1) 0%, rgba(59, 130, 246, 0.05) 50%, rgba(255,255,255,0) 70%);
-        position: fixed; border-radius: 50%; pointer-events: none;
-        transform: translate(-50%, -50%); z-index: 0; transition: transform 0.1s ease-out; filter: blur(20px);
-    }
-
-    /* --- GLASS CARDS --- */
-    .glass-card {
-        background: rgba(10, 10, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        overflow: hidden; margin-bottom: 24px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; z-index: 1;
-    }
-    .glass-card.p-0 { padding: 0 !important; }
-    
-    .glass-card::after {
-        content: ''; position: absolute; inset: -200%;
-        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, var(--accent-blue) 25%, var(--accent-pink) 50%, var(--accent-purple) 75%, transparent 100%);
-        animation: spin-glow 8s linear infinite; opacity: 0; transition: opacity 0.4s ease; z-index: 0; pointer-events: none;
-    }
-    @keyframes spin-glow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .glass-card:hover::after { opacity: 0.15; }
-    .glass-card:hover { transform: translateY(-5px); background: rgba(15, 15, 25, 0.8); border-color: var(--accent-pink); box-shadow: 0 30px 60px -12px rgba(236, 72, 153, 0.3); }
-    .glass-card > * { position: relative; z-index: 2; }
-
-    /* --- TYPOGRAPHY --- */
-    h1, h2, h3, h5, h6 { color: white !important; font-weight: 700; letter-spacing: -0.02em; }
-    h1 {
-        background: linear-gradient(135deg, #fff, var(--accent-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        background-clip: text; font-size: 2.5rem; margin-bottom: 0.25rem;
-    }
-    p, span, div, i { color: rgba(255, 255, 255, 0.8); }
-    .text-muted { color: rgba(255, 255, 255, 0.5) !important; }
-
-    /* --- PROFILE HERO --- */
-    .profile-hero { position: relative; padding-bottom: 24px; }
-    .cover-section {
-        height: 220px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-pink), var(--accent-purple)); opacity: 0.3; position: relative; overflow: hidden;
-    }
-    .cover-section::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.2) 0%, transparent 70%); }
-    .profile-avatar-container { margin-top: -80px; position: relative; display: inline-block; z-index: 10;}
-    
     .profile-avatar {
-        width: 160px; height: 160px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3));
-        backdrop-filter: blur(10px); color: white; border: 4px solid rgba(255, 255, 255, 0.3); border-radius: 32px; 
-        display: flex; align-items: center; justify-content: center; font-size: 60px; font-weight: 800; box-shadow: 0 20px 40px rgba(0,0,0,0.4); overflow: hidden; transition: all 0.3s ease;
+        width: 80px;
+        height: 80px;
+        background: var(--ink-3);
+        border: 2px solid var(--wire-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--signal);
+        flex-shrink: 0;
     }
-    .profile-avatar:hover { transform: rotate(5deg) scale(1.05); border-color: var(--accent-pink); box-shadow: 0 0 40px rgba(236, 72, 153, 0.4); }
-    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; transition: all 0.3s ease; }
-    .profile-avatar:hover img { transform: scale(1.1); }
-
-    .user-info { padding-top: 0.5rem; }
-    .user-headline { color: var(--accent-pink); font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: 500;}
-    .user-meta { display: flex; gap: 1rem; color: rgba(255,255,255,0.6); font-size: 0.875rem; flex-wrap: wrap;}
-    .user-meta i { margin-right: 0.25rem; }
-    .user-meta .bi-geo-alt { color: var(--accent-pink); } .user-meta .bi-briefcase { color: var(--accent-blue); } .user-meta .bi-calendar { color: var(--accent-purple); }
-
-    /* --- BUTTONS --- */
-    .btn-glass {
-        background: rgba(59, 130, 246, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); color: white; 
-        border-radius: 50px; padding: 10px 24px; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-weight: 500; position: relative; overflow: hidden;
-    }
-    .btn-glass::before {
-        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.2) 25%, transparent 50%);
-        animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s; z-index: -1;
-    }
-    .btn-glass:hover::before { opacity: 1; }
-    .btn-glass:hover { background: rgba(236, 72, 153, 0.25); border-color: var(--accent-pink); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3); color: white; }
-
-    .btn-primary-glass {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2)); backdrop-filter: blur(10px); color: white; 
-        border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50px; padding: 10px 24px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s ease; position: relative; overflow: hidden; border: none;
-    }
-    .btn-primary-glass::before {
-        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.2) 25%, transparent 50%);
-        animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s; z-index: -1;
-    }
-    .btn-primary-glass:hover::before { opacity: 1; }
-    .btn-primary-glass:hover { background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3)); border-color: var(--accent-pink); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3); color: white; }
-
-    .btn-disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
-    
-    /* --- MISC UI ELEMENTS --- */
-    .skill-tag {
-        background: rgba(59, 130, 246, 0.15); backdrop-filter: blur(5px); color: white; border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; display: inline-block; margin: 4px; transition: all 0.3s ease; font-weight: 500;
-    }
-    .skill-tag:hover { background: rgba(236, 72, 153, 0.25); border-color: var(--accent-pink); transform: translateY(-2px); }
-
-    .project-card {
-        background: rgba(59, 130, 246, 0.1); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 16px; padding: 1.5rem; transition: all 0.3s ease; height: 100%;
-    }
-    .project-card:hover { background: rgba(236, 72, 153, 0.15); border-color: var(--accent-pink); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(236, 72, 153, 0.2); }
-    .project-card h5 { background: linear-gradient(135deg, #fff, var(--accent-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; margin-bottom: 0.5rem; }
-
-    .completeness-list { list-style: none; margin: 0; padding: 0; }
-    .completeness-list li { margin-bottom: 0.5rem; font-size: 0.875rem; display: flex; align-items: center;}
-    .completeness-list i { margin-right: 0.5rem; }
-    .text-success { color: #10b981 !important; } .text-danger { color: #ef4444 !important; } .text-warning { color: #f59e0b !important; }
-
-    /* --- FIXED RESUME ITEM FOR TRUNCATION --- */
-    .resume-item { 
-        display: flex; align-items: center; padding: 0.75rem; border-radius: 0.5rem; 
-        background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(255,255,255,0.05); 
-    }
-    .resume-icon { font-size: 2.5rem; margin-right: 0.75rem; color: #ef4444; flex-shrink: 0;}
-    
-    /* Crucial fix for text-overflow in flexbox */
-    .resume-details { flex: 1; min-width: 0; overflow: hidden; }
-    .resume-name { 
-        font-weight: 700; color: white; 
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-        display: block; width: 100%;
-    }
-    .resume-meta { color: rgba(255,255,255,0.5); font-size: 0.875rem; }
-    
-    .border-dashed { border: 1px dashed rgba(255,255,255,0.2) !important; }
-
-    @media (max-width: 768px) {
-        .profile-avatar { width: 120px; height: 120px; font-size: 40px; }
-        .action-buttons { width: 100%; display: flex; gap: 10px; margin-top: 15px;}
-        .action-buttons .btn-glass, .action-buttons .btn-primary-glass { flex: 1; margin: 0;}
-    }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2px; background: var(--wire); margin-bottom: 32px; }
+    .info-tile { background: var(--ink-2); border: 1px solid var(--wire); padding: 16px; }
 </style>
+{% endblock %}
 
-<div class="quantum-bg">
-    <div class="bg-layer-1"></div>
-    <div class="bg-layer-2"></div>
-</div>
-<div class="noise-overlay"></div>
+{% block content %}
+<div style="max-width:1100px; margin:0 auto; padding:48px 24px; position:relative; z-index:1;">
 
-<div class="bg-shape shape-1"></div>
-<div class="bg-shape shape-2"></div>
-<div class="cursor-glow" id="cursorGlow"></div>
-
-<div class="container py-5" style="padding-top: 100px !important; position: relative; z-index: 10;">
-    
-    <div class="glass-card profile-hero p-0">
-        <div class="cover-section"></div>
-        
-        <div class="px-4 pb-4">
-            <div class="d-flex flex-column flex-md-row align-items-start">
-                
-                <div class="profile-avatar-container me-md-4 mb-3 mb-md-0">
-                    <div class="profile-avatar">
-                        {% if profile.profile_pic %}
-                            <img src="{{ url_for('static', filename='uploads/' + profile.profile_pic) }}" alt="Profile">
-                        {% else %}
-                            {{ user.name[0] | upper }}
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <div class="flex-grow-1 w-100" style="margin-top: 1rem;">
-                    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-                        
-                        <div class="user-info">
-                            <h1 class="mb-1">{{ user.name }}</h1>
-                            <div class="user-headline">
-                                {{ profile.headline if profile.headline else "Aspiring Professional" }}
-                            </div>
-                            <div class="user-meta mt-2">
-                                <span><i class="bi bi-geo-alt"></i> {{ profile.location if profile.location else "Earth" }}</span>
-                                <span><i class="bi bi-briefcase"></i> {{ profile.experience_years }} Exp</span>
-                                <span><i class="bi bi-calendar"></i> Joined {{ user.created_at.strftime('%Y') }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="action-buttons d-flex flex-wrap gap-2">
-                            {% if is_own_profile %}
-                                <a href="{{ url_for('main.setup_profile') }}" class="btn-glass text-center flex-grow-1 flex-md-grow-0">
-                                    <i class="bi bi-pencil me-2"></i>Edit Profile
-                                </a>
-                                <button class="btn-primary-glass text-center flex-grow-1 flex-md-grow-0" onclick="shareProfile(this)">
-                                    <i class="bi bi-share me-2"></i>Share
-                                </button>
-                            {% elif is_recruiter %}
-                                {% if profile.resume_file %}
-                                    <a href="{{ url_for('static', filename='uploads/' + profile.resume_file) }}" download="{{ profile.resume_file }}" type="application/pdf" target="_blank" class="btn-primary-glass text-center w-100">
-                                        <i class="bi bi-download me-2"></i>Download Resume
-                                    </a>
-                                {% else %}
-                                    <button class="btn-glass btn-disabled text-center w-100">
-                                        <i class="bi bi-file-pdf me-2"></i>No Resume
-                                    </button>
-                                {% endif %}
-                            {% endif %}
-                        </div>
-
-                    </div>
-                </div>
-
-            </div>
-        </div>
+    <!-- Header -->
+    <div class="animate-fade-up" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:32px;">
+        <a href="{{ url_for('main.seeker_dashboard') }}" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--chalk-3); text-decoration:none; letter-spacing:0.05em; display:inline-flex; align-items:center; gap:6px;" onmouseover="this.style.color='var(--chalk)'" onmouseout="this.style.color='var(--chalk-3)'">← Dashboard</a>
     </div>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
-            
-            <div class="glass-card p-4">
-                <h3 class="mb-3"><i class="bi bi-person-lines-fill me-2" style="color: var(--accent-pink);"></i> About</h3>
-                <p style="line-height: 1.8; opacity: 0.9;">
-                   Passionate about <strong style="color: var(--accent-pink);">{{ profile.education_level }}</strong>. 
-                   Skilled in building scalable applications and solving complex problems. 
-                   Currently looking for opportunities to leverage my skills in a challenging environment.
-                </p>
-            </div>
-
-            <div class="glass-card p-4">
-                <h3 class="mb-3"><i class="bi bi-stars me-2" style="color: var(--accent-pink);"></i> Skills</h3>
-                <div>
-                    {% if profile.skills %}
-                        {% for skill in profile.skills %}
-                        <span class="skill-tag">{{ skill }}</span>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-muted">No skills added yet.</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if profile.projects %}
-            <div class="glass-card p-4">
-                <h3 class="mb-3"><i class="bi bi-code-slash me-2" style="color: var(--accent-pink);"></i> Projects</h3>
-                <div class="row g-3">
-                    {% for project in profile.projects %}
-                    <div class="col-md-6">
-                        <div class="project-card">
-                            <h5>{{ project.title }}</h5>
-                            <a href="{{ project.link }}" target="_blank" class="btn-glass mt-3 d-inline-block" style="padding: 6px 16px; font-size: 0.85rem;">
-                                <i class="bi bi-github me-1"></i> View Project
-                            </a>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <div class="glass-card p-4">
-                <h3 class="mb-3"><i class="bi bi-mortarboard me-2" style="color: var(--accent-pink);"></i> Education</h3>
-                <div>
-                    <h5 style="color: white; margin-bottom: 0.25rem;">{{ profile.education_level }}</h5>
-                    <p class="text-muted mb-0">2023 - Present</p>
-                </div>
-            </div>
-
+    <!-- Profile Header -->
+    <div class="profile-header animate-fade-up" style="animation-delay:0.05s;">
+        <div class="profile-avatar">{{ user.name[0]|upper if user.name else '?' }}</div>
+        <div style="flex:1;">
+            <h1 class="display" style="font-size:clamp(24px,4vw,40px); color:var(--chalk); margin-bottom:4px;">{{ user.name }}</h1>
+            <p style="font-size:14px; color:var(--signal); margin-bottom:8px; font-family:'JetBrains Mono',monospace;">{{ profile.headline if profile.headline else 'Aspiring Professional' }}</p>
+            <p style="font-size:13px; color:var(--chalk-3);">
+                <i class="bi bi-geo-alt" style="margin-right:4px;"></i>{{ profile.location if profile.location else 'India' }}
+            </p>
         </div>
-
-        <div class="col-lg-4">
-            
+        <div style="display:flex; gap:8px; flex-direction:column;">
             {% if is_own_profile %}
-            <div class="glass-card p-4">
-                <h5 class="mb-3"><i class="bi bi-pie-chart me-2" style="color: var(--accent-pink);"></i> Profile Status</h5>
-                
-                <ul class="completeness-list mb-4">
-                    {% if not profile.resume_file %}
-                        <li class="text-danger"><i class="bi bi-x-circle"></i> Upload Resume</li>
-                    {% else %}
-                        <li class="text-success"><i class="bi bi-check-circle"></i> Resume Uploaded</li>
-                    {% endif %}
-
-                    {% if not profile.projects %}
-                        <li class="text-danger"><i class="bi bi-x-circle"></i> Add a Project</li>
-                    {% else %}
-                        <li class="text-success"><i class="bi bi-check-circle"></i> Project Added</li>
-                    {% endif %}
-
-                    {% if not profile.linkedin_url %}
-                        <li class="text-warning"><i class="bi bi-exclamation-circle"></i> Link LinkedIn</li>
-                    {% else %}
-                        <li class="text-success"><i class="bi bi-check-circle"></i> LinkedIn Linked</li>
-                    {% endif %}
-                </ul>
-                
-                <a href="{{ url_for('main.setup_profile') }}" class="btn-primary-glass w-100 text-center">
-                    <i class="bi bi-arrow-up-circle me-2"></i>Complete Profile
-                </a>
-            </div>
+            <a href="{{ url_for('main.setup_profile') }}" class="btn-ghost" style="padding:10px 16px; font-size:12px; white-space:nowrap;">
+                ✎ Edit Profile
+            </a>
+            <button onclick="alert('Share feature coming soon')" class="btn-signal" style="padding:10px 16px; font-size:12px; white-space:nowrap;">
+                Share Profile
+            </button>
+            {% elif is_recruiter and profile.resume_file %}
+            <a href="{{ url_for('static', filename='uploads/' + profile.resume_file) }}" download class="btn-signal" style="padding:10px 16px; font-size:12px; white-space:nowrap; text-decoration:none; text-align:center;">
+                Download Resume
+            </a>
             {% endif %}
-
-            <div class="glass-card p-4">
-                <h5 class="mb-3"><i class="bi bi-file-earmark-pdf me-2" style="color: var(--accent-pink);"></i> Resume</h5>
-                {% if profile.resume_file %}
-                    <div class="resume-item mb-3">
-                        <i class="bi bi-file-pdf resume-icon"></i>
-                        <div class="resume-details">
-                            <div class="resume-name" title="{{ profile.resume_file }}">{{ profile.resume_file }}</div>
-                            <div class="resume-meta">Uploaded Document</div>
-                        </div>
-                    </div>
-                    <a href="{{ url_for('static', filename='uploads/' + profile.resume_file) }}" download="{{ profile.resume_file }}" type="application/pdf" target="_blank" class="btn-glass w-100 text-center">
-                        <i class="bi bi-download me-2"></i>Download PDF
-                    </a>
-                {% else %}
-                    <div class="text-center py-4 border-dashed rounded mb-3">
-                        <i class="bi bi-file-earmark-x display-4 text-muted mb-2"></i>
-                        <p class="text-muted mb-0">No resume available</p>
-                    </div>
-                    {% if is_own_profile %}
-                    <a href="{{ url_for('main.setup_profile') }}" class="btn-glass w-100 text-center">
-                        <i class="bi bi-upload me-2"></i>Upload Now
-                    </a>
-                    {% endif %}
-                {% endif %}
-            </div>
-
         </div>
     </div>
+
+    <!-- Stats -->
+    <div class="info-grid animate-fade-up" style="animation-delay:0.1s;">
+        <div class="info-tile">
+            <div class="label">Credits</div>
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--chalk); margin-top:4px;">{{ current_user.credits }}</div>
+        </div>
+        <div class="info-tile">
+            <div class="label">Skills</div>
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--chalk); margin-top:4px;">{{ profile.skills|length if profile.skills else 0 }}</div>
+        </div>
+        <div class="info-tile">
+            <div class="label">Experience</div>
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--chalk); margin-top:4px;">{{ profile.experience_years if profile.experience_years else '0' }} years</div>
+        </div>
+        <div class="info-tile">
+            <div class="label">Profile</div>
+            <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+                <span style="width:8px; height:8px; border-radius:50%; background:#4ade80; display:inline-block;"></span>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--chalk-2);">Complete</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skills Section -->
+    <div class="animate-fade-up" style="animation-delay:0.15s;">
+        <div class="section-label" style="margin-bottom:16px;">
+            <span class="label-signal">Skills</span>
+        </div>
+        {% if profile.skills %}
+        <div style="display:flex; flex-wrap:wrap; gap:8px; background:var(--ink-2); border:1px solid var(--wire); padding:16px;">
+            {% for skill in profile.skills %}
+            <span style="display:inline-block; background:var(--ink-3); border:1px solid var(--wire-2); padding:6px 12px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--chalk-2);">{{ skill }}</span>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="padding:24px; text-align:center; background:var(--ink-2); border:1px solid var(--wire);">
+            <p style="font-size:13px; color:var(--chalk-3);">No skills added yet. {% if is_own_profile %}<a href="{{ url_for('main.setup_profile') }}" style="color:var(--signal); text-decoration:none;">Add skills →</a>{% endif %}</p>
+        </div>
+        {% endif %}
+    </div>
 </div>
-
-<script>
-    // Cursor Glow Effect
-    document.addEventListener('mousemove', function(e) {
-        const glow = document.getElementById('cursorGlow');
-        if(glow) {
-            glow.style.left = e.clientX + 'px';
-            glow.style.top = e.clientY + 'px';
-        }
-    });
-
-    function shareProfile(btnElement) {
-        const profileUrl = window.location.href; // Grabs the current page URL
-        const originalHTML = btnElement.innerHTML;
-
-        // Check if the browser supports the native Web Share API
-        if (navigator.share) {
-            navigator.share({
-                title: '{{ user.name }} - SkillMap Profile',
-                text: 'Check out my professional profile, skills, and projects on SkillMap!',
-                url: profileUrl,
-            }).catch((error) => console.log('Sharing failed or was cancelled:', error));
-        } else {
-            // Fallback: Copy to clipboard if Web Share is not supported
-            navigator.clipboard.writeText(profileUrl).then(() => {
-                // Visual feedback for the user
-                btnElement.innerHTML = '<i class="bi bi-check2-all me-2"></i>Link Copied!';
-                btnElement.style.background = 'linear-gradient(135deg, #10b981, #059669)'; // Turn green
-                btnElement.style.borderColor = '#10b981';
-                
-                // Reset button after 2 seconds
-                setTimeout(() => {
-                    btnElement.innerHTML = originalHTML;
-                    btnElement.style.background = ''; // Reverts to CSS class default
-                    btnElement.style.borderColor = '';
-                }, 2000);
-            }).catch(err => {
-                console.error('Could not copy text: ', err);
-                alert("Failed to copy link.");
-            });
-        }
-    }
-</script>
-
 {% endblock %}

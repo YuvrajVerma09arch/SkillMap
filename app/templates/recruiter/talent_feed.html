@@ -1,251 +1,129 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block extra_head %}
 <style>
-    /* --- QUANTUM THEME --- */
-    :root {
-        --primary-dark: #0A1929;
-        --accent-blue: #3b82f6;
-        --accent-pink: #ec4899;
-        --accent-purple: #8b5cf6;
-    }
-
-    body {
-        background: #050505 !important;
-        min-height: 100vh;
-        color: white;
-        font-family: 'Inter', sans-serif;
-        overflow-x: hidden;
-    }
-
-    /* --- QUANTUM BACKGROUND LAYERS --- */
-    .quantum-bg { position: fixed; inset: 0; z-index: -2; pointer-events: none; }
-    
-    .bg-layer-1 {
-        position: absolute; inset: 0;
-        background: radial-gradient(circle at 50% 50%, rgba(30,27,75,0.8) 0%, #050505 70%);
-    }
-    
-    .bg-layer-2 {
-        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.4) 0%, transparent 50%),
-                    radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
-                    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.4) 0%, transparent 50%);
-        animation: plasma-move 30s infinite alternate ease-in-out;
-        filter: blur(80px); opacity: 0.5;
-    }
-    
-    @keyframes plasma-move {
-        0% { transform: rotate(0deg) translate(0,0); }
-        100% { transform: rotate(45deg) translate(-10%, -10%); }
-    }
-    
-    .noise-overlay {
-        position: fixed; inset: 0; z-index: -1;
-        background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-        pointer-events: none; mix-blend-mode: overlay; opacity: 0.2;
-    }
-
-    /* --- FLOATING SHAPES --- */
-    .bg-shape {
-        position: fixed; background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
-        border-radius: 50%; filter: blur(60px); opacity: 0.15; z-index: -1;
-        animation: float 20s infinite ease-in-out; pointer-events: none;
-    }
-    .shape-1 { width: 400px; height: 400px; top: -10%; left: -10%; animation-delay: 0s; }
-    .shape-2 { width: 300px; height: 300px; bottom: 10%; right: -5%; animation-delay: 2s; }
-
-    @keyframes float {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(30px, -50px) scale(1.1); }
-        66% { transform: translate(-20px, 20px) scale(0.9); }
-    }
-
-    /* --- CURSOR GLOW --- */
-    .cursor-glow {
-        width: 400px; height: 400px;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(236, 72, 153, 0.05) 50%, rgba(255,255,255,0) 70%);
-        position: fixed; border-radius: 50%; pointer-events: none;
-        transform: translate(-50%, -50%); z-index: 0; transition: transform 0.1s ease-out; filter: blur(20px);
-    }
-
-    /* --- TALENT CARD --- */
+    /* ─── TALENT FEED — ORBITAL INTERFACE ──────────────────────────────
+       Candidate card grid with profile preview and CTA buttons.
+    ──────────────────────────────────────────────────────────────────── */
     .talent-card {
-        background: rgba(10, 10, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; padding: 28px 24px;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); height: 100%;
-        display: flex; flex-direction: column; align-items: center; text-align: center;
-        position: relative; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        background: var(--ink-2);
+        border: 1px solid var(--wire);
+        padding: 28px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transition: all 0.2s;
+        height: 100%;
     }
+    .talent-card:hover { border-color: var(--wire-2); background: var(--ink-3); transform: translateY(-2px); }
 
-    .talent-card::after {
-        content: ''; position: absolute; inset: -200%;
-        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, var(--accent-blue) 25%, var(--accent-pink) 50%, var(--accent-purple) 75%, transparent 100%);
-        animation: spin-glow 8s linear infinite; opacity: 0; transition: opacity 0.4s ease; z-index: 0; pointer-events: none;
-    }
-
-    @keyframes spin-glow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-    .talent-card:hover::after { opacity: 0.15; }
-    .talent-card:hover {
-        transform: translateY(-8px); background: rgba(15, 15, 25, 0.8);
-        border-color: var(--accent-pink); box-shadow: 0 30px 60px -12px rgba(236, 72, 153, 0.3);
-    }
-    .talent-card > * { position: relative; z-index: 2; }
-
-    /* --- AVATAR --- */
     .talent-avatar {
-        width: 100px; height: 100px;
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3));
-        backdrop-filter: blur(5px); color: white; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 40px; font-weight: 800; margin-bottom: 20px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s ease;
-    }
-    .talent-card:hover .talent-avatar { transform: scale(1.05) rotate(5deg); border-color: var(--accent-pink); box-shadow: 0 0 30px rgba(236, 72, 153, 0.4); }
-
-    /* --- TYPOGRAPHY --- */
-    h4.fw-bold { color: white; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
-    .head-text { color: rgba(255,255,255,0.6); font-size: 0.9rem; font-weight: 400; }
-    
-    h1 {
-        background: linear-gradient(135deg, #fff, var(--accent-pink));
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        background-clip: text; font-weight: 800; font-size: 2.5rem; letter-spacing: -0.5px;
-    }
-    .text-white-50 { color: rgba(255,255,255,0.7) !important; }
-
-    /* --- BADGES --- */
-    .skill-badge {
-        background: rgba(59, 130, 246, 0.15); backdrop-filter: blur(5px); color: white;
-        padding: 6px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600;
-        margin: 3px; display: inline-block; border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease;
-    }
-    .skill-badge:hover { background: rgba(236, 72, 153, 0.25); border-color: var(--accent-pink); transform: translateY(-2px); }
-
-    /* --- INFO ROW --- */
-    .info-row {
-        display: flex; justify-content: space-between; color: rgba(255,255,255,0.6);
-        font-size: 0.85rem; margin: 20px 0; padding: 0 10px; width: 100%;
-    }
-    .info-row span { display: flex; align-items: center; gap: 6px; font-weight: 500; }
-    .info-row i { color: var(--accent-pink); font-size: 1rem; }
-
-    /* --- BUTTONS --- */
-    .btn-view {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2));
-        backdrop-filter: blur(10px); color: white; border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50px; padding: 12px 24px; font-weight: 700; margin-top: auto;
-        transition: all 0.3s ease; text-decoration: none; width: 100%; position: relative; overflow: hidden; letter-spacing: 0.5px;
-    }
-    .btn-view::before {
-        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: conic-gradient(from 90deg at 50% 50%, transparent 0%, rgba(255,255,255,0.2) 25%, transparent 50%);
-        animation: spin-glow 4s linear infinite; opacity: 0; transition: opacity 0.3s; z-index: -1;
-    }
-    .btn-view:hover::before { opacity: 1; }
-    .btn-view:hover {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(236, 72, 153, 0.3));
-        border-color: var(--accent-pink); transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 10px 25px rgba(236, 72, 153, 0.3); color: white;
+        width: 80px;
+        height: 80px;
+        background: var(--ink-3);
+        border: 2px solid var(--wire-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--signal);
+        margin-bottom: 16px;
+        flex-shrink: 0;
     }
 
-    .btn-outline-light {
-        background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3);
-        color: white; transition: all 0.3s ease; position: relative; overflow: hidden; border-radius: 50px;
-        padding: 10px 24px; font-weight: 600; text-decoration: none; display: inline-block;
-    }
-    .btn-outline-light:hover {
-        background: rgba(255, 255, 255, 0.2); border-color: var(--accent-pink);
-        transform: translateY(-2px); box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3); color: white;
-    }
+    .talent-name { font-size: 15px; font-weight: 600; color: var(--chalk); margin-bottom: 4px; }
+    .talent-headline { font-size: 12px; color: var(--chalk-3); margin-bottom: 12px; line-height: 1.5; }
+    .talent-location { font-size: 11px; color: var(--chalk-3); font-family: 'JetBrains Mono', monospace; margin-bottom: 12px; }
 
-    /* --- EMPTY STATE --- */
-    .bi-search {
-        background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent; opacity: 0.5;
+    .skill-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 16px; }
+    .skill-tag {
+        display: inline-block;
+        background: var(--ink-3);
+        border: 1px solid var(--wire-2);
+        padding: 3px 8px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        color: var(--chalk-2);
     }
-
-    @media (max-width: 768px) { h1 { font-size: 2rem; } .talent-card { padding: 20px; } .talent-avatar { width: 80px; height: 80px; font-size: 32px; } }
 </style>
+{% endblock %}
 
-<div class="quantum-bg">
-    <div class="bg-layer-1"></div>
-    <div class="bg-layer-2"></div>
-</div>
-<div class="noise-overlay"></div>
+{% block content %}
+<div style="max-width:1200px; margin:0 auto; padding:48px 24px; position:relative; z-index:1;">
 
-<div class="bg-shape shape-1"></div>
-<div class="bg-shape shape-2"></div>
-<div class="cursor-glow" id="cursorGlow"></div>
-
-<div class="container py-5 position-relative z-10">
-    
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <!-- Header -->
+    <div class="animate-fade-up" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:48px;">
         <div>
-            <h1 class="fw-bold mb-1">Discover Talent</h1>
-            <p class="mb-0 text-white-50">Find your next star employee.</p>
+            <div class="label-signal" style="margin-bottom:8px;">Talent Discovery</div>
+            <h1 class="display" style="font-size:clamp(24px,3vw,40px); color:var(--chalk);">
+                Browse Candidates
+            </h1>
         </div>
-        <a href="{{ url_for('main.recruiter_dashboard') }}" class="btn-outline-light">
-            <i class="bi bi-speedometer2 me-2"></i> Dashboard
+        <a href="{{ url_for('main.recruiter_dashboard') }}" class="btn-ghost" style="padding:10px 20px; font-size:12px;">
+            ← Dashboard
         </a>
     </div>
 
-    <div class="row g-4">
+    <!-- Talent Grid -->
+    {% if seekers %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-up" style="animation-delay:0.05s;">
         {% for seeker in seekers %}
-        <div class="col-md-6 col-lg-4 col-xl-3">
-            <div class="talent-card">
-                <div class="talent-avatar">
-                    {{ seeker.name[0] | upper }}
-                </div>
-                
-                <h4 class="fw-bold mb-1">{{ seeker.name }}</h4>
-                <p class="head-text mb-3 text-truncate w-100">
-                    {{ seeker.seeker_profile.headline if seeker.seeker_profile.headline else "Aspiring Professional" }}
-                </p>
+        <div class="talent-card">
+            <div class="talent-avatar">{{ seeker.name[0]|upper if seeker.name else '?' }}</div>
+            
+            <h3 class="talent-name">{{ seeker.name }}</h3>
+            
+            {% if seeker.seeker_profile.headline %}
+            <p class="talent-headline">{{ seeker.seeker_profile.headline }}</p>
+            {% else %}
+            <p class="talent-headline">Aspiring Professional</p>
+            {% endif %}
 
-                <div class="mb-4 w-100">
-                    {% if seeker.seeker_profile.skills %}
-                        {% for skill in seeker.seeker_profile.skills[:3] %}
-                            <span class="skill-badge">{{ skill }}</span>
-                        {% endfor %}
-                        {% if seeker.seeker_profile.skills|length > 3 %}
-                            <span class="skill-badge">+{{ seeker.seeker_profile.skills|length - 3 }}</span>
-                        {% endif %}
-                    {% else %}
-                        <span class="skill-badge opacity-50 border-0">No skills listed</span>
-                    {% endif %}
-                </div>
-
-                <div class="info-row">
-                    <span><i class="bi bi-briefcase"></i> {{ seeker.seeker_profile.experience_years }} Exp</span>
-                    <span><i class="bi bi-geo-alt"></i> {{ seeker.seeker_profile.location if seeker.seeker_profile.location else "India" }}</span>
-                </div>
-
-                <a href="{{ url_for('main.view_profile', user_id=seeker.id) }}" class="btn-view">
-                    View Profile <i class="bi bi-arrow-right ms-2"></i>
-                </a>
+            {% if seeker.seeker_profile.location %}
+            <div class="talent-location">
+                <i class="bi bi-geo-alt" style="margin-right:4px;"></i>{{ seeker.seeker_profile.location }}
             </div>
-        </div>
-        {% else %}
-        <div class="col-12 text-center py-5">
-            <div class="display-1 mb-3"><i class="bi bi-search"></i></div>
-            <h3 class="fw-bold text-white mb-2">No talent found yet.</h3>
-            <p class="text-white-50">Wait for users to complete their profiles.</p>
+            {% else %}
+            <div class="talent-location">
+                <i class="bi bi-geo-alt" style="margin-right:4px;"></i>India
+            </div>
+            {% endif %}
+
+            {% if seeker.seeker_profile.skills %}
+            <div class="skill-list">
+                {% for skill in seeker.seeker_profile.skills[:3] %}
+                <span class="skill-tag">{{ skill }}</span>
+                {% endfor %}
+                {% if seeker.seeker_profile.skills|length > 3 %}
+                <span class="skill-tag">+{{ seeker.seeker_profile.skills|length - 3 }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div style="display:flex; gap:8px; width:100%; margin-top:auto;">
+                <a href="{{ url_for('main.view_profile', user_id=seeker.id) }}" class="btn-ghost" style="flex:1; padding:10px 12px; font-size:12px; text-align:center;">
+                    View Profile
+                </a>
+                <button onclick="alert('Message feature coming soon')" class="btn-signal" style="flex:1; padding:10px 12px; font-size:12px;">
+                    Message
+                </button>
+            </div>
         </div>
         {% endfor %}
     </div>
 
+    {% else %}
+    <!-- Empty state -->
+    <div class="animate-fade-up" style="text-align:center; padding:80px 24px; background:var(--ink-2); border:1px solid var(--wire);">
+        <i class="bi bi-search" style="font-size:48px; color:var(--chalk-3); margin-bottom:16px; display:block; opacity:0.5;"></i>
+        <h3 style="font-size:18px; font-weight:600; color:var(--chalk-2); margin-bottom:8px;">No candidates yet</h3>
+        <p style="font-size:13px; color:var(--chalk-3); line-height:1.6;">
+            Candidates will appear here as they complete their profiles on SkillMap.
+        </p>
+    </div>
+    {% endif %}
 </div>
-
-<script>
-    // Cursor Glow Effect
-    document.addEventListener('mousemove', function(e) {
-        const glow = document.getElementById('cursorGlow');
-        if (glow) {
-            glow.style.left = e.clientX + 'px';
-            glow.style.top = e.clientY + 'px';
-        }
-    });
-</script>
 {% endblock %}
