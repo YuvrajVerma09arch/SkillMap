@@ -6,11 +6,11 @@
         <h1 class="display" style="font-size:clamp(24px,3vw,40px); color:var(--chalk);">Career Questionnaire</h1>
         <p style="font-size:13px; color:var(--chalk-3); margin-top:8px;">Answer a few questions to get a personalized roadmap.</p>
     </div>
-    <form method="POST" action="{{ url_for('main.save_questionnaire') }}" class="animate-fade-up" style="animation-delay:0.1s;">
+    <form method="POST" action="{{ url_for('main.roadmap') }}" class="animate-fade-up" style="animation-delay:0.1s;">
         <div style="display:flex; flex-direction:column; gap:24px;">
             <div>
                 <label class="label" style="display:block; margin-bottom:8px;">What's your current role?</label>
-                <input type="text" name="current_role" class="input-field" placeholder="e.g. Software Engineer" required>
+                <input type="text" name="current_skills" class="input-field" placeholder="e.g. Software Engineer" required>
             </div>
             <div>
                 <label class="label" style="display:block; margin-bottom:8px;">Years of experience?</label>
@@ -24,7 +24,7 @@
             </div>
             <div>
                 <label class="label" style="display:block; margin-bottom:8px;">What's your goal?</label>
-                <textarea name="goal" class="input-field" rows="3" placeholder="e.g. Become a tech lead" required></textarea>
+                <textarea name="target_role" class="input-field" rows="3" placeholder="e.g. Become a tech lead" required></textarea>
             </div>
             <button type="submit" class="btn-signal" style="padding:14px 32px;">Generate Roadmap →</button>
         </div>

@@ -5,13 +5,14 @@
         <div class="label-signal" style="margin-bottom:8px;">Analysis</div>
         <h1 class="display" style="font-size:clamp(24px,3vw,40px); color:var(--chalk);">Resume Checker</h1>
     </div>
-    <form method="POST" action="{{ url_for('main.analyze_resume') }}" enctype="multipart/form-data" class="animate-fade-up" style="animation-delay:0.1s;">
+    <form method="POST" action="{{ url_for('main.resume_checker') }}" enctype="multipart/form-data" class="animate-fade-up" style="animation-delay:0.1s;">
         <div style="display:flex; flex-direction:column; gap:24px;">
             <div style="border:2px dashed var(--wire); padding:32px; text-align:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--signal)'" onmouseout="this.style.borderColor='var(--wire)'">
                 <i class="bi bi-cloud-upload" style="font-size:32px; color:var(--chalk-3); margin-bottom:12px; display:block;"></i>
                 <label style="cursor:pointer;">
                     <input type="file" name="resume" accept=".pdf,.doc,.docx" required style="display:none;" onchange="this.parentElement.parentElement.querySelector('p').textContent = this.files[0].name">
                     <p style="font-size:13px; color:var(--chalk-2); margin:0;">Click to upload resume or drag & drop</p>
+                    <input type="hidden" name="use_existing" value="no">
                 </label>
             </div>
             <button type="submit" class="btn-signal" style="padding:14px 32px;">Analyze Resume →</button>
