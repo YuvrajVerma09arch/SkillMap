@@ -1,14 +1,16 @@
+import json
 import os
+import re
 import uuid
-from flask import Blueprint, render_template, request, current_app, flash, redirect, url_for, session
+
+from flask import Blueprint, request, jsonify, current_app, session
 from flask_login import login_required, current_user
-from flask import abort
 from werkzeug.utils import secure_filename
 
 # --- DB & MODELS IMPORT ---
-from app import db
+from app import db, limiter
 from app.models import SeekerProfile, RecruiterProfile, JobPost, Application, User
-from app.utils.email_service import send_roadmap_email 
+from app.utils.email_service import send_roadmap_email
 
 # --- ALGORITHMS IMPORT ---
 from app.utils.heap import MaxHeap
@@ -16,441 +18,659 @@ from app.utils.matcher import calculate_match_score
 
 main = Blueprint('main', __name__)
 
-# --- HOME ---
-@main.route('/')
-def home():
-    return render_template('index.html')
 
-# --- 1. PROFILE SETUP ROUTER ---
-@main.route('/setup-profile', methods=['GET'])
+# ─── HELPERS ────────────────────────────────────────────────────────────────
+def uploads_dir():
+    """Absolute upload folder inside the app's static dir (cwd-independent).
+
+    Bug fix: the old config used os.getcwd()-based paths, so under gunicorn
+    uploads landed outside the served static directory and downloads broke.
+    """
+    folder = os.path.join(current_app.static_folder, 'uploads')
+    os.makedirs(folder, exist_ok=True)
+    return folder
+
+
+RESUME_EXTENSIONS = {'.pdf', '.doc', '.docx'}
+IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.webp'}
+MAX_RESUME_BYTES = 5 * 1024 * 1024
+MAX_IMAGE_BYTES = 2 * 1024 * 1024
+
+_MAGIC_CHECKS = {
+    '.pdf': lambda head: head.startswith(b'%PDF'),
+    '.png': lambda head: head.startswith(b'\x89PNG\r\n\x1a\n'),
+    '.jpg': lambda head: head.startswith(b'\xff\xd8\xff'),
+    '.jpeg': lambda head: head.startswith(b'\xff\xd8\xff'),
+    '.webp': lambda head: head[:4] == b'RIFF' and head[8:12] == b'WEBP',
+    '.doc': lambda head: head.startswith(b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'),
+    '.docx': lambda head: head.startswith(b'PK\x03\x04'),
+}
+
+
+def validate_upload(file, allowed_extensions, max_bytes):
+    """Reject uploads whose extension/magic bytes/size don't match.
+
+    Files saved under static/uploads are served back by Flask with no
+    content sniffing, so an uploaded .html/.svg would execute script in our
+    origin (stored XSS -> session theft). Extension allowlist + magic-byte
+    check closes that.
+    """
+    filename = secure_filename(file.filename or '')
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in allowed_extensions:
+        return None, f'File type not allowed. Allowed: {", ".join(sorted(allowed_extensions))}'
+    head = file.stream.read(16)
+    file.stream.seek(0)
+    checker = _MAGIC_CHECKS.get(ext)
+    if checker and not checker(head):
+        return None, 'File content does not match its extension.'
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0)
+    if size > max_bytes:
+        return None, f'File too large. Max {max_bytes // (1024 * 1024)}MB.'
+    if size == 0:
+        return None, 'Empty file.'
+    return filename, None
+
+
+def seeker_profile_payload(profile):
+    if not profile:
+        return None
+    return {
+        'headline': profile.headline,
+        'phone': profile.phone,
+        'location': profile.location,
+        'experience_years': profile.experience_years,
+        'education_level': profile.education_level,
+        'skills': profile.skills or [],
+        'projects': profile.projects or [],
+        'profile_pic': profile.profile_pic,
+        'resume_file': profile.resume_file,
+        'linkedin_url': profile.linkedin_url,
+        'portfolio_url': profile.portfolio_url,
+    }
+
+
+def recruiter_profile_payload(profile):
+    if not profile:
+        return None
+    return {
+        'recruiter_name': profile.recruiter_name,
+        'role_title': profile.role_title,
+        'work_email': profile.work_email,
+        'company_name': profile.company_name,
+        'industry': profile.industry,
+        'company_size': profile.company_size,
+        'location': profile.location,
+        'website': profile.website,
+        'is_verified': profile.is_verified,
+    }
+
+
+def parse_education(education_level):
+    """'Degree - College (Year)' -> {'degree','college','year'} (never crashes)."""
+    parsed = {'degree': '', 'college': '', 'year': ''}
+    if not education_level:
+        return parsed
+    try:
+        parts = education_level.split(' - ', 1)
+        parsed['degree'] = parts[0]
+        if len(parts) > 1:
+            rest = parts[1]
+            college_part = rest.rsplit(' (', 1)
+            if len(college_part) > 1:
+                parsed['college'] = college_part[0]
+                parsed['year'] = college_part[1].replace(')', '')
+            else:
+                parsed['college'] = rest
+    except Exception:
+        pass
+    return parsed
+
+
+# ─── HOME (metadata only; SPA renders the landing page) ─────────────────────
+@main.route('/api/health')
+def health():
+    return jsonify({'ok': True, 'service': 'skillmap'})
+
+
+# ─── 1. SEEKER PROFILE ──────────────────────────────────────────────────────
+@main.route('/api/profile/seeker', methods=['GET'])
 @login_required
-def setup_profile():
-    if current_user.role == 'recruiter':
-        # Recruiter Logic
-        profile = current_user.recruiter_profile
-        return render_template('recruiter/setup.html', profile=profile)
-    else:
-        # SEEKER LOGIC (EDIT MODE)
-        profile = current_user.seeker_profile
-        
-        # PARSE EDUCATION DATA (Fixing the missing College/Year bug)
-        parsed_edu = {'college': '', 'year': ''}
-        if profile and profile.education_level:
-            # Format is: "Degree - College Name (Year)"
-            # Regex to extract: Anything after " - " until " (", then the Year inside "()"
-            try:
-                # Split "Degree - College..."
-                parts = profile.education_level.split(' - ', 1)
-                if len(parts) > 1:
-                    rest = parts[1] # "LJIET (2026)"
-                    college_part = rest.rsplit(' (', 1) # ["LJIET", "2026)"]
-                    if len(college_part) > 1:
-                        parsed_edu['college'] = college_part[0]
-                        parsed_edu['year'] = college_part[1].replace(')', '')
-                    else:
-                        parsed_edu['college'] = rest
-            except:
-                pass # Fallback to empty if format is weird
+def get_seeker_profile():
+    profile = current_user.seeker_profile
+    return jsonify({
+        'profile': seeker_profile_payload(profile),
+        'parsed_edu': parse_education(profile.education_level if profile else None),
+        'user': {'name': current_user.name},
+    })
 
-        return render_template('seeker/questionnaire.html', profile=profile, parsed_edu=parsed_edu)
 
-# --- 2. SAVE SEEKER ---
-@main.route('/save-seeker-profile', methods=['POST'])
+@main.route('/api/profile/seeker', methods=['POST'])
 @login_required
 def save_seeker_profile():
     try:
-        # 1. Get Basic Data
-        full_name = request.form.get('full_name')
-        phone = request.form.get('phone')
-        location = request.form.get('location')
-        experience_years = request.form.get('experience_years')
-        education_level = request.form.get('qualification')
-        college = request.form.get('college')
-        grad_year = request.form.get('grad_year')
-        skills = request.form.getlist('skills')
-        linkedin = request.form.get('linkedin')
-        
-        # 2. Get Project Data
-        project_title = request.form.get('project_title')
-        project_link = request.form.get('project_link')
-        
+        data = request.get_json(silent=True) or {}
+        form = request.form
+
+        def pick(key, default=None):
+            if key in data:
+                return data.get(key)
+            if key in form:
+                return form.get(key)
+            return default
+
+        full_name = (pick('full_name') or '').strip()
+        phone = pick('phone')
+        location = pick('location')
+        experience_years = pick('experience_years')
+        education_level = pick('qualification')
+        college = pick('college')
+        grad_year = pick('grad_year')
+        linkedin = pick('linkedin')
+        portfolio = pick('portfolio')
+        headline = pick('headline')
+
+        # skills: JSON array or repeated form field
+        if 'skills' in data and isinstance(data.get('skills'), list):
+            skills = [str(s).strip() for s in data['skills'] if str(s).strip()]
+        else:
+            skills = [s.strip() for s in form.getlist('skills') if s.strip()]
+
+        if not full_name:
+            return jsonify({'error': 'Full name is required.'}), 400
+
+        project_title = pick('project_title')
+        project_link = pick('project_link')
         projects_data = []
         if project_title and project_link:
             projects_data = [{'title': project_title, 'link': project_link}]
+        elif isinstance(data.get('projects'), list):
+            projects_data = data['projects']
 
-        # 3. Update User Name
+        # Update User Name
         current_user.name = full_name
         db.session.add(current_user)
 
-        # 4. Get/Create Profile
+        # Get/Create Profile
         profile = SeekerProfile.query.filter_by(user_id=current_user.id).first()
         if not profile:
             profile = SeekerProfile(user_id=current_user.id)
-        
-        # 5. Update Profile Fields
+
         profile.phone = phone
         profile.location = location
         profile.experience_years = experience_years
-        # Combine Education into one string for storage
-        profile.education_level = f"{education_level} - {college} ({grad_year})"
-        profile.skills = skills 
+        profile.education_level = f"{education_level or ''} - {college or ''} ({grad_year or ''})"
+        profile.skills = skills
         profile.linkedin_url = linkedin
-        
-        # Only overwrite projects if user provided new ones, or if it's a new profile
+        profile.portfolio_url = portfolio
+        profile.headline = headline
+
         if projects_data:
             profile.projects = projects_data
+
+        folder = uploads_dir()
 
         if 'profile_pic' in request.files:
             pic = request.files['profile_pic']
             if pic and pic.filename != '':
-                pic_filename = secure_filename(pic.filename)
-                # Unique name: pic_user_ID_hash.jpg
+                pic_filename, pic_error = validate_upload(pic, IMAGE_EXTENSIONS, MAX_IMAGE_BYTES)
+                if pic_error:
+                    return jsonify({'error': f'Profile picture: {pic_error}'}), 400
                 pic_unique_name = f"pic_{current_user.id}_{uuid.uuid4().hex[:8]}_{pic_filename}"
-                
-                upload_folder = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static', 'uploads'))
-                if not os.path.exists(upload_folder):
-                    os.makedirs(upload_folder,exist_ok=True)
-                
-                pic.save(os.path.join(upload_folder, pic_unique_name))
+                pic.save(os.path.join(folder, pic_unique_name))
                 profile.profile_pic = pic_unique_name
-        
-        # 6. Handle Resume
+
         if 'resume' in request.files:
             file = request.files['resume']
             if file and file.filename != '':
-                filename = secure_filename(file.filename)
+                filename, resume_error = validate_upload(file, RESUME_EXTENSIONS, MAX_RESUME_BYTES)
+                if resume_error:
+                    return jsonify({'error': f'Resume: {resume_error}'}), 400
                 unique_name = f"{current_user.id}_{uuid.uuid4().hex[:8]}_{filename}"
-                
-                upload_folder = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static', 'uploads'))
-                
-                if not os.path.exists(upload_folder):
-                    os.makedirs(upload_folder, exist_ok=True)
-                
-                file.save(os.path.join(upload_folder, unique_name))
+                file.save(os.path.join(folder, unique_name))
                 profile.resume_file = unique_name
 
         db.session.add(profile)
         db.session.commit()
-        
-        flash("Profile Updated Successfully!", "success")
-        # FIXED: Now redirects to the profile page we just created logic for
-        return redirect(url_for('main.view_profile', user_id=current_user.id))
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error: {e}") # Print to terminal for debugging
-        flash(f"Error saving profile: {str(e)}", "danger")
-        return redirect(url_for('main.setup_profile'))
 
-# --- 3. SAVE RECRUITER ---
-@main.route('/save-recruiter-profile', methods=['POST'])
+        return jsonify({'profile': seeker_profile_payload(profile), 'user': {'name': current_user.name}})
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('seeker profile save failed')
+        return jsonify({'error': 'Could not save profile. Please try again.'}), 500
+
+
+# ─── 2. RECRUITER PROFILE ───────────────────────────────────────────────────
+@main.route('/api/profile/recruiter', methods=['GET'])
+@login_required
+def get_recruiter_profile():
+    return jsonify({'profile': recruiter_profile_payload(current_user.recruiter_profile)})
+
+
+@main.route('/api/profile/recruiter', methods=['POST'])
 @login_required
 def save_recruiter_profile():
     try:
-        # Extract Data
-        company_name = request.form.get('company_name')
-        industry = request.form.get('industry')
-        company_size = request.form.get('size')
-        location = request.form.get('location')
-        website = request.form.get('website')
-        
-        # New Fields
-        recruiter_name = request.form.get('recruiter_name')
-        role_title = request.form.get('role_title')
-        work_email = request.form.get('work_email')
-        
+        data = request.get_json(silent=True) or {}
+
+        company_name = (data.get('company_name') or '').strip()
+        if not company_name:
+            return jsonify({'error': 'Company name is required.'}), 400
+
         profile = RecruiterProfile.query.filter_by(user_id=current_user.id).first()
         if not profile:
             profile = RecruiterProfile(user_id=current_user.id)
-            
-        # Update Fields
+
         profile.company_name = company_name
-        profile.industry = industry
-        profile.company_size = company_size
-        profile.location = location
-        profile.website = website
-        
-        profile.recruiter_name = recruiter_name
-        profile.role_title = role_title
-        profile.work_email = work_email
-        
+        profile.industry = data.get('industry')
+        profile.company_size = data.get('size') or data.get('company_size')
+        profile.location = data.get('location')
+        profile.website = data.get('website')
+        profile.recruiter_name = data.get('recruiter_name')
+        profile.role_title = data.get('role_title')
+        profile.work_email = data.get('work_email')
+
+        if data.get('name'):
+            current_user.name = data['name']
+            db.session.add(current_user)
+
         db.session.add(profile)
         db.session.commit()
-        
-        flash("Company Profile Updated!", "success")
-        return redirect(url_for('main.recruiter_dashboard'))
-        
-    except Exception as e:
+        return jsonify({'profile': recruiter_profile_payload(profile)})
+    except Exception:
         db.session.rollback()
-        flash(f"Error: {str(e)}", "danger")
-        return redirect(url_for('main.setup_profile'))
+        current_app.logger.exception('recruiter profile save failed')
+        return jsonify({'error': 'Could not save profile. Please try again.'}), 500
 
-# --- 4. RECRUITER DASHBOARD (WITH HEAP LOGIC) ---
-@main.route('/recruiter/dashboard')
+
+# ─── 3. PUBLIC PROFILE VIEWS ────────────────────────────────────────────────
+@main.route('/api/profiles/<int:user_id>', methods=['GET'])
+@login_required
+def view_profile(user_id):
+    user = User.query.get_or_404(user_id)
+
+    # Security: only the owner or a recruiter may view a seeker profile
+    if current_user.id != user_id and current_user.role != 'recruiter':
+        return jsonify({'error': 'Unauthorized.'}), 403
+
+    profile = user.seeker_profile
+    if user.role == 'seeker' and not profile:
+        return jsonify({'error': 'This user has not set up their profile yet.', 'needs_setup': True}), 404
+
+    return jsonify({
+        'user': {'id': user.id, 'name': user.name, 'role': user.role},
+        'profile': seeker_profile_payload(profile),
+        'is_own_profile': current_user.id == user.id,
+        'is_recruiter': current_user.role == 'recruiter',
+        'parsed_edu': parse_education(profile.education_level if profile else None),
+    })
+
+
+@main.route('/api/companies/<int:user_id>', methods=['GET'])
+@login_required
+def view_company(user_id):
+    # SECURITY: owner OR a job seeker may view a company profile.
+    if current_user.id != user_id and current_user.role != 'seeker':
+        return jsonify({'error': 'Unauthorized.'}), 403
+
+    profile = RecruiterProfile.query.filter_by(user_id=user_id).first_or_404()
+    jobs = JobPost.query.filter_by(recruiter_id=profile.id, is_active=True).all()
+    return jsonify({
+        'profile': recruiter_profile_payload(profile),
+        'jobs': [
+            {
+                'id': j.id, 'title': j.title, 'location': j.location,
+                'job_type': j.job_type,
+                'applicant_count': len(j.applications),
+            }
+            for j in jobs
+        ],
+        'is_owner': current_user.id == user_id,
+        'total_applicants': sum(len(j.applications) for j in jobs),
+    })
+
+
+# ─── 4. RECRUITER DASHBOARD (heap-ranked candidates, with emails) ───────────
+@main.route('/api/recruiter/dashboard', methods=['GET'])
 @login_required
 def recruiter_dashboard():
     if current_user.role != 'recruiter':
-        return redirect(url_for('jobs.job_feed'))
+        return jsonify({'error': 'Recruiters only.'}), 403
 
-    # 1. Get Recruiter Profile
     profile = current_user.recruiter_profile
     if not profile:
-        return redirect(url_for('main.setup_profile'))
+        return jsonify({'needs_setup': True}), 404
 
-    # 2. Get All Active Jobs
     jobs = JobPost.query.filter_by(recruiter_id=profile.id).order_by(JobPost.posted_at.desc()).all()
 
-    # 3. Initialize Stats & Heap
     total_applicants = 0
     shortlisted_count = 0
-    applicant_heap = MaxHeap() 
+    applicant_heap = MaxHeap()
 
-    # 4. Loop through jobs and applications
     for job in jobs:
-        # Get applications for this job
         job_apps = Application.query.filter_by(job_id=job.id).all()
         total_applicants += len(job_apps)
 
         for application in job_apps:
             if application.status == 'Shortlisted':
                 shortlisted_count += 1
-            
-            # Smart Match Logic
+
             seeker_profile = application.seeker
             if seeker_profile:
                 seeker_user = seeker_profile.user
-                
-                # Calculate Score (Seeker Skills vs Job Skills)
-                # Note: job.required_skills is now a clean list from our new form
                 score = calculate_match_score(seeker_profile.skills, job.required_skills)
-                
-                # Create Candidate Object for Display
+                # Bug fix: template used to render candidate.email but the field
+                # was never included -> always blank. Now included.
                 candidate_data = {
-                    "name": seeker_user.name,
-                    "role": job.title, # Showing which job they applied for
-                    "match_score": score
+                    'name': seeker_user.name,
+                    'email': seeker_user.email,
+                    'user_id': seeker_user.id,
+                    'role': job.title,
+                    'match_score': score,
                 }
-                
-                # Push to Heap (Score is the priority key)
                 applicant_heap.push((score, candidate_data))
 
-    # 5. Get Top 5 Matches
     top_candidates = applicant_heap.get_top_n(5)
 
-    stats = {
-        "total_applicants": total_applicants,
-        "active_jobs": len(jobs),
-        "interviews": shortlisted_count
-    }
+    return jsonify({
+        'stats': {
+            'total_applicants': total_applicants,
+            'active_jobs': len(jobs),
+            'interviews': shortlisted_count,
+            'credits': current_user.credits,
+        },
+        'jobs': [
+            {
+                'id': j.id, 'title': j.title, 'location': j.location,
+                'job_type': j.job_type, 'salary_range': j.salary_range,
+                'applicant_count': len(j.applications),
+                'posted_at': j.posted_at.isoformat() if j.posted_at else None,
+            }
+            for j in jobs
+        ],
+        'candidates': top_candidates,
+    })
 
-    return render_template('recruiter/dashboard.html', 
-                           stats=stats, 
-                           jobs=jobs, 
-                           candidates=top_candidates)
 
-# --- 6. SEEKER PROFILE VIEWER ---
-@main.route('/profile/<int:user_id>')
-@login_required
-def view_profile(user_id):
-    user = User.query.get_or_404(user_id)
-    
-    # Security: Ensure profile exists
-    if user.role == 'seeker' and not user.seeker_profile:
-        if current_user.id == user.id:
-            return redirect(url_for('main.setup_profile'))
-        else:
-            flash("This user has not set up their profile yet.", "warning")
-            return redirect(url_for('main.home'))
-
-    # Determine permissions
-    is_own_profile = (current_user.id == user.id)
-    is_recruiter = (current_user.role == 'recruiter')
-    if current_user.id != user_id and current_user.role != 'recruiter':
-        abort(403)
-
-    return render_template(
-        'seeker/profile.html', 
-        user=user, 
-        profile=user.seeker_profile,
-        is_own_profile=is_own_profile,
-        is_recruiter=is_recruiter
-    )
-
-@main.route('/my-profile')
-@login_required
-def my_profile():
-    return redirect(url_for('main.view_profile', user_id=current_user.id))
-
-# --- 7. RECRUITER COMPANY PROFILE VIEWER ---
-@main.route('/company/<int:recruiter_id>')
-@login_required
-def view_company(recruiter_id):
-    # SECURITY FIX: Only the owner OR a job seeker can view a company profile.
-    # Recruiter A cannot view Recruiter B's profile.
-    if current_user.id != recruiter_id and current_user.role != 'seeker':
-        abort(403)
-
-    profile = RecruiterProfile.query.filter_by(user_id=recruiter_id).first_or_404()
-    jobs = JobPost.query.filter_by(recruiter_id=profile.id, is_active=True).all()
-    is_owner = (current_user.id == recruiter_id)
-    
-    return render_template('recruiter/profile.html', profile=profile, jobs=jobs, is_owner=is_owner)
-
-@main.route('/my-company')
-@login_required
-def my_company():
-    if current_user.role != 'recruiter':
-        return redirect(url_for('main.home'))
-    return redirect(url_for('main.view_company', recruiter_id=current_user.id))
-
-# --- 8. TALENT FEED ---
-@main.route('/talent')
+# ─── 5. TALENT FEED ─────────────────────────────────────────────────────────
+@main.route('/api/talent', methods=['GET'])
 @login_required
 def talent_feed():
     if current_user.role != 'recruiter':
-        return redirect(url_for('jobs.job_feed'))
-    
-    seekers = db.session.query(User).join(SeekerProfile).filter(User.role == 'seeker').all()
-    return render_template('recruiter/talent_feed.html', seekers=seekers)
+        return jsonify({'error': 'Recruiters only.'}), 403
 
-# --- 9. OTHER TOOLS (Roadmap, Resume, Interview) ---
-@main.route('/roadmap', methods=['GET', 'POST'])
-@login_required 
+    seekers = db.session.query(User).join(SeekerProfile).filter(User.role == 'seeker').all()
+    return jsonify({
+        'seekers': [
+            {
+                'id': u.id,
+                'name': u.name,
+                'headline': u.seeker_profile.headline,
+                'location': u.seeker_profile.location,
+                'skills': u.seeker_profile.skills or [],
+            }
+            for u in seekers
+        ]
+    })
+
+
+# ─── 6. ROADMAP GENERATOR ───────────────────────────────────────────────────
+@main.route('/api/tools/roadmap', methods=['POST'])
+@login_required
 def roadmap():
     from app.utils.roadmap_gen import generate_roadmap
-    roadmap_data = []
-    if request.method == 'POST':
-        if not current_user.deduct_credits(1):
-            flash("You need 1 Credit to analyze a resume. Please Upgrade!", "warning")
-            return redirect(url_for('payments.pricing'))
-        current_skills = request.form.get('current_skills')
-        target_role = request.form.get('target_role')
-        if current_skills and target_role:
-            try:
-                roadmap_data = generate_roadmap(current_skills, target_role)
-                session['latest_roadmap'] = roadmap_data
-                session['target_role'] = target_role
-            except Exception as e:
-                flash(f"Error: {str(e)}", "danger")
-    return render_template('seeker/roadmap.html', roadmap=roadmap_data)
 
-@main.route('/resume-checker', methods=['GET', 'POST'])
+    data = request.get_json(silent=True) or {}
+    current_skills = (data.get('current_skills') or '').strip()
+    target_role = (data.get('target_role') or '').strip()
+
+    # Bug fix: validate BEFORE any credit is spent.
+    if not current_skills or not target_role:
+        return jsonify({'error': 'Current skills and target role are required.'}), 400
+
+    if not current_user.has_credits(1):
+        return jsonify({'error': 'Not enough credits. Please upgrade.', 'redirect': '/pricing'}), 402
+
+    try:
+        roadmap_data = generate_roadmap(current_skills, target_role)
+    except Exception:
+        current_app.logger.exception('roadmap generation failed')
+        return jsonify({'error': 'Roadmap generation failed. Please try again.'}), 502
+
+    # Bug fix: an empty/failed generation must NOT cost a credit.
+    if not roadmap_data:
+        return jsonify({'error': 'The AI returned no roadmap. Please try again.'}), 502
+
+    # Deduct only after a successful generation.
+    if not current_user.deduct_credits(1):
+        return jsonify({'error': 'Not enough credits. Please upgrade.', 'redirect': '/pricing'}), 402
+
+    session['latest_roadmap'] = roadmap_data
+    session['target_role'] = target_role
+
+    return jsonify({'roadmap': roadmap_data, 'target_role': target_role, 'credits': current_user.credits})
+
+
+# ─── 7. RESUME CHECKER ──────────────────────────────────────────────────────
+# Failure markers returned by analyze_resume that indicate no real analysis happened
+_FAILED_MARKERS = ('API Key Missing', 'Unreadable PDF', 'AI Analysis Failed')
+
+
+@main.route('/api/tools/resume-check', methods=['POST'])
 @login_required
 def resume_checker():
-    from app.utils.resume_parser import analyze_resume 
-    
-    results = None
-    profile_resume = None
-    
-    # 1. Detect Existing Profile Resume
-    if current_user.role == 'seeker' and current_user.seeker_profile:
-        profile_resume = current_user.seeker_profile.resume_file
+    from app.utils.resume_parser import analyze_resume
 
-    if request.method == 'POST':
+    data = request.get_json(silent=True) or {}
+    form = request.form
+
+    def pick(key, default=None):
+        if key in data:
+            return data.get(key)
+        if key in form:
+            return form.get(key)
+        return default
+
+    # The SPA posts multipart/form-data (file + fields); also accept JSON.
+    job_description = pick('job_description')
+    raw_existing = pick('use_existing')
+    use_existing = (
+        str(raw_existing).lower() in ('1', 'true', 'yes')
+        if raw_existing is not None else False
+    )
+
+    folder = uploads_dir()
+    save_path = None
+    is_temp_file = False
+
+    try:
+        if use_existing:
+            if current_user.role != 'seeker' or not current_user.seeker_profile \
+                    or not current_user.seeker_profile.resume_file:
+                return jsonify({'error': 'No saved resume on your profile. Please upload one.'}), 400
+            save_path = os.path.join(folder, current_user.seeker_profile.resume_file)
+            if not os.path.exists(save_path):
+                return jsonify({'error': 'Saved resume was cleared from the server. Please upload it again.'}), 400
+        else:
+            if 'resume' not in request.files:
+                return jsonify({'error': 'Please upload a resume.'}), 400
+            file = request.files['resume']
+            if not file or file.filename == '':
+                return jsonify({'error': 'Please upload a resume.'}), 400
+            filename, upload_error = validate_upload(file, RESUME_EXTENSIONS, MAX_RESUME_BYTES)
+            if upload_error:
+                return jsonify({'error': upload_error}), 400
+            save_path = os.path.join(folder, f"temp_{uuid.uuid4().hex[:6]}_{filename}")
+            file.save(save_path)
+            is_temp_file = True
+
+        # Bug fix: a missing JD used to silently reach the AI as None.
+        if not job_description or not str(job_description).strip():
+            return jsonify({'error': 'A job description is required for analysis.'}), 400
+
+        if not current_user.has_credits(1):
+            return jsonify({'error': 'Not enough credits. Please upgrade.', 'redirect': '/pricing'}), 402
+
+        results = analyze_resume(save_path, str(job_description))
+        if 'match_score' not in results:
+            results['match_score'] = 0
+
+        # Bug fix: never charge a credit when the AI run actually failed.
+        if any(m in (results.get('missing_required_skills') or []) for m in _FAILED_MARKERS):
+            return jsonify({'error': 'Analysis failed. You have not been charged.', 'results': results}), 502
+
         if not current_user.deduct_credits(1):
-            flash("You need 1 Credit to analyze a resume. Please Upgrade!", "warning")
-            return redirect(url_for('payments.pricing'))
-            
-        job_description = request.form.get('job_description')
-        use_existing = request.form.get('use_existing') == 'yes'
-        
-        save_path = None
-        is_temp_file = False
-        
-        # --- ENSURE FOLDER EXISTS ---
-        upload_folder = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static', 'uploads'))
-        if not os.path.exists(upload_folder):
-            os.makedirs(upload_folder, exist_ok=True) 
+            return jsonify({'error': 'Not enough credits. Please upgrade.', 'redirect': '/pricing'}), 402
 
-        try:
-            # CASE A: Use Profile Resume
-            if use_existing and profile_resume:
-                save_path = os.path.join(upload_folder, profile_resume)
-                if not os.path.exists(save_path):
-                    # Graceful fallback if Render wiped the file
-                    flash("Profile resume file was cleared from the server cache. Please upload it again below.", "warning")
-                    save_path = None
+        return jsonify({'results': results, 'credits': current_user.credits})
 
-            # CASE B: Upload New Resume
-            elif 'resume' in request.files:
-                file = request.files['resume']
-                if file and file.filename != '':
-                    filename = secure_filename(file.filename)
-                    save_path = os.path.join(upload_folder, f"temp_{uuid.uuid4().hex[:6]}_{filename}")
-                    file.save(save_path) 
-                    is_temp_file = True
-            
-            # 2. Run Analysis
-            if save_path:
-                results = analyze_resume(save_path, job_description)
-                if 'match_score' not in results:
-                    results['match_score'] = 0
-            else:
-                # If they tried to use existing but it was missing, we don't run the AI
-                if not use_existing:
-                    flash("Please upload a resume.", "warning")
+    except Exception:
+        current_app.logger.exception('resume check failed')
+        return jsonify({'error': 'An error occurred while processing the file. Please try again.'}), 500
+    finally:
+        if is_temp_file and save_path and os.path.exists(save_path):
+            try:
+                os.remove(save_path)
+            except Exception as cleanup_error:
+                print(f'Failed to clean up temp file: {cleanup_error}')
 
-        except Exception as e:
-            print(f"Server Error during analysis: {e}")
-            flash("An error occurred while processing the file. Please try again.", "danger")
-        finally:
-            # 3. Cleanup Temp File
-            if is_temp_file and save_path and os.path.exists(save_path):
-                try:
-                    os.remove(save_path)
-                except Exception as cleanup_error:
-                    print(f"Failed to clean up temp file: {cleanup_error}")
 
-    return render_template('seeker/resume_checker.html', results=results, profile_resume=profile_resume)
-
-@main.route('/interview', methods=['GET', 'POST'])
-@login_required
-def interview():
-    from app.utils.interview_bot import generate_interview_question, evaluate_answer
-    if request.args.get('reset'):
-        session.pop('current_question', None)
-        return redirect(url_for('main.interview'))
-    
-    question = session.get('current_question')
-    feedback = None
-    role = session.get('current_role', 'Software Engineer')
-    
-    if request.method == 'POST':
-        if not current_user.deduct_credits(1):
-            flash("You need 1 Credit to generate a roadmap. Please Upgrade!", "warning")
-            return redirect(url_for('payments.pricing'))
-        if 'start_new' in request.form:
-            role = request.form.get('role', role)
-            question = generate_interview_question(role, "General", resume_text="")
-            session['current_question'] = question
-            session['current_role'] = role
-        elif 'submit_answer' in request.form:
-            user_answer = request.form.get('user_answer')
-            feedback = evaluate_answer(question, user_answer)
-            
-    return render_template('seeker/interview.html', question=question, feedback=feedback, role=role)
-
-@main.route('/trigger-email', methods=['POST'])
+# ─── 9. EMAIL ROADMAP ───────────────────────────────────────────────────────
+@main.route('/api/emails/roadmap', methods=['POST'])
 @login_required
 def trigger_email():
     roadmap_data = session.get('latest_roadmap')
     target_role = session.get('target_role')
-    
+
     if not roadmap_data:
-        flash("No roadmap found to email. Please generate one first.", "warning")
-        return redirect(url_for('main.roadmap'))
-        
-    # Using the same email service we set up for recruiters
-    success, msg = send_roadmap_email(current_user.email, current_user.name, target_role, roadmap_data)
-    
+        return jsonify({'error': 'No roadmap found to email. Please generate one first.'}), 400
+
+    success, msg = send_roadmap_email(
+        current_user.email, current_user.name, target_role, roadmap_data
+    )
     if success:
-        flash(f"Roadmap sent to {current_user.email}!", "success")
-    else:
-        flash(f"Failed to send email: {msg}", "danger")
-        
-    return redirect(url_for('main.roadmap'))
+        return jsonify({'sent': True, 'email': current_user.email})
+    return jsonify({'sent': False, 'error': msg}), 502
 
-@main.route('/legal')
-def legal():
-    return render_template('payments/legal.html')
 
+# ─── 10. COMPANY PREP PACK (free, login-gated, cached per company+role) ──────
+@main.route('/api/prep/companies', methods=['POST'])
+@login_required
+@limiter.limit('30 per minute')
+def prep_companies():
+    from sqlalchemy import text as sqltext
+
+    data = request.get_json(silent=True) or {}
+    query = (data.get('query') or '').strip()
+    if not query:
+        return jsonify({'error': 'Search query is required.'}), 400
+
+    pat = f'%{query}%'
+    rows = db.session.execute(sqltext("""
+        SELECT c.slug, c.name,
+               (c.meta ? 'rounds') AS has_rounds,
+               (SELECT count(*) FROM questions q WHERE q.company_id = c.id) AS n
+        FROM companies c
+        WHERE c.name ILIKE :pat OR c.slug ILIKE :pat
+           OR c.aliases::text ILIKE :pat
+        ORDER BY has_rounds DESC, n DESC, c.name
+        LIMIT 12
+    """), {'pat': pat}).fetchall()
+
+    return jsonify({'companies': [
+        {'slug': r[0], 'name': r[1], 'has_rounds': bool(r[2]), 'question_count': r[3]}
+        for r in rows
+    ]})
+
+
+@main.route('/api/prep/generate', methods=['POST'])
+@login_required
+@limiter.limit('6 per minute')
+def prep_generate():
+    from sqlalchemy import text as sqltext
+    from app.utils.prep_bot import embed_query, fetch_salary_band, synthesize_pack
+
+    data = request.get_json(silent=True) or {}
+    slug = (data.get('company_slug') or '').strip()
+    role = (data.get('role') or '').strip()[:80]
+
+    if not slug or not role:
+        return jsonify({'error': 'Company and role are required.'}), 400
+
+    company = db.session.execute(sqltext(
+        'SELECT id, name, meta FROM companies WHERE slug = :s'
+    ), {'s': slug}).fetchone()
+    if not company:
+        return jsonify({'error': 'Unknown company. Pick one from the list.'}), 404
+    cid, cname, meta = company[0], company[1], company[2] or {}
+
+    # 1. Cache check — the free-tier sustainability key (Groq ~30 RPM).
+    cached = db.session.execute(sqltext(
+        'SELECT pack, salary FROM prep_packs '
+        'WHERE company_id = :cid AND role = :role'
+    ), {'cid': cid, 'role': role}).fetchone()
+    if cached:
+        return jsonify({'company': cname, 'role': role,
+                        'pack': cached[0], 'salary': cached[1], 'cached': True})
+
+    # 2. Hybrid retrieval: pgvector cosine (top 25) + FTS OR-query (top 15).
+    try:
+        qvec = json.dumps(embed_query(f'{cname} {role} interview questions'))
+    except Exception:
+        current_app.logger.exception('prep query embedding failed')
+        return jsonify({'error': 'Search is temporarily unavailable. Please try again.'}), 502
+
+    vec_rows = db.session.execute(sqltext("""
+        SELECT question, COALESCE(category, ''), COALESCE(source_url, ''), source
+        FROM questions
+        WHERE company_id = :cid AND embedding IS NOT NULL
+        ORDER BY embedding <=> CAST(:v AS vector)
+        LIMIT 25
+    """), {'cid': cid, 'v': qvec}).fetchall()
+
+    words = [w for w in re.sub(r'[^a-z0-9 ]', '', f'{cname} {role}'.lower()).split() if w]
+    fts_rows = []
+    if words:
+        or_q = ' | '.join(words)
+        fts_rows = db.session.execute(sqltext("""
+            SELECT question, COALESCE(category, ''), COALESCE(source_url, ''), source
+            FROM questions
+            WHERE company_id = :cid
+              AND to_tsvector('english', question) @@ to_tsquery('english', :q)
+            ORDER BY ts_rank_cd(to_tsvector('english', question),
+                                to_tsquery('english', :q)) DESC
+            LIMIT 15
+        """), {'cid': cid, 'q': or_q}).fetchall()
+
+    retrieved, seen = [], set()
+    for r in list(vec_rows) + list(fts_rows):
+        if r[0] in seen:
+            continue
+        seen.add(r[0])
+        retrieved.append({'question': r[0], 'category': r[1],
+                          'source_url': r[2], 'source': r[3]})
+
+    # 3. Groq synthesis (rounds prose comes from companies.meta — no live scrape).
+    rounds_prose = meta.get('rounds') or []
+    pack = synthesize_pack(cname, role, rounds_prose, retrieved)
+    if not pack:
+        return jsonify({'error': 'Pack generation failed. You have not been charged.'}), 502
+
+    # 4. Salary band (best effort — never blocks the pack).
+    salary = fetch_salary_band(role)
+
+    # 5. Cache for every future request of this (company, role).
+    db.session.execute(sqltext("""
+        INSERT INTO prep_packs (company_id, role, pack, salary)
+        VALUES (:cid, :role, CAST(:pack AS jsonb), CAST(:salary AS jsonb))
+        ON CONFLICT (company_id, role) DO UPDATE
+            SET pack = EXCLUDED.pack, salary = EXCLUDED.salary,
+                created_at = now()
+    """), {'cid': cid, 'role': role, 'pack': json.dumps(pack),
+           'salary': json.dumps(salary) if salary else None})
+    db.session.commit()
+
+    return jsonify({'company': cname, 'role': role,
+                    'pack': pack, 'salary': salary, 'cached': False})

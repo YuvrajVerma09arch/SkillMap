@@ -1,34 +1,66 @@
 # app/jobs/routes.py
 import os
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session
+import re
+import time
+import xml.etree.ElementTree as ET
+
+import requests
+from bs4 import BeautifulSoup
+from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required, current_user
+
 from app import db
 from app.models import JobPost, Application, User, SeekerProfile
-from datetime import datetime
-from bs4 import BeautifulSoup
-import requests
-# --- CRITICAL IMPORT ---
-from app.utils.matcher import calculate_match_score 
+from app.utils.matcher import calculate_match_score
 from app.utils.email_service import send_interview_invite, send_job_offer, send_rejection
 
 jobs = Blueprint('jobs', __name__)
 
-# --- 1. JOB FEED (Seeker) ---
-@jobs.route('/jobs')
+# Bug fix: arbitrary URL strings used to be written into the status column.
+VALID_STATUSES = {'Applied', 'Shortlisted', 'Accepted', 'Rejected'}
+
+
+def job_payload(job, include_description=True):
+    payload = {
+        'id': job.id,
+        'title': job.title,
+        'location': job.location,
+        'job_type': job.job_type,
+        'salary_range': job.salary_range,
+        'experience_required': job.experience_required,
+        'required_skills': job.required_skills or [],
+        'nice_to_have': job.nice_to_have or [],
+        'benefits': job.benefits or [],
+        'responsibilities': job.responsibilities or [],
+        'is_active': job.is_active,
+        'is_seeded': job.is_seeded,
+        'external_link': job.external_link,
+        'posted_at': job.posted_at.isoformat() if job.posted_at else None,
+    }
+    if include_description:
+        payload['description'] = job.description
+    if job.company_name:
+        payload['company_name'] = job.company_name
+    elif job.recruiter and job.recruiter.company_name:
+        payload['company_name'] = job.recruiter.company_name
+    else:
+        payload['company_name'] = 'Company'
+    return payload
+
+
+# ─── 1. JOB FEED (Seeker) ───────────────────────────────────────────────────
+@jobs.route('/api/jobs', methods=['GET'])
 @login_required
 def job_feed():
     if current_user.role != 'seeker':
-        return redirect(url_for('main.recruiter_dashboard'))
-    
-    # Get Query Parameters
+        return jsonify({'error': 'Seekers only.'}), 403
+
     filter_role = request.args.get('role', '').strip()
     filter_location = request.args.get('location', '').strip()
     filter_type = request.args.get('type', '').strip()
 
-    # Start with Base Query (Active Jobs Only)
     query = JobPost.query.filter_by(is_active=True)
 
-    # Apply Filters
     if filter_role:
         query = query.filter(JobPost.title.ilike(f"%{filter_role}%"))
     if filter_location:
@@ -36,150 +68,167 @@ def job_feed():
     if filter_type:
         query = query.filter(JobPost.job_type == filter_type)
 
-    # Sort by Newest First
-    all_jobs = query.order_by(JobPost.posted_at.desc()).all()
-    
-    # Get IDs of jobs user has already applied to
+    page = max(1, request.args.get('page', 1, type=int))
+    per_page = min(50, max(1, request.args.get('per_page', 10, type=int) or 10))
+    total = query.count()
+    pages = max(1, -(-total // per_page))
+    page = min(page, pages)
+    all_jobs = (
+        query.order_by(JobPost.posted_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+
     applied_job_ids = []
     if current_user.seeker_profile:
-        my_apps = Application.query.filter_by(seeker_id=current_user.seeker_profile.id).with_entities(Application.job_id).all()
+        my_apps = Application.query.filter_by(
+            seeker_id=current_user.seeker_profile.id
+        ).with_entities(Application.job_id).all()
         applied_job_ids = [app.job_id for app in my_apps]
 
-    return render_template('seeker/job_feed.html', jobs=all_jobs, applied_ids=applied_job_ids)
+    return jsonify({
+        'jobs': [job_payload(j) for j in all_jobs],
+        'applied_ids': applied_job_ids,
+        'total': total,
+        'page': page,
+        'pages': pages,
+        'per_page': per_page,
+    })
 
-# --- 2. APPLY TO JOB (With Smart Score) ---
-@jobs.route('/apply/<int:job_id>', methods=['POST'])
+
+# ─── 2. APPLY TO JOB (with smart score) ─────────────────────────────────────
+@jobs.route('/api/jobs/<int:job_id>/apply', methods=['POST'])
 @login_required
 def apply_to_job(job_id):
     if current_user.role != 'seeker':
-        flash("Recruiters cannot apply to jobs.", "warning")
-        return redirect(url_for('jobs.job_feed'))
+        return jsonify({'error': 'Recruiters cannot apply to jobs.'}), 403
 
     seeker_profile = current_user.seeker_profile
     if not seeker_profile:
-        flash("Please complete your profile before applying.", "warning")
-        return redirect(url_for('main.setup_profile'))
+        return jsonify({'error': 'Please complete your profile before applying.', 'redirect': '/setup-profile'}), 403
 
-    # Check for duplicate
+    # Bug fix: get_or_404 instead of .get() -> AttributeError on bad ids.
+    job = JobPost.query.get_or_404(job_id)
+    # Bug fix: closed/inactive jobs could still accept applications.
+    if not job.is_active:
+        return jsonify({'error': 'This job is no longer accepting applications.'}), 400
+    if job.external_link:
+        return jsonify({'error': 'This job is hosted externally.', 'external_link': job.external_link}), 400
+
     existing_app = Application.query.filter_by(job_id=job_id, seeker_id=seeker_profile.id).first()
     if existing_app:
-        flash("You have already applied to this job.", "info")
-        return redirect(url_for('jobs.job_feed'))
+        return jsonify({'error': 'You have already applied to this job.', 'application_id': existing_app.id}), 409
 
-    # --- SMART MATCH CALCULATION ---
-    job = JobPost.query.get(job_id)
-    # This line triggered the error before. Now it will work because of the import.
     score = calculate_match_score(seeker_profile.skills, job.required_skills)
-    
-    # Create Application with Score
+
     new_app = Application(
-        job_id=job_id, 
+        job_id=job_id,
         seeker_id=seeker_profile.id,
         status='Applied',
-        match_score=score 
+        match_score=score,
     )
-    
     db.session.add(new_app)
     db.session.commit()
-    
-    flash("Application submitted successfully!", "success")
-    return redirect(url_for('jobs.job_feed'))
 
-# --- 3. ANALYZE FIT ---
-@jobs.route('/analyze-fit/<int:job_id>', methods=['POST'])
-@login_required
-def analyze_fit(job_id):
-    job = JobPost.query.get_or_404(job_id)
-    
-    # Combine description and skills for the AI
-    full_context = job.description
-    if job.required_skills:
-        skills_text = ", ".join(job.required_skills)
-        full_context += f"\n\n### Required Skills:\n{skills_text}"
-        
-    session['prefill_job_description'] = full_context
-    session['analyzing_job_id'] = job.id
-    
-    return redirect(url_for('main.resume_checker'))
+    return jsonify({
+        'application': {
+            'id': new_app.id,
+            'job_id': job_id,
+            'status': new_app.status,
+            'match_score': new_app.match_score,
+        }
+    }), 201
 
-# --- 4. MY APPLICATIONS ---
-@jobs.route('/my-applications')
+
+# ─── 3. MY APPLICATIONS ─────────────────────────────────────────────────────
+@jobs.route('/api/applications/me', methods=['GET'])
 @login_required
 def my_applications():
     if current_user.role != 'seeker':
-        return redirect(url_for('main.recruiter_dashboard'))
-    
+        return jsonify({'error': 'Seekers only.'}), 403
     if not current_user.seeker_profile:
-        return redirect(url_for('main.setup_profile'))
-        
-    my_apps = Application.query.filter_by(seeker_id=current_user.seeker_profile.id)\
-                               .order_by(Application.applied_at.desc()).all()
-                               
-    return render_template('seeker/my_applications.html', applications=my_apps)
+        return jsonify({'needs_setup': True, 'applications': []}), 200
 
-# --- 5. RECRUITER: POST JOB ---
-@jobs.route('/post-job', methods=['GET', 'POST'])
+    my_apps = Application.query.filter_by(
+        seeker_id=current_user.seeker_profile.id
+    ).order_by(Application.applied_at.desc()).all()
+
+    return jsonify({
+        'applications': [
+            {
+                'id': app.id,
+                'status': app.status,
+                'match_score': app.match_score,
+                'applied_at': app.applied_at.isoformat() if app.applied_at else None,
+                'job': job_payload(app.job, include_description=False) if app.job else None,
+            }
+            for app in my_apps
+        ]
+    })
+
+
+# ─── 4. RECRUITER: POST JOB ─────────────────────────────────────────────────
+@jobs.route('/api/recruiter/jobs', methods=['POST'])
 @login_required
 def post_job():
     if current_user.role != 'recruiter':
-        return redirect(url_for('main.home'))
-    
+        return jsonify({'error': 'Recruiters only.'}), 403
     if not current_user.recruiter_profile:
-        return redirect(url_for('main.setup_profile'))
+        return jsonify({'error': 'Complete your company profile first.', 'redirect': '/setup-profile'}), 403
 
-    if request.method == 'POST':
-        try:
-            title = request.form.get('title')
-            location = request.form.get('location')
-            job_type = request.form.get('job_type')
-            salary = request.form.get('salary_range')
-            experience = request.form.get('experience_required')
-            desc = request.form.get('description')
-            
-            def parse_list(data, separator=','):
-                return [x.strip() for x in data.split(separator) if x.strip()]
+    try:
+        data = request.get_json(silent=True) or {}
 
-            resp = parse_list(request.form.get('responsibilities', ''), '\n')
-            
-            # Use getlist for Checkboxes
-            skills = request.form.getlist('required_skills') 
-            
-            nice = parse_list(request.form.get('nice_to_have', ''), ',')
-            benefits = parse_list(request.form.get('benefits', ''), ',')
+        title = (data.get('title') or '').strip()
+        description = (data.get('description') or '').strip()
+        if not title or not description:
+            return jsonify({'error': 'Title and description are required.'}), 400
 
-            new_job = JobPost(
-                recruiter_id=current_user.recruiter_profile.id,
-                title=title, location=location, job_type=job_type,
-                salary_range=salary, experience_required=experience, description=desc,
-                responsibilities=resp, required_skills=skills, nice_to_have=nice, benefits=benefits
-            )
-            
-            db.session.add(new_job)
-            db.session.commit()
-            flash(f"Job '{title}' Posted Successfully!", "success")
-            return redirect(url_for('main.recruiter_dashboard'))
-            
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Error posting job: {str(e)}", "danger")
+        def as_list(value, separator='\n'):
+            if isinstance(value, list):
+                return [str(v).strip() for v in value if str(v).strip()]
+            if not value:
+                return []
+            return [x.strip() for x in str(value).split(separator) if x.strip()]
 
-    return render_template('recruiter/post_job.html')
+        new_job = JobPost(
+            recruiter_id=current_user.recruiter_profile.id,
+            title=title,
+            location=data.get('location'),
+            job_type=data.get('job_type'),
+            salary_range=data.get('salary_range'),
+            experience_required=data.get('experience_required'),
+            description=description,
+            responsibilities=as_list(data.get('responsibilities'), '\n'),
+            required_skills=as_list(data.get('required_skills')),
+            nice_to_have=as_list(data.get('nice_to_have'), ','),
+            benefits=as_list(data.get('benefits'), ','),
+        )
 
-# --- 6. RECRUITER: VIEW APPLICANTS ---
-@jobs.route('/job/<int:job_id>/applicants')
+        db.session.add(new_job)
+        db.session.commit()
+        return jsonify({'job': job_payload(new_job)}), 201
+
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('job posting failed')
+        return jsonify({'error': 'Error posting job. Please try again.'}), 500
+
+
+# ─── 5. RECRUITER: VIEW APPLICANTS ──────────────────────────────────────────
+@jobs.route('/api/recruiter/jobs/<int:job_id>/applicants', methods=['GET'])
 @login_required
 def view_applicants(job_id):
     job = JobPost.query.get_or_404(job_id)
     if not current_user.recruiter_profile or job.recruiter_id != current_user.recruiter_profile.id:
-        flash("Unauthorized access.", "danger")
-        return redirect(url_for('main.recruiter_dashboard'))
+        return jsonify({'error': 'Unauthorized access.'}), 403
 
-    # --- CHANGED: Fetch ALL candidates so we see history ---
     applications = Application.query.filter_by(job_id=job_id).all()
-    
+
     applicants_data = []
     for app in applications:
-        seeker = app.seeker 
+        seeker = app.seeker
         user = seeker.user
         applicants_data.append({
             'id': app.id,
@@ -188,154 +237,549 @@ def view_applicants(job_id):
             'phone': seeker.phone,
             'experience': seeker.experience_years,
             'user_id': user.id,
-            'skills': seeker.skills,
+            'skills': seeker.skills or [],
             'status': app.status,
             'match_score': app.match_score,
-            'applied_at': app.applied_at.strftime('%Y-%m-%d'),
-            'resume': seeker.resume_file
+            'applied_at': app.applied_at.strftime('%Y-%m-%d') if app.applied_at else None,
+            'resume': seeker.resume_file,
         })
 
-    # Sort: Pending first, then Closed (so active ones are at the top)
-    # We use a simple lambda: 0 if active, 1 if closed
+    # Pending first, closed (Accepted/Rejected) last
     applicants_data.sort(key=lambda x: 1 if x['status'] in ['Accepted', 'Rejected'] else 0)
 
-    return render_template('recruiter/applicants.html', job=job, applicants=applicants_data)
+    return jsonify({'job': job_payload(job, include_description=False), 'applicants': applicants_data})
 
 
-# --- 7. RECRUITER: UPDATE STATUS ---
-@jobs.route('/application/<int:app_id>/update/<string:status>', methods=['POST'])
+# ─── 6. RECRUITER: UPDATE STATUS ────────────────────────────────────────────
+@jobs.route('/api/applications/<int:app_id>/status', methods=['POST'])
 @login_required
-def update_status(app_id, status):
+def update_status(app_id):
+    data = request.get_json(silent=True) or {}
+    status = (data.get('status') or '').strip()
+
+    # Bug fix: only known statuses may be written.
+    if status not in VALID_STATUSES:
+        return jsonify({'error': f'Invalid status. Allowed: {sorted(VALID_STATUSES)}'}), 400
+
     app_record = Application.query.get_or_404(app_id)
     job = app_record.job
-    
-    # Security Check
+
     if not current_user.recruiter_profile or job.recruiter_id != current_user.recruiter_profile.id:
-        flash("Unauthorized.", "danger")
-        return redirect(url_for('main.recruiter_dashboard'))
-    
-    # 1. Update Status
+        return jsonify({'error': 'Unauthorized.'}), 403
+
     app_record.status = status
     db.session.commit()
-    
-    # 2. Trigger Email Logic
+
     candidate = app_record.seeker.user
     job_title = job.title
     recruiter_email = current_user.email
-    
-    success = True
-    msg = ""
 
+    email_ok, email_msg = True, ''
     if status == 'Shortlisted':
-        # Send Interview Invite
-        success, msg = send_interview_invite(candidate.email, candidate.name, job_title, recruiter_email)
-        if success:
-            flash(f"Candidate shortlisted! Invite sent to {candidate.email}", "success")
-        else:
-            flash(f"Candidate shortlisted, but email failed: {msg}", "warning")
-        
+        email_ok, email_msg = send_interview_invite(candidate.email, candidate.name, job_title, recruiter_email)
     elif status == 'Accepted':
-        # Send Offer
-        success, msg = send_job_offer(candidate.email, candidate.name, job_title)
-        if success:
-            flash(f"Candidate Hired! Offer sent to {candidate.email}.", "success")
-        else:
-            flash(f"Candidate Hired, but email failed: {msg}", "warning")
-        
+        email_ok, email_msg = send_job_offer(candidate.email, candidate.name, job_title)
     elif status == 'Rejected':
-        # Send Rejection
-        success, msg = send_rejection(candidate.email, candidate.name, job_title)
-        if success:
-            flash(f"Candidate rejected. Notification sent.", "info")
-        else:
-            flash(f"Candidate rejected, but email failed: {msg}", "warning")
-    
-    return redirect(url_for('jobs.view_applicants', job_id=job.id))
+        email_ok, email_msg = send_rejection(candidate.email, candidate.name, job_title)
 
-@jobs.route('/live-jobs')
+    return jsonify({
+        'application': {'id': app_record.id, 'status': app_record.status},
+        'email_sent': email_ok,
+        'email_error': None if email_ok else email_msg,
+    })
+
+
+# ─── 7. LIVE (EXTERNAL) JOBS ────────────────────────────────────────────────
+_FEED_CACHE = {}
+_FEED_TTL_SECONDS = 600
+
+
+def _cached(key, fetcher):
+    hit = _FEED_CACHE.get(key)
+    if hit and time.time() - hit[0] < _FEED_TTL_SECONDS:
+        return hit[1]
+    data = fetcher()
+    _FEED_CACHE[key] = (time.time(), data)
+    return data
+
+
+@jobs.route('/api/live-jobs', methods=['GET'])
 @login_required
 def live_jobs():
     if current_user.role != 'seeker':
-        return redirect(url_for('main.recruiter_dashboard'))
-    
-    # Get the requested feed source (default to 'remote')
+        return jsonify({'error': 'Seekers only.'}), 403
+
     source = request.args.get('feed', 'india')
-    
-    # Fetch based on selection
     if source == 'remote':
         raw_jobs = fetch_remotive()
-    else: 
+    elif source == 'carrerlift':
+        raw_jobs = fetch_carrerlift()
+    elif source == 'aicte-govt':
+        raw_jobs = fetch_aicte('government')
+    elif source == 'aicte-private':
+        raw_jobs = fetch_aicte('private')
+    elif source == 'tech':
+        raw_jobs = fetch_remoteok() + fetch_jobicy()
+    elif source == 'rss':
+        raw_jobs = fetch_rss('weworkremotely') + fetch_rss('hn') + fetch_rss('python')
+    elif source == 'usa':
+        raw_jobs = fetch_usajobs()
+    elif source == 'europe':
+        raw_jobs = fetch_arbeitnow()
+    else:
         raw_jobs = fetch_indian_jobs()
         source = 'india'
-    
-    # Clean HTML Descriptions into pure text for the Groq AI
+
     for job in raw_jobs:
         if job.get('description'):
-            soup = BeautifulSoup(job['description'], "html.parser")
+            soup = BeautifulSoup(job['description'], 'html.parser')
             job['clean_description'] = soup.get_text(separator=' ')
         else:
-            job['clean_description'] = "No description available."
-            
-    return render_template('seeker/live_jobs.html', jobs=raw_jobs, current_feed=source)
-    
-    
-@jobs.route('/analyze-external-fit', methods=['POST'])
-@login_required
-def analyze_external_fit():
-    # External jobs don't have an ID in our DB, so we get the text directly from the form
-    job_desc = request.form.get('job_description')
-    
-    if job_desc:
-        session['prefill_job_description'] = job_desc
-        session['analyzing_job_id'] = 'external'
-    
-    return redirect(url_for('main.resume_checker'))
+            job['clean_description'] = 'No description available.'
+
+    return jsonify({'jobs': raw_jobs, 'feed': source})
 
 
 def fetch_remotive():
     try:
-        url = "https://remotive.com/api/remote-jobs?category=software-dev&limit=20"
+        url = 'https://remotive.com/api/remote-jobs?category=software-dev&limit=20'
         resp = requests.get(url, timeout=5).json()
-        jobs = []
+        result = []
         for j in resp.get('jobs', []):
-            jobs.append({
+            result.append({
                 'title': j.get('title'),
                 'company': j.get('company_name'),
                 'location': j.get('candidate_required_location'),
                 'url': j.get('url'),
-                'description': j.get('description'), # Raw HTML for Analyze Fit
+                'description': j.get('description'),
                 'logo': j.get('company_logo'),
-                'source': 'Remotive'
+                'source': 'Remotive',
             })
-        return jobs
-    except Exception as e: 
-        print(f"Remotive Error: {e}")
+        return result
+    except Exception as e:
+        print(f'Remotive Error: {e}')
         return []
 
 
-    
 def fetch_indian_jobs():
     try:
-        # Put your real Adzuna keys here!
-        APP_ID = os.environ.get("APP_ID")
-        APP_KEY = os.environ.get("APP_KEY")
-        
-        # We target 'in' (India), category 'it-jobs', keyword 'software'
-        url = f"https://api.adzuna.com/v1/api/jobs/in/search/1?app_id={APP_ID}&app_key={APP_KEY}&results_per_page=15&what=software&category=it-jobs&content-type=application/json"
-        
+        app_id = os.environ.get('APP_ID')
+        app_key = os.environ.get('APP_KEY')
+        if not app_id or not app_key:
+            return []
+        url = (
+            f'https://api.adzuna.com/v1/api/jobs/in/search/1'
+            f'?app_id={app_id}&app_key={app_key}&results_per_page=15'
+            f'&what=software&category=it-jobs&content-type=application/json'
+        )
         resp = requests.get(url, timeout=5).json()
-        jobs = []
+        result = []
         for j in resp.get('results', []):
-            jobs.append({
+            result.append({
                 'title': j.get('title'),
-                'company': j.get('company', {}).get('display_name'),
-                'location': j.get('location', {}).get('display_name'), # E.g., Bangalore, Pune, Ahmedabad!
+                'company': (j.get('company') or {}).get('display_name'),
+                'location': (j.get('location') or {}).get('display_name'),
                 'url': j.get('redirect_url'),
                 'description': j.get('description'),
-                'logo': None, 
-                'source': 'Adzuna (India)'
+                'logo': None,
+                'source': 'Adzuna (India)',
+            })
+        return result
+    except Exception as e:
+        print(f'Adzuna Error: {e}')
+        return []
+
+
+def fetch_carrerlift():
+    def _scrape():
+        jobs = []
+        seen = set()
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+                          'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36'
+        }
+        for page in (1, 2):
+            try:
+                params = {'page': page} if page > 1 else {}
+                resp = requests.get(
+                    'https://www.carrerlift.in/jobs',
+                    params=params,
+                    headers=headers,
+                    timeout=8,
+                )
+                resp.raise_for_status()
+            except Exception as e:
+                print(f'Carrerlift Error: {e}')
+                continue
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            for h2 in soup.find_all('h2'):
+                anchor = h2.find('a', href=re.compile(r'^/jobs/'))
+                if not anchor or anchor['href'] in seen:
+                    continue
+                card = h2.find_parent('div', class_='rounded-xl')
+                if not card:
+                    continue
+                seen.add(anchor['href'])
+                meta = {}
+                for dt in card.find_all('dt'):
+                    dd = dt.find_next_sibling('dd')
+                    if dd:
+                        meta[dt.get_text(strip=True)] = dd.get_text(' ', strip=True)
+                company_el = card.find('p', class_='truncate')
+                desc_el = card.find('p', class_='line-clamp-2')
+                external = card.find('a', target='_blank', href=re.compile(r'^https?://'))
+                jobs.append({
+                    'title': anchor.get_text(' ', strip=True),
+                    'company': company_el.get_text(strip=True) if company_el else None,
+                    'location': meta.get('Location'),
+                    'stipend': meta.get('Stipend'),
+                    'url': external['href'] if external else 'https://www.carrerlift.in' + anchor['href'],
+                    'description': desc_el.get_text(' ', strip=True) if desc_el else '',
+                    'logo': None,
+                    'source': 'Carrerlift',
+                })
+        return jobs
+    return _cached('carrerlift', _scrape)
+
+
+def fetch_aicte(section):
+    def _fetch():
+        categories = {'government': 'Government,Army,TULIP', 'private': 'Corporate,MSME,NGO'}[section]
+        label = {'government': 'AICTE (Govt)', 'private': 'AICTE (Private)'}[section]
+        try:
+            resp = requests.get(
+                'https://internship.aicte-india.org/api/v1/catalogue/internships',
+                params={'categories': categories, 'pageSize': 60},
+                headers={'User-Agent': 'Mozilla/5.0'},
+                timeout=8,
+            )
+            resp.raise_for_status()
+            items = resp.json().get('items', [])
+        except Exception as e:
+            print(f'AICTE Error: {e}')
+            return []
+        base = 'https://internship.aicte-india.org'
+        jobs = []
+        for item in items:
+            uid = item.get('uid')
+            if not uid:
+                continue
+            logo = item.get('logo')
+            jobs.append({
+                'title': item.get('title'),
+                'company': item.get('organization'),
+                'location': item.get('location'),
+                'stipend': item.get('stipendDisplay') if item.get('stipend') else None,
+                'url': f'{base}/internships/{uid}',
+                'description': item.get('description') or '',
+                'logo': f'{base}{logo}' if logo and logo.startswith('/') else logo,
+                'source': label,
             })
         return jobs
-    except Exception as e:
-        print(f"Adzuna Error: {e}")
+    return _cached(f'aicte:{section}', _fetch)
+
+
+def fetch_greenhouse(board):
+    def _fetch():
+        try:
+            resp = requests.get(
+                f'https://boards-api.greenhouse.io/v1/boards/{board}/jobs',
+                timeout=8,
+            )
+            resp.raise_for_status()
+            items = resp.json().get('jobs', [])
+        except Exception as e:
+            print(f'Greenhouse {board} Error: {e}')
+            return []
+        jobs = []
+        for item in items:
+            url = item.get('absolute_url')
+            if not url:
+                continue
+            jobs.append({
+                'title': item.get('title'),
+                'company': item.get('company_name') or board.replace('-', ' ').title(),
+                'location': (item.get('location') or {}).get('name'),
+                'stipend': None,
+                'url': url,
+                'description': '',
+                'logo': None,
+                'source': f'Greenhouse ({board})',
+            })
+        return jobs
+    return _cached(f'gh:{board}', _fetch)
+
+
+def fetch_lever(company):
+    def _fetch():
+        try:
+            resp = requests.get(
+                f'https://api.lever.co/v0/postings/{company}?mode=json',
+                timeout=8,
+            )
+            resp.raise_for_status()
+            items = resp.json()
+        except Exception as e:
+            print(f'Lever {company} Error: {e}')
+            return []
+        jobs = []
+        for item in items:
+            url = item.get('hostedUrl')
+            if not url:
+                continue
+            cats = item.get('categories') or {}
+            jobs.append({
+                'title': item.get('text'),
+                'company': company.title(),
+                'location': cats.get('location'),
+                'stipend': None,
+                'url': url,
+                'description': item.get('descriptionPlain') or '',
+                'logo': None,
+                'source': f'Lever ({company})',
+            })
+        return jobs
+    return _cached(f'lever:{company}', _fetch)
+
+
+ASHBY_DISPLAY = {
+    'openai': 'OpenAI', 'notion': 'Notion', 'ramp': 'Ramp', 'cursor': 'Cursor',
+    'cohere': 'Cohere', 'linear': 'Linear', 'supabase': 'Supabase',
+    'modal': 'Modal', 'anyscale': 'Anyscale', 'runway': 'Runway',
+}
+
+
+def fetch_ashby(board):
+    def _fetch():
+        try:
+            resp = requests.get(
+                f'https://api.ashbyhq.com/posting-api/job-board/{board}',
+                timeout=8,
+            )
+            resp.raise_for_status()
+            items = resp.json().get('jobs', [])
+        except Exception as e:
+            print(f'Ashby {board} Error: {e}')
+            return []
+        jobs = []
+        for item in items:
+            url = item.get('jobUrl')
+            if not url:
+                continue
+            jobs.append({
+                'title': (item.get('title') or '').strip() or None,
+                'company': ASHBY_DISPLAY.get(board, board.title()),
+                'location': item.get('location'),
+                'stipend': None,
+                'url': url,
+                'description': item.get('descriptionHtml') or '',
+                'logo': None,
+                'source': f'Ashby ({board})',
+            })
+        return jobs
+    return _cached(f'ashby:{board}', _fetch)
+
+
+def fetch_remoteok():
+    def _fetch():
+        try:
+            resp = requests.get(
+                'https://remoteok.com/api',
+                headers={'User-Agent': 'Mozilla/5.0'},
+                timeout=8,
+            )
+            resp.raise_for_status()
+            items = resp.json()
+        except Exception as e:
+            print(f'RemoteOK Error: {e}')
+            return []
+        jobs = []
+        for item in items:
+            if not isinstance(item, dict) or not item.get('position'):
+                continue
+            salary_min = item.get('salary_min')
+            salary_max = item.get('salary_max')
+            stipend = f'${salary_min:,} - ${salary_max:,}' if salary_min and salary_max else None
+            jobs.append({
+                'title': item.get('position'),
+                'company': item.get('company'),
+                'location': item.get('location') or 'Remote',
+                'stipend': stipend,
+                'url': item.get('url'),
+                'description': item.get('description') or '',
+                'logo': item.get('company_logo') or None,
+                'source': 'RemoteOK',
+            })
+        return jobs
+    return _cached('remoteok', _fetch)
+
+
+def fetch_jobicy():
+    def _fetch():
+        try:
+            resp = requests.get(
+                'https://jobicy.com/api/v2/remote-jobs?count=25',
+                timeout=8,
+            )
+            resp.raise_for_status()
+            items = resp.json().get('jobs', [])
+        except Exception as e:
+            print(f'Jobicy Error: {e}')
+            return []
+        jobs = []
+        for item in items:
+            url = item.get('url')
+            if not url:
+                continue
+            jobs.append({
+                'title': item.get('jobTitle'),
+                'company': item.get('companyName'),
+                'location': item.get('jobGeo') or 'Remote',
+                'stipend': None,
+                'url': url,
+                'description': item.get('jobExcerpt') or '',
+                'logo': item.get('companyLogo') or None,
+                'source': 'Jobicy',
+            })
+        return jobs
+    return _cached('jobicy', _fetch)
+
+
+RSS_FEEDS = {
+    'weworkremotely': {
+        'url': 'https://weworkremotely.com/categories/remote-programming-jobs.rss',
+        'label': 'We Work Remotely',
+    },
+    'hn': {
+        'url': 'https://hnrss.org/jobs',
+        'label': 'Hacker News Jobs',
+    },
+    'python': {
+        'url': 'https://www.python.org/jobs/feed/rss/',
+        'label': 'Python.org Jobs',
+    },
+}
+
+
+def fetch_rss(source):
+    feed = RSS_FEEDS.get(source)
+    if not feed:
         return []
+
+    def _fetch():
+        try:
+            resp = requests.get(
+                feed['url'],
+                headers={'User-Agent': 'Mozilla/5.0'},
+                timeout=8,
+            )
+            resp.raise_for_status()
+            root = ET.fromstring(resp.content)
+        except Exception as e:
+            print(f'RSS {source} Error: {e}')
+            return []
+        jobs = []
+        for item in root.iter('item'):
+            title = (item.findtext('title') or '').strip()
+            url = (item.findtext('link') or '').strip()
+            if not title or not url:
+                continue
+            company = feed['label']
+            if ' - ' in title:
+                name, role = title.rsplit(' - ', 1)
+            elif ': ' in title:
+                name, role = title.split(': ', 1)
+            else:
+                name, role = '', title
+            if name.strip() and len(name) < 60:
+                company, title = name.strip(), role.strip()
+            jobs.append({
+                'title': title[:100],
+                'company': company[:100],
+                'location': 'Remote',
+                'stipend': None,
+                'url': url,
+                'description': item.findtext('description') or '',
+                'logo': None,
+                'source': feed['label'],
+            })
+        return jobs
+    return _cached(f'rss:{source}', _fetch)
+
+
+def fetch_usajobs(keyword='python'):
+    key = os.environ.get('USAJOBS_KEY')
+    if not key:
+        return []
+
+    def _fetch():
+        try:
+            resp = requests.get(
+                'https://data.usajobs.gov/api/search',
+                params={
+                    'Keyword': keyword,
+                    'LocationName': 'United States',
+                    'ResultsPerPage': 25,
+                },
+                headers={
+                    'Authorization-Key': key,
+                    'User-Agent': os.environ.get('USAJOBS_USER_AGENT') or 'skillmap',
+                },
+                timeout=8,
+            )
+            resp.raise_for_status()
+            items = resp.json().get('SearchResult', {}).get('SearchResultItems', [])
+        except Exception as e:
+            print(f'USAJOBS Error: {e}')
+            return []
+        jobs = []
+        for item in items:
+            d = item.get('MatchedObjectDescriptor') or {}
+            url = d.get('PositionURI')
+            if not url:
+                continue
+            location = (d.get('PositionLocationDisplay') or 'United States').split(';')[0]
+            jobs.append({
+                'title': d.get('PositionTitle'),
+                'company': d.get('OrganizationName') or 'US Federal Government',
+                'location': location[:100],
+                'stipend': None,
+                'url': url,
+                'description': d.get('QualificationSummary') or '',
+                'logo': None,
+                'source': 'USAJOBS',
+            })
+        return jobs
+    return _cached(f'usajobs:{keyword}', _fetch)
+
+
+def fetch_arbeitnow():
+    def _fetch():
+        try:
+            resp = requests.get(
+                'https://www.arbeitnow.com/api/job-board-api',
+                headers={'User-Agent': 'Mozilla/5.0'},
+                timeout=8,
+            )
+            resp.raise_for_status()
+            items = resp.json().get('data', [])
+        except Exception as e:
+            print(f'Arbeitnow Error: {e}')
+            return []
+        jobs = []
+        for item in items:
+            url = item.get('url')
+            if not url:
+                continue
+            jobs.append({
+                'title': item.get('title'),
+                'company': item.get('company_name'),
+                'location': 'Remote' if item.get('remote') else item.get('location') or 'Germany',
+                'stipend': None,
+                'url': url,
+                'description': item.get('description') or '',
+                'logo': None,
+                'source': 'Arbeitnow (Germany)',
+            })
+        return jobs
+    return _cached('arbeitnow', _fetch)

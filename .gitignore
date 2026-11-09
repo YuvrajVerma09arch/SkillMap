@@ -4,3 +4,8 @@ instance/
 .env
 app/static/uploads/*
 CHECKPOINT.txt
+node_modules/
+.DS_Store
+**/.DS_Store
+dist/
+*.log

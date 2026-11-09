@@ -35,22 +35,14 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     
-    # Helper to check if user has enough credits
     def has_credits(self, cost=1):
-        if self.tier == 'Enterprise': # Enterprise gets unlimited
-            return True
         return self.credits >= cost
 
-    # Helper to deduct credits
     def deduct_credits(self, cost=1):
-        if self.tier == 'Enterprise':
-            return True # Enterprise users get a free pass!
-            
         if self.credits >= cost:
             self.credits -= cost
             db.session.commit()
             return True
-            
         return False
 
 # 2. SEEKER PROFILES (Unchanged)
@@ -97,7 +89,8 @@ class JobPost(db.Model):
     __tablename__ = 'job_posts'
     id = db.Column(db.Integer, primary_key=True)
     recruiter_id = db.Column(db.Integer, db.ForeignKey('recruiter_profiles.id'), nullable=True) # Nullable for Seeded Jobs
-    
+    company_name = db.Column(db.String(100))
+
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(100))
