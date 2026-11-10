@@ -1,343 +1,210 @@
-import { useEffect, useRef, useState } from 'react'
-import { useToast } from '../context/ToastContext'
+import { useEffect, useState } from 'react'
 import { post } from '../lib/api'
+import CompanyCombobox from '../components/prep/CompanyCombobox'
+import PrepResult from '../components/prep/PrepResult'
 
-// Company Prep Pack — free, login-gated. Company + role in, structured pack out:
-// round breakdown, top questions with attribution, 4-week study plan, salary band.
+// Company Prep Pack — free, login-gated. Company (optional) + role in,
+// structured pack out: round breakdown, 12 sourced questions, 4-week study
+// plan, salary bands. No company = role-only pack across the whole corpus.
+
+const ROLE_CHIPS = [
+  'Software Engineer',
+  'Frontend Engineer',
+  'Backend Engineer',
+  'Full Stack Developer',
+  'Data Analyst',
+  'Data Scientist',
+  'Machine Learning Engineer',
+  'Product Manager',
+  'DevOps Engineer',
+  'QA Engineer',
+]
+
+// First build for an uncached pack takes ~68s (embedding model + Groq);
+// cached packs return in ~1.2s. Stage copy tracks elapsed seconds.
+const STAGES = [
+  [3, 'Checking pack cache'],
+  [14, 'Retrieving corpus matches'],
+  [35, 'Synthesizing rounds & questions'],
+  [55, 'Building the 4-week study plan'],
+  [Infinity, 'Finalizing pack'],
+]
+
 export default function Prep() {
-  const { toast } = useToast()
-
-  const [query, setQuery] = useState('')
-  const [suggestions, setSuggestions] = useState([])
-  const [showSug, setShowSug] = useState(false)
   const [company, setCompany] = useState(null) // {slug, name, has_rounds, question_count}
   const [role, setRole] = useState('')
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(null)   // {company, role, pack, salary, cached}
+  const [elapsed, setElapsed] = useState(0)
+  const [result, setResult] = useState(null) // {company, role, mode, pack, salary, cached}
   const [error, setError] = useState('')
 
-  const debounceRef = useRef(null)
-  const boxRef = useRef(null)
-
-  // Debounced typeahead against /api/prep/companies
+  // Elapsed-seconds ticker while a pack is generating.
   useEffect(() => {
-    if (company) return
-    clearTimeout(debounceRef.current)
-    const q = query.trim()
-    if (q.length < 2) {
-      setSuggestions([])
-      return
-    }
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const data = await post('/api/prep/companies', { query: q })
-        setSuggestions(data.companies || [])
-        setShowSug(true)
-      } catch {
-        setSuggestions([])
-      }
-    }, 300)
-    return () => clearTimeout(debounceRef.current)
-  }, [query, company])
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const h = (e) => {
-      if (boxRef.current && !boxRef.current.contains(e.target)) setShowSug(false)
-    }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
-
-  const pick = (c) => {
-    setCompany(c)
-    setQuery(c.name)
-    setShowSug(false)
-    setSuggestions([])
-  }
-
-  const clearCompany = () => {
-    setCompany(null)
-    setQuery('')
-    setResult(null)
-  }
+    if (!loading) return undefined
+    const t = setInterval(() => setElapsed((e) => e + 1), 1000)
+    return () => clearInterval(t)
+  }, [loading])
 
   const generate = async (e) => {
     e.preventDefault()
-    setError('')
-    if (!role.trim()) {
-      toast('Enter the role you are preparing for.', 'error')
+    const r = role.trim()
+    if (!r) {
+      setError('Pick a role to prep for.')
       return
     }
-    if (!company && query.trim()) {
-      toast('No match in our list — generating a role-based pack instead.', 'success')
-    }
-    setLoading(true)
+    setError('')
     setResult(null)
+    setElapsed(0)
+    setLoading(true)
     try {
       const data = await post('/api/prep/generate', {
         company_slug: company ? company.slug : '',
-        role: role.trim(),
+        role: r,
       })
       setResult(data)
-      toast(data.cached ? 'Loaded your saved pack.' : 'Prep pack generated.')
     } catch (err) {
-      setError(err.message || 'Generation failed. Please try again.')
+      setError(
+        err.status === 429
+          ? 'Rate limited — wait a few seconds and try again.'
+          : err.message || 'Pack generation failed. Try again.'
+      )
     } finally {
       setLoading(false)
     }
   }
 
-  const fmtMoney = (n, currency) => {
-    if (n == null) return '—'
-    try {
-      return new Intl.NumberFormat(undefined, {
-        style: 'currency',
-        currency: currency || 'USD',
-        maximumFractionDigits: 0,
-        notation: n >= 100000 ? 'compact' : 'standard',
-      }).format(n)
-    } catch {
-      return `${n} ${currency || ''}`.trim()
-    }
+  const reset = () => {
+    setResult(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const pack = result?.pack
-  const salary = result?.salary
+  const stage = (STAGES.find(([sec]) => elapsed < sec) || STAGES[STAGES.length - 1])[1]
+  const progress = Math.min(96, (elapsed / 70) * 100)
+  const mmss = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`
+  const roleLower = role.trim().toLowerCase()
 
   return (
-    <div className="container animate-fade-up" style={{ paddingBottom: 64 }}>
-      <div style={{ maxWidth: 860, margin: '0 auto' }}>
-        <span className="label-signal">FREE · NO CREDITS</span>
-        <h1 style={{ margin: '8px 0 6px' }}>Company Prep Pack</h1>
-        <p style={{ color: 'var(--muted)', marginTop: 0 }}>
-          Pick a company and a role — get the interview round structure, the top
-          questions candidates actually face (with sources), a 4-week study plan,
-          and a market salary band. <strong>Company not in the list?</strong> Just
-          fill the role and generate anyway — you'll get a role-based pack.
+    <div className="prep-page">
+      <div className="animate-fade-up" style={{ marginBottom: 32 }}>
+        <div className="label-signal" style={{ marginBottom: 8 }}>
+          Prep // Free
+        </div>
+        <h1 className="display" style={{ fontSize: 'clamp(24px,3vw,40px)', color: 'var(--chalk)' }}>
+          Company Prep Pack
+        </h1>
+        <p style={{ fontSize: 13, color: 'var(--chalk-3)', marginTop: 8, maxWidth: 640 }}>
+          Round breakdown, 12 sourced questions, a 4-week study plan and live salary bands —
+          built from 432 companies' real interview data. No credits, no card.
         </p>
+      </div>
 
-        {/* ── Input form ─────────────────────────────────────────────── */}
-        <form className="card" onSubmit={generate} style={{ marginTop: 18 }}>
-          <div ref={boxRef} style={{ position: 'relative' }}>
-            <label className="label-signal" htmlFor="prep-company">Company</label>
-            {company ? (
-              <div
-                className="input-field"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <span>
-                  {company.name}{' '}
-                  <small style={{ color: 'var(--muted)' }}>
-                    {company.question_count} questions
-                    {company.has_rounds ? ' · round info' : ''}
-                  </small>
-                </span>
+      <form
+        className="card prep-form animate-fade-up"
+        style={{ animationDelay: '0.05s' }}
+        onSubmit={generate}
+        aria-busy={loading}
+      >
+        <div className="prep-field">
+          <label className="prep-label" htmlFor="prep-company">
+            Company <span>— optional</span>
+          </label>
+          <CompanyCombobox value={company} onChange={setCompany} disabled={loading} />
+          <p className="prep-help">Leave blank to build a role-only pack across the whole corpus.</p>
+        </div>
+
+        <div className="prep-field">
+          <label className="prep-label" htmlFor="prep-role">
+            Role <span>— required</span>
+          </label>
+          <input
+            id="prep-role"
+            type="text"
+            className="input-field"
+            disabled={loading}
+            placeholder="e.g. Software Engineer"
+            value={role}
+            maxLength={80}
+            onChange={(e) => setRole(e.target.value)}
+          />
+          <div className="prep-chips" role="group" aria-label="Quick-pick roles">
+            {ROLE_CHIPS.map((r) => {
+              const selected = roleLower === r.toLowerCase()
+              return (
                 <button
                   type="button"
-                  onClick={clearCompany}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}
-                  aria-label="Change company"
+                  key={r}
+                  disabled={loading}
+                  aria-pressed={selected}
+                  className={`skill-chip${selected ? ' selected' : ''}`}
+                  onClick={() => setRole(r)}
                 >
-                  ✕
+                  {r}
                 </button>
-              </div>
-            ) : (
-              <>
-                <input
-                  id="prep-company"
-                  className="input-field"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onFocus={() => suggestions.length && setShowSug(true)}
-                  placeholder="e.g. Amazon, Google, TCS…"
-                  autoComplete="off"
-                />
-                {showSug && suggestions.length > 0 && (
-                  <ul
-                    style={{
-                      position: 'absolute', zIndex: 20, top: '100%', left: 0, right: 0,
-                      margin: '4px 0 0', padding: 6, listStyle: 'none',
-                      background: 'var(--bg, #0d1117)', border: '1px solid var(--border, #30363d)',
-                      borderRadius: 8, maxHeight: 260, overflowY: 'auto',
-                    }}
-                  >
-                    {suggestions.map((c) => (
-                      <li key={c.slug}>
-                        <button
-                          type="button"
-                          onClick={() => pick(c)}
-                          style={{
-                            display: 'flex', width: '100%', justifyContent: 'space-between',
-                            gap: 10, padding: '8px 10px', cursor: 'pointer',
-                            background: 'none', border: 'none', color: 'inherit',
-                            borderRadius: 6, textAlign: 'left',
-                          }}
-                        >
-                          <span>{c.name}</span>
-                          <small style={{ color: 'var(--muted)', whiteSpace: 'nowrap' }}>
-                            {c.question_count} Qs{c.has_rounds ? ' · rounds ✓' : ''}
-                          </small>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </>
-            )}
+              )
+            })}
           </div>
+        </div>
 
-          <div style={{ marginTop: 14 }}>
-            <label className="label-signal" htmlFor="prep-role">Target role</label>
-            <input
-              id="prep-role"
-              className="input-field"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              placeholder="e.g. Software Engineer, Data Analyst…"
-            />
-          </div>
+        <p className="prep-hint">
+          <span aria-hidden="true">&gt;</span> {company ? company.name : 'any company'}
+          {' × '}
+          {role.trim() || '…'} →{' '}
+          <strong>{company ? 'company pack' : 'role pack · whole corpus'}</strong>
+        </p>
 
-          <button className="btn-signal" type="submit" disabled={loading} style={{ marginTop: 16 }}>
-            {loading ? 'Building your pack…' : 'Generate Prep Pack'}
-          </button>
-
-          {loading && (
-            <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 0 }}>
-              First pack for a company takes ~10 seconds (we research + cite sources).
-              The same pack is cached afterwards, so it loads instantly next time.
-            </p>
-          )}
-          {error && <p style={{ color: '#f85149' }}>{error}</p>}
-        </form>
-
-        {/* ── Result ─────────────────────────────────────────────────── */}
-        {pack && result && (
-          <div className="animate-fade-up" style={{ marginTop: 26 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-              <h2 style={{ margin: 0 }}>
-                {result.company ? `${result.company} · ` : ''}{result.role}
-              </h2>
-              {result.mode === 'role' && (
-                <span className="label-signal" style={{ opacity: 0.8 }}>role-based pack</span>
-              )}
-              {result.cached && (
-                <span className="label-signal" style={{ opacity: 0.8 }}>saved pack</span>
-              )}
-            </div>
-
-            {/* Salary band */}
-            {salary && (
-              <div className="card" style={{ marginTop: 12 }}>
-                <span className="label-signal">Market salary band</span>
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
-                  {Object.entries(salary).map(([k, b]) => (
-                    <div key={k} className="job-card" style={{ flex: '1 1 220px', margin: 0 }}>
-                      <strong>{k.toUpperCase()}</strong>
-                      <div style={{ fontSize: 20, margin: '4px 0' }}>
-                        {fmtMoney(b.min, b.currency)} – {fmtMoney(b.max, b.currency)}
-                      </div>
-                      <small style={{ color: 'var(--muted)' }}>
-                        from {b.sample} live listings
-                      </small>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Rounds */}
-            {Array.isArray(pack.rounds) && pack.rounds.length > 0 && (
-              <div className="card" style={{ marginTop: 14 }}>
-                <span className="label-signal">Interview rounds</span>
-                <ol style={{ paddingLeft: 20, marginTop: 8 }}>
-                  {pack.rounds.map((r, i) => (
-                    <li key={i} style={{ marginBottom: 8 }}>
-                      <strong>{r.name}</strong>
-                      {r.focus && <> — {r.focus}</>}
-                      {r.tips && (
-                        <div style={{ color: 'var(--muted)', fontSize: 13 }}>💡 {r.tips}</div>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )}
-
-            {/* Questions */}
-            {Array.isArray(pack.questions) && pack.questions.length > 0 && (
-              <div className="card" style={{ marginTop: 14 }}>
-                <span className="label-signal">Top {pack.questions.length} likely questions</span>
-                <ol style={{ paddingLeft: 20, marginTop: 8 }}>
-                  {pack.questions.map((q, i) => (
-                    <li key={i} style={{ marginBottom: 10 }}>
-                      <span>{q.question}</span>{' '}
-                      {q.source === 'corpus' && q.source_url ? (
-                        <a
-                          href={q.source_url}
-                          target="_blank"
-                          rel="noreferrer noopener"
-                          style={{ fontSize: 12, whiteSpace: 'nowrap' }}
-                        >
-                          [source ↗]
-                        </a>
-                      ) : (
-                        <span style={{ fontSize: 12, color: 'var(--muted)' }}>[likely]</span>
-                      )}
-                      {q.category && (
-                        <span style={{ fontSize: 12, color: 'var(--muted)' }}> · {q.category}</span>
-                      )}
-                      {q.why && (
-                        <div style={{ color: 'var(--muted)', fontSize: 13 }}>{q.why}</div>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-                <p style={{ color: 'var(--muted)', fontSize: 12, marginBottom: 0 }}>
-                  <strong>source ↗</strong> = question verified in our company question
-                  corpus (LeetCode frequency data / InterviewBit).{' '}
-                  <strong>[likely]</strong> = synthesized from this company's published
-                  interview process.
-                </p>
-              </div>
-            )}
-
-            {/* Study plan */}
-            {Array.isArray(pack.study_plan) && pack.study_plan.length > 0 && (
-              <div className="card" style={{ marginTop: 14 }}>
-                <span className="label-signal">4-week study plan</span>
-                <div style={{ display: 'grid', gap: 10, marginTop: 8 }}>
-                  {pack.study_plan.map((w, i) => (
-                    <div key={i} className="job-card" style={{ margin: 0 }}>
-                      <strong>{w.week || `Week ${i + 1}`}</strong>
-                      {w.focus && <> — {w.focus}</>}
-                      {Array.isArray(w.actions) && (
-                        <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
-                          {w.actions.map((a, j) => (
-                            <li key={j} style={{ fontSize: 14 }}>{a}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Tips */}
-            {Array.isArray(pack.tips) && pack.tips.length > 0 && (
-              <div className="card" style={{ marginTop: 14 }}>
-                <span className="label-signal">Interview tips</span>
-                <ul style={{ paddingLeft: 20, marginTop: 8 }}>
-                  {pack.tips.map((t, i) => (
-                    <li key={i} style={{ marginBottom: 4 }}>{t}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+        {error && (
+          <div className="prep-error" role="alert">
+            <i className="bi bi-exclamation-triangle-fill" aria-hidden="true" />
+            <span>{error}</span>
+            <button type="button" onClick={() => setError('')} aria-label="Dismiss error">
+              <i className="bi bi-x-lg" aria-hidden="true" />
+            </button>
           </div>
         )}
-      </div>
+
+        <div className="prep-actions">
+          <button type="submit" className="btn-signal" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="prep-btn-spin" aria-hidden="true" />
+                Generating…
+              </>
+            ) : (
+              <>
+                <i className="bi bi-lightning-charge-fill" aria-hidden="true" />
+                Build prep pack
+              </>
+            )}
+          </button>
+          <span className="prep-actions-note">
+            free · zero credits · first build ~60s, then instant
+          </span>
+        </div>
+      </form>
+
+      {loading && (
+        <div className="card prep-loading animate-fade-up" role="status" aria-live="polite">
+          <div className="prep-loading-row">
+            <span className="prep-scan" aria-hidden="true" />
+            <div className="prep-loading-copy">
+              <div className="label-signal">{stage}</div>
+              <p className="prep-help">
+                {elapsed < 3
+                  ? 'Cached packs return in about a second.'
+                  : 'First build for this pack downloads the embedding model — ~60s total.'}
+              </p>
+            </div>
+            <span className="prep-timer" aria-label={`${elapsed} seconds elapsed`}>
+              {mmss}
+            </span>
+          </div>
+          <div className="prep-progress" aria-hidden="true">
+            <span style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+      )}
+
+      {!loading && result && <PrepResult result={result} onReset={reset} />}
     </div>
   )
 }
