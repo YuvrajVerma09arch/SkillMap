@@ -573,8 +573,9 @@ def prep_companies():
                (c.meta ? 'rounds') AS has_rounds,
                (SELECT count(*) FROM questions q WHERE q.company_id = c.id) AS n
         FROM companies c
-        WHERE c.name ILIKE :pat OR c.slug ILIKE :pat
-           OR c.aliases::text ILIKE :pat
+        WHERE (c.name ILIKE :pat OR c.slug ILIKE :pat
+           OR c.aliases::text ILIKE :pat)
+          AND c.slug <> 'role-only'   -- sentinel for role-only packs, never a pick
         ORDER BY has_rounds DESC, n DESC, c.name
         LIMIT 12
     """), {'pat': pat}).fetchall()
@@ -596,14 +597,28 @@ def prep_generate():
     slug = (data.get('company_slug') or '').strip()
     role = (data.get('role') or '').strip()[:80]
 
-    if not slug or not role:
-        return jsonify({'error': 'Company and role are required.'}), 400
+    if not role:
+        return jsonify({'error': 'Role is required.'}), 400
+    role_only = not slug
 
-    company = db.session.execute(sqltext(
-        'SELECT id, name, meta FROM companies WHERE slug = :s'
-    ), {'s': slug}).fetchone()
-    if not company:
-        return jsonify({'error': 'Unknown company. Pick one from the list.'}), 404
+    if role_only:
+        # Company not in the corpus → pack against a sentinel "Any company"
+        # row so the (company_id, role) cache key keeps working unchanged.
+        db.session.execute(sqltext("""
+            INSERT INTO companies (slug, name, meta)
+            VALUES ('role-only', 'Any company', '{}'::jsonb)
+            ON CONFLICT (slug) DO NOTHING
+        """))
+        db.session.commit()
+        company = db.session.execute(sqltext(
+            "SELECT id, name, meta FROM companies WHERE slug = 'role-only'"
+        )).fetchone()
+    else:
+        company = db.session.execute(sqltext(
+            'SELECT id, name, meta FROM companies WHERE slug = :s'
+        ), {'s': slug}).fetchone()
+        if not company:
+            return jsonify({'error': 'Unknown company. Pick one from the list.'}), 404
     cid, cname, meta = company[0], company[1], company[2] or {}
 
     # 1. Cache check — the free-tier sustainability key (Groq ~30 RPM).
@@ -612,37 +627,43 @@ def prep_generate():
         'WHERE company_id = :cid AND role = :role'
     ), {'cid': cid, 'role': role}).fetchone()
     if cached:
-        return jsonify({'company': cname, 'role': role,
+        return jsonify({'company': None if role_only else cname, 'role': role,
+                        'mode': 'role' if role_only else 'company',
                         'pack': cached[0], 'salary': cached[1], 'cached': True})
 
     # 2. Hybrid retrieval: pgvector cosine (top 25) + FTS OR-query (top 15).
+    #    Role-only mode searches the WHOLE corpus (role words in the query)
+    #    instead of one company's slice.
+    query_text = f'{role} interview questions' if role_only \
+        else f'{cname} {role} interview questions'
     try:
-        qvec = json.dumps(embed_query(f'{cname} {role} interview questions'))
+        qvec = json.dumps(embed_query(query_text))
     except Exception:
         current_app.logger.exception('prep query embedding failed')
         return jsonify({'error': 'Search is temporarily unavailable. Please try again.'}), 502
 
-    vec_rows = db.session.execute(sqltext("""
+    vec_rows = db.session.execute(sqltext(f"""
         SELECT question, COALESCE(category, ''), COALESCE(source_url, ''), source
         FROM questions
-        WHERE company_id = :cid AND embedding IS NOT NULL
+        WHERE embedding IS NOT NULL {'AND company_id = :cid' if not role_only else ''}
         ORDER BY embedding <=> CAST(:v AS vector)
         LIMIT 25
-    """), {'cid': cid, 'v': qvec}).fetchall()
+    """), ({'cid': cid} if not role_only else {}) | {'v': qvec}).fetchall()
 
-    words = [w for w in re.sub(r'[^a-z0-9 ]', '', f'{cname} {role}'.lower()).split() if w]
+    fts_source = role if role_only else f'{cname} {role}'
+    words = [w for w in re.sub(r'[^a-z0-9 ]', '', fts_source.lower()).split() if w]
     fts_rows = []
     if words:
         or_q = ' | '.join(words)
-        fts_rows = db.session.execute(sqltext("""
+        fts_rows = db.session.execute(sqltext(f"""
             SELECT question, COALESCE(category, ''), COALESCE(source_url, ''), source
             FROM questions
-            WHERE company_id = :cid
+            WHERE {'1=1' if role_only else 'company_id = :cid'}
               AND to_tsvector('english', question) @@ to_tsquery('english', :q)
             ORDER BY ts_rank_cd(to_tsvector('english', question),
                                 to_tsquery('english', :q)) DESC
             LIMIT 15
-        """), {'cid': cid, 'q': or_q}).fetchall()
+        """), ({'cid': cid} if not role_only else {}) | {'q': or_q}).fetchall()
 
     retrieved, seen = [], set()
     for r in list(vec_rows) + list(fts_rows):
@@ -653,8 +674,9 @@ def prep_generate():
                           'source_url': r[2], 'source': r[3]})
 
     # 3. Groq synthesis (rounds prose comes from companies.meta — no live scrape).
-    rounds_prose = meta.get('rounds') or []
-    pack = synthesize_pack(cname, role, rounds_prose, retrieved)
+    rounds_prose = [] if role_only else (meta.get('rounds') or [])
+    pack = synthesize_pack(None if role_only else cname, role, rounds_prose,
+                           retrieved, role_only=role_only)
     if not pack:
         return jsonify({'error': 'Pack generation failed. You have not been charged.'}), 502
 
@@ -672,5 +694,6 @@ def prep_generate():
            'salary': json.dumps(salary) if salary else None})
     db.session.commit()
 
-    return jsonify({'company': cname, 'role': role,
+    return jsonify({'company': None if role_only else cname, 'role': role,
+                    'mode': 'role' if role_only else 'company',
                     'pack': pack, 'salary': salary, 'cached': False})

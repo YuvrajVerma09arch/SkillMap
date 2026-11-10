@@ -181,7 +181,7 @@ export default function Layout() {
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block' }}></span>
                   <span style={{ fontSize: 12, color: 'var(--chalk-3)', fontFamily: "'JetBrains Mono',monospace" }}>All systems operational</span>
                 </div>
-                <span style={{ fontSize: 11, color: 'var(--chalk-3)', fontFamily: "'JetBrains Mono',monospace" }}>Powered by Groq · Llama 3</span>
+                <span style={{ fontSize: 11, color: 'var(--chalk-3)', fontFamily: "'JetBrains Mono',monospace" }}>Powered by Groq · GPT-OSS 120B</span>
                 <span style={{ fontSize: 11, color: 'var(--chalk-3)', fontFamily: "'JetBrains Mono',monospace" }}>Payments via Razorpay</span>
               </div>
             </div>

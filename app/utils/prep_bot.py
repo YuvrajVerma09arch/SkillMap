@@ -69,8 +69,11 @@ def embed_query(text_):
     return vec.tolist()
 
 
-def synthesize_pack(company_name, role, rounds_prose, retrieved):
+def synthesize_pack(company_name, role, rounds_prose, retrieved, role_only=False):
     """Groq pack synthesis. `retrieved` = list of dicts from hybrid retrieval.
+
+    role_only=True: the user's target company isn't in the corpus — build a
+    company-agnostic pack for the role (standard loop, cross-company corpus).
 
     Returns the pack dict, or {} on failure (caller must not charge/caches).
     """
@@ -86,20 +89,61 @@ def synthesize_pack(company_name, role, rounds_prose, retrieved):
             f'{i}. "{r["question"]}" [{r.get("category") or "unclassified"}]'
             f'{" — " + r["source_url"] if r.get("source_url") else ""}'
         )
-    corpus_block = '\n'.join(corpus_lines) or '(no corpus rows for this company)'
 
-    rounds_block = '\n'.join(f'- {p[:600]}' for p in (rounds_prose or [])) or \
-        '(no published process description — infer a standard loop for this company)'
-
-    prompt = f"""You are a career coach building a Company Prep Pack.
+    if role_only:
+        intro = f"""You are a career coach building a Role Prep Pack.
+The candidate could not find their target company in our database, so this
+pack must be company-agnostic: standard interview loop for the role, questions
+asked across many companies.
+Target role: {role}"""
+        process_header = 'PUBLISHED INTERVIEW PROCESS (when a known company process exists):'
+        corpus_header = (
+            'CORPUS OF QUESTIONS FOR THIS ROLE (from LeetCode company-wise frequency\n'
+            'data and InterviewBit, asked at many companies; the URL after each\n'
+            'question is its source):'
+        )
+        corpus_block = '\n'.join(corpus_lines) or \
+            '(no corpus rows matched this role — synthesize typical questions for it)'
+        rounds_block = '\n'.join(f'- {p[:600]}' for p in (rounds_prose or [])) or \
+            '(no published process — infer a standard interview loop for this role)'
+        why_rule = '- "why" = one sentence on why this question is likely for this role.'
+        tips_rule = '- tips: 4-6 short, role-specific interview tips.'
+        q_rule = (
+            '- questions: EXACTLY 12 entries. At least 8 must come from the corpus\n'
+            '  above (copy the text verbatim; set "source":"corpus" and carry its\n'
+            '  source_url). Up to 4 may be behavioral/system-design questions\n'
+            '  typical for this role (set "source":"synthesized", "source_url":"").'
+        )
+    else:
+        intro = f"""You are a career coach building a Company Prep Pack.
 Company: {company_name}
-Target role: {role}
+Target role: {role}"""
+        process_header = ("PUBLISHED INTERVIEW PROCESS (verbatim excerpts, from the "
+                          "company's interview-prep page):")
+        corpus_header = (
+            'CORPUS OF QUESTIONS ACTUALLY ASKED AT THIS COMPANY (from LeetCode company-wise\n'
+            'frequency data and InterviewBit; the URL after each question is its source):'
+        )
+        corpus_block = '\n'.join(corpus_lines) or \
+            '(no corpus rows for this company)'
+        rounds_block = '\n'.join(f'- {p[:600]}' for p in (rounds_prose or [])) or \
+            '(no published process description — infer a standard loop for this company)'
+        why_rule = '- "why" = one sentence on why this question is likely for this company/role.'
+        tips_rule = '- tips: 4-6 short, company-specific interview tips.'
+        q_rule = (
+            '- questions: EXACTLY 12 entries. At least 8 must come from the corpus\n'
+            '  above (copy the text verbatim; set "source":"corpus" and carry its\n'
+            '  source_url). Up to 4 may be behavioral/system-design questions typical\n'
+            '  for this company (set "source":"synthesized", "source_url":""), grounded\n'
+            '  in the published process when one exists.'
+        )
 
-PUBLISHED INTERVIEW PROCESS (verbatim excerpts, from the company's interview-prep page):
+    prompt = f"""{intro}
+
+{process_header}
 {rounds_block}
 
-CORPUS OF QUESTIONS ACTUALLY ASKED AT THIS COMPANY (from LeetCode company-wise
-frequency data and InterviewBit; the URL after each question is its source):
+{corpus_header}
 {corpus_block}
 
 Produce a JSON object with EXACTLY these keys:
@@ -114,15 +158,11 @@ Produce a JSON object with EXACTLY these keys:
 Rules:
 - rounds: 3-5 entries derived from the published process; name each round
   (e.g. "OA", "DS/Algo Round 1", "HR/Bar Raiser") and what it focuses on.
-- questions: EXACTLY 12 entries. At least 8 must come from the corpus above
-  (copy the text verbatim; set "source":"corpus" and carry its source_url).
-  Up to 4 may be behavioral/system-design questions typical for this company
-  (set "source":"synthesized", "source_url":""), grounded in the published
-  process when one exists.
-- "why" = one sentence on why this question is likely for this company/role.
+{q_rule}
+{why_rule}
 - study_plan: 4 weeks, actions must be concrete and time-boxed.
-- tips: 4-6 short, company-specific interview tips.
-- Return ONLY the JSON object, no markdown fences, no commentary.""" 
+{tips_rule}
+- Return ONLY the JSON object, no markdown fences, no commentary."""
 
     try:
         completion = client.chat.completions.create(

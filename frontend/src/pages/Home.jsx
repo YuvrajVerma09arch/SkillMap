@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const FEATURES = [
-  { num: '01', icon: 'bi-file-earmark-text', title: 'Resume Analyst', text: 'Llama 3 scores your resume against job descriptions with semantic precision. Identify gaps, strengthen positioning.', link: '/resume-checker', cta: 'Run Analysis →' },
+  { num: '01', icon: 'bi-file-earmark-text', title: 'Resume Analyst', text: 'GPT-OSS 120B scores your resume against job descriptions with semantic precision. Identify gaps, strengthen positioning.', link: '/resume-checker', cta: 'Run Analysis →' },
   { num: '02', icon: 'bi-diagram-3', title: 'Roadmap Generator', text: 'Personalized step-by-step learning paths built from your current skill set and target role requirements.', link: '/roadmap', cta: 'Generate Path →' },
   { num: '03', icon: 'bi-journal-check', title: 'Company Prep Pack', text: 'Company-specific prep: interview round structure, top asked questions with sources, a 4-week study plan and salary bands. Free.', link: '/prep', cta: 'Build Pack →' },
   { num: '04', icon: 'bi-briefcase', title: 'Job Matching', text: 'Semantic matching connects your profile to live opportunities. Apply with one click, track everything.', link: '/live-jobs', cta: 'Browse Jobs →' },
@@ -12,7 +12,7 @@ const FEATURES = [
 
 const STEPS = [
   { num: '01', title: 'Upload Resume', text: 'Drop your resume. AI parses skills, experience, and education in seconds.', icon: 'bi-upload' },
-  { num: '02', title: 'AI Analysis', text: 'Deep semantic analysis against thousands of role requirements using Llama 3.', icon: 'bi-cpu' },
+  { num: '02', title: 'AI Analysis', text: 'Deep semantic analysis against thousands of role requirements using GPT-OSS 120B.', icon: 'bi-cpu' },
   { num: '03', title: 'Get Roadmap', text: 'Receive a personalized path with skill gaps, resources, and milestones.', icon: 'bi-map' },
   { num: '04', title: 'Apply & Win', text: 'Connect with matched recruiters, prep with company packs, apply with confidence.', icon: 'bi-rocket-takeoff' },
 ]
@@ -55,7 +55,7 @@ export default function Home() {
             </h1>
 
             <p className="animate-fade-up" style={{ fontSize: 16, color: 'var(--chalk-3)', maxWidth: 480, lineHeight: 1.7, marginBottom: 40, animationDelay: '0.2s' }}>
-              SkillMap uses Llama 3 AI to analyze your resume, generate personalized roadmaps, and connect you with the right opportunities — with precision.
+              SkillMap uses Groq's GPT-OSS 120B to analyze your resume, generate personalized roadmaps, and connect you with the right opportunities — with precision.
             </p>
 
             <div className="flex flex-wrap gap-3 animate-fade-up" style={{ animationDelay: '0.3s' }}>
@@ -80,7 +80,7 @@ export default function Home() {
             <div className="flex flex-wrap gap-6 mt-12 animate-fade-up" style={{ animationDelay: '0.4s' }}>
               <div>
                 <p className="label mb-1">Engine</p>
-                <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: 'var(--chalk-2)' }}>Llama 3 · Groq</p>
+                <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: 'var(--chalk-2)' }}>GPT-OSS 120B · Groq</p>
               </div>
               <div>
                 <p className="label mb-1">Payments</p>

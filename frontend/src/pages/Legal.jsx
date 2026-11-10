@@ -22,7 +22,7 @@ const SECTIONS = [
     h: '5. Privacy Policy',
     p: [
       'We collect only the data necessary to provide the Service: your email, name, resume content (for analysis), and usage logs. We do not sell your data to third parties.',
-      "Resume content is processed by Groq's Llama 3 API and is not stored beyond the session unless you explicitly save a result.",
+      "Resume content is processed by Groq's GPT-OSS 120B API and is not stored beyond the session unless you explicitly save a result.",
     ],
   },
   {

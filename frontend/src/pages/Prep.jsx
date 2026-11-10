@@ -65,19 +65,18 @@ export default function Prep() {
   const generate = async (e) => {
     e.preventDefault()
     setError('')
-    if (!company) {
-      toast('Pick a company from the list first.', 'error')
-      return
-    }
     if (!role.trim()) {
       toast('Enter the role you are preparing for.', 'error')
       return
+    }
+    if (!company && query.trim()) {
+      toast('No match in our list — generating a role-based pack instead.', 'success')
     }
     setLoading(true)
     setResult(null)
     try {
       const data = await post('/api/prep/generate', {
-        company_slug: company.slug,
+        company_slug: company ? company.slug : '',
         role: role.trim(),
       })
       setResult(data)
@@ -114,7 +113,8 @@ export default function Prep() {
         <p style={{ color: 'var(--muted)', marginTop: 0 }}>
           Pick a company and a role — get the interview round structure, the top
           questions candidates actually face (with sources), a 4-week study plan,
-          and a market salary band.
+          and a market salary band. <strong>Company not in the list?</strong> Just
+          fill the role and generate anyway — you'll get a role-based pack.
         </p>
 
         {/* ── Input form ─────────────────────────────────────────────── */}
@@ -215,7 +215,12 @@ export default function Prep() {
         {pack && result && (
           <div className="animate-fade-up" style={{ marginTop: 26 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-              <h2 style={{ margin: 0 }}>{result.company} · {result.role}</h2>
+              <h2 style={{ margin: 0 }}>
+                {result.company ? `${result.company} · ` : ''}{result.role}
+              </h2>
+              {result.mode === 'role' && (
+                <span className="label-signal" style={{ opacity: 0.8 }}>role-based pack</span>
+              )}
               {result.cached && (
                 <span className="label-signal" style={{ opacity: 0.8 }}>saved pack</span>
               )}
