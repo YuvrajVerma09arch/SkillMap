@@ -56,7 +56,9 @@ class Config:
     # Cookies: cross-origin XHR with credentials requires SameSite=None +
     # Secure; same-origin keeps the safer Lax default. COOKIE_SECURE overrides.
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = None if CROSS_ORIGIN else 'Lax'
+    # 'None' (string) is required for cross-site credentialed fetches; Python None
+    # would omit the attribute and browsers default to Lax, breaking Vercel→Render.
+    SESSION_COOKIE_SAMESITE = 'None' if CROSS_ORIGIN else 'Lax'
     SESSION_COOKIE_SECURE = _flag('COOKIE_SECURE', default=CROSS_ORIGIN)
     REMEMBER_COOKIE_SAMESITE = SESSION_COOKIE_SAMESITE
     REMEMBER_COOKIE_SECURE = SESSION_COOKIE_SECURE
