@@ -1,5 +1,6 @@
 import os
 import re
+import html as html_module
 import requests
 from dotenv import load_dotenv
 
@@ -30,7 +31,10 @@ def _send_email(user_email, subject, html_content):
     print(f"   Using Brevo API over HTTPS (Port 443)")
 
     url = "https://api.brevo.com/v3/smtp/email"
-    
+
+    # F3 fix: a subject carrying CR/LF could inject extra headers into the
+    # message. Subjects are built from user input (job titles, role names).
+    subject = re.sub(r'[\r\n]+', ' ', str(subject)).strip()
     headers = {
         "accept": "application/json",
         "api-key": api_key,
@@ -63,15 +67,25 @@ def _send_email(user_email, subject, html_content):
 
 
 # --- 1. ROADMAP EMAIL (Kept Exactly As Is) ---
+def _esc(value):
+    """HTML-escape any dynamic value interpolated into an email body (F3 fix).
+
+    Job titles / candidate names / roadmap topics are attacker-controllable
+    strings that used to be dropped raw into HTML — a recruiter (or applicant)
+    could inject markup/scripts into other people's email clients.
+    """
+    return html_module.escape(str(value if value is not None else ''))
+
+
 def format_roadmap_html(user_name, target_role, roadmap):
     html = f"""
     <div style="font-family: 'Helvetica', sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
         <div style="background: #2563EB; padding: 30px; text-align: center;">
             <h1 style="color: white; margin: 0; font-size: 24px;">SkillMap Roadmap</h1>
-            <p style="color: #bfdbfe; margin: 10px 0 0; font-size: 16px;">Target Role: <strong>{target_role}</strong></p>
+            <p style="color: #bfdbfe; margin: 10px 0 0; font-size: 16px;">Target Role: <strong>{_esc(target_role)}</strong></p>
         </div>
         <div style="padding: 30px; background: #fff;">
-            <p style="font-size: 16px;">Hi {user_name},</p>
+            <p style="font-size: 16px;">Hi {_esc(user_name)},</p>
             <p style="color: #64748b;">Here is your personalized roadmap.</p>
             <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
     """
@@ -83,9 +97,9 @@ def format_roadmap_html(user_name, target_role, roadmap):
             desc = step.get('description', '')
             html += f"""
             <div style="margin-bottom: 20px;">
-                <span style="background: #eff6ff; color: #2563EB; padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold;">{month}</span>
-                <h3 style="margin: 5px 0; color: #1e3a8a;">{topic}</h3>
-                <p style="color: #64748b; font-size: 14px;">{desc}</p>
+                <span style="background: #eff6ff; color: #2563EB; padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold;">{_esc(month)}</span>
+                <h3 style="margin: 5px 0; color: #1e3a8a;">{_esc(topic)}</h3>
+                <p style="color: #64748b; font-size: 14px;">{_esc(desc)}</p>
             </div>
             """
     
@@ -105,12 +119,12 @@ def send_interview_invite(candidate_email, candidate_name, job_title, recruiter_
     html = f"""
     <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; padding: 20px;">
         <h2 style="color: #2563EB;">Good News! You've been Shortlisted.</h2>
-        <p>Hi <strong>{candidate_name}</strong>,</p>
-        <p>We reviewed your profile for the <strong>{job_title}</strong> position and we are impressed!</p>
+        <p>Hi <strong>{_esc(candidate_name)}</strong>,</p>
+        <p>We reviewed your profile for the <strong>{_esc(job_title)}</strong> position and we are impressed!</p>
         <p>We would like to invite you for an interview to discuss your skills further.</p>
         <div style="background: #f8fafc; padding: 15px; border-left: 4px solid #2563EB; margin: 20px 0;">
             <strong>Next Steps:</strong><br>
-            Please reply to this email (<a href="mailto:{recruiter_email}">{recruiter_email}</a>) to schedule a time.
+            Please reply to this email (<a href="mailto:{_esc(recruiter_email)}">{_esc(recruiter_email)}</a>) to schedule a time.
         </div>
         <p>Best regards,<br>The Hiring Team</p>
     </div>
@@ -122,8 +136,8 @@ def send_job_offer(candidate_email, candidate_name, job_title):
     html = f"""
     <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; padding: 20px;">
         <h2 style="color: #10b981;">Congratulations! You're Hired!</h2>
-        <p>Dear <strong>{candidate_name}</strong>,</p>
-        <p>We are thrilled to offer you the position of <strong>{job_title}</strong>!</p>
+        <p>Dear <strong>{_esc(candidate_name)}</strong>,</p>
+        <p>We are thrilled to offer you the position of <strong>{_esc(job_title)}</strong>!</p>
         <p>After reviewing your interview performance, we believe you are the perfect fit for our team. You will receive a formal offer letter shortly.</p>
         <p>Welcome aboard! 🚀</p>
     </div>
@@ -135,8 +149,8 @@ def send_rejection(candidate_email, candidate_name, job_title):
     html = f"""
     <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; padding: 20px;">
         <h2 style="color: #64748b;">Application Update</h2>
-        <p>Dear <strong>{candidate_name}</strong>,</p>
-        <p>Thank you for giving us the opportunity to consider you for the <strong>{job_title}</strong> role.</p>
+        <p>Dear <strong>{_esc(candidate_name)}</strong>,</p>
+        <p>Thank you for giving us the opportunity to consider you for the <strong>{_esc(job_title)}</strong> role.</p>
         <p>While your skills are impressive, we have decided to move forward with other candidates who match our specific needs more closely at this time.</p>
         <p>We have added your resume to our talent pool for future openings.</p>
         <p>Best wishes in your job search.</p>

@@ -64,7 +64,10 @@ def create_app(config_class=Config):
             return None
         return jsonify({'error': 'Origin not allowed.'}), 403
 
-    os.makedirs(os.path.join(app.static_folder, 'uploads'), exist_ok=True)
+    # F1 fix: uploads live OUTSIDE static_folder so Flask never serves them
+    # publicly at /static/uploads/<name>; they're only reachable via the
+    # authenticated /api/files/... routes.
+    os.makedirs(os.path.join(app.instance_path, 'uploads'), exist_ok=True)
 
     # 2. Register Google Client (MUST BE BEFORE BLUEPRINTS)
     if not app.config.get('GOOGLE_CLIENT_ID') or not app.config.get('GOOGLE_CLIENT_SECRET'):

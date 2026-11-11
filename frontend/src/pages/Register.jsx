@@ -43,9 +43,9 @@ export default function Register() {
     setError('')
     setLoading(true)
     try {
-      const u = await register({ username: name, email, password, role })
-      navigate('/setup-profile', { replace: true })
-      return u
+      await register({ username: name, email, password, role })
+      // No auto-login (anti-enumeration): send them to sign in with a notice.
+      navigate('/login?registered=1', { replace: true })
     } catch (err) {
       setError(err.message)
     } finally {

@@ -16,7 +16,7 @@ def plans():
         'credits': current_user.credits,
         'tier': current_user.tier,
         'plans': [
-            {'id': 'starter', 'price': 0, 'credits': 3, 'name': 'Starter'},
+            {'id': 'starter', 'price': 0, 'credits': 5, 'name': 'Starter'},
             {'id': 'pro', 'price': 299, 'credits': 50, 'name': 'Pro'},
             {'id': 'enterprise', 'price': 499, 'credits': 200, 'name': 'Max'},
         ],

@@ -58,7 +58,7 @@ export default function ResumeChecker() {
         <div className="label-signal" style={{ marginBottom: 8 }}>Analysis</div>
         <h1 className="display" style={{ fontSize: 'clamp(24px,3vw,40px)', color: 'var(--chalk)' }}>Resume Checker</h1>
         <p style={{ fontSize: 13, color: 'var(--chalk-3)', marginTop: 8 }}>
-          Score your resume against a job description. 1 credit per successful analysis.
+          Score your resume against a job description. 5 credits per successful analysis — new accounts start with 5 free credits.
           {user && (
             <>
               {' '}· <span style={{ color: 'var(--signal)', fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>CREDITS: {user.credits}</span>

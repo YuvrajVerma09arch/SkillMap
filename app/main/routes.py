@@ -21,12 +21,16 @@ main = Blueprint('main', __name__)
 
 # ─── HELPERS ────────────────────────────────────────────────────────────────
 def uploads_dir():
-    """Absolute upload folder inside the app's static dir (cwd-independent).
+    """Absolute upload folder inside the app's instance dir (F1 fix).
 
-    Bug fix: the old config used os.getcwd()-based paths, so under gunicorn
-    uploads landed outside the served static directory and downloads broke.
+    Uploads previously lived under static_folder/uploads, which Flask serves
+    publicly at /static/uploads/<filename> — anyone could fetch any user's
+    resume/profile picture without logging in (only filename entropy stood
+    between an attacker and the whole PII store). Uploads now live OUTSIDE the
+    static tree and are only reachable through the authenticated
+    /api/files/... routes below, which check ownership/relationships.
     """
-    folder = os.path.join(current_app.static_folder, 'uploads')
+    folder = os.path.join(current_app.instance_path, 'uploads')
     os.makedirs(folder, exist_ok=True)
     return folder
 
@@ -74,31 +78,43 @@ def validate_upload(file, allowed_extensions, max_bytes):
     return filename, None
 
 
-def seeker_profile_payload(profile):
+def seeker_profile_payload(profile, private=False):
+    """Seeker profile for API responses.
+
+    F1 fix: phone and resume_file are contact/document PII. They are only
+    included for the profile owner (private=True) or for a recruiter who has
+    an Application linking them to this seeker (see view_profile).
+    """
     if not profile:
         return None
-    return {
+    payload = {
         'headline': profile.headline,
-        'phone': profile.phone,
         'location': profile.location,
         'experience_years': profile.experience_years,
         'education_level': profile.education_level,
         'skills': profile.skills or [],
         'projects': profile.projects or [],
         'profile_pic': profile.profile_pic,
-        'resume_file': profile.resume_file,
         'linkedin_url': profile.linkedin_url,
         'portfolio_url': profile.portfolio_url,
     }
+    payload['phone'] = profile.phone if private else None
+    payload['resume_file'] = profile.resume_file if private else None
+    return payload
 
 
-def recruiter_profile_payload(profile):
+def recruiter_profile_payload(profile, include_contact=False):
+    """Recruiter profile for API responses.
+
+    F5 fix: work_email is only returned to the owner or to a seeker who has
+    applied to that recruiter's job.
+    """
     if not profile:
         return None
     return {
         'recruiter_name': profile.recruiter_name,
         'role_title': profile.role_title,
-        'work_email': profile.work_email,
+        'work_email': profile.work_email if include_contact else None,
         'company_name': profile.company_name,
         'industry': profile.industry,
         'company_size': profile.company_size,
@@ -106,6 +122,34 @@ def recruiter_profile_payload(profile):
         'website': profile.website,
         'is_verified': profile.is_verified,
     }
+
+
+def recruiter_can_view_seeker(recruiter_user, seeker_user):
+    """True only when an Application ties this recruiter's job to this seeker."""
+    if recruiter_user.role != 'recruiter' or not recruiter_user.recruiter_profile:
+        return False
+    if seeker_user.role != 'seeker':
+        return False
+    return Application.query.join(
+        JobPost, Application.job_id == JobPost.id
+    ).filter(
+        JobPost.recruiter_id == recruiter_user.recruiter_profile.id,
+        Application.seeker_id == seeker_user.id,
+    ).count() > 0
+
+
+def seeker_can_view_recruiter(seeker_user, recruiter_user):
+    """True only when this seeker applied to one of that recruiter's jobs."""
+    if seeker_user.role != 'seeker':
+        return False
+    if recruiter_user.role != 'recruiter' or not recruiter_user.recruiter_profile:
+        return False
+    return Application.query.join(
+        JobPost, Application.job_id == JobPost.id
+    ).filter(
+        JobPost.recruiter_id == recruiter_user.recruiter_profile.id,
+        Application.seeker_id == seeker_user.id,
+    ).count() > 0
 
 
 def parse_education(education_level):
@@ -141,7 +185,7 @@ def health():
 def get_seeker_profile():
     profile = current_user.seeker_profile
     return jsonify({
-        'profile': seeker_profile_payload(profile),
+        'profile': seeker_profile_payload(profile, private=True),
         'parsed_edu': parse_education(profile.education_level if profile else None),
         'user': {'name': current_user.name},
     })
@@ -235,7 +279,7 @@ def save_seeker_profile():
         db.session.add(profile)
         db.session.commit()
 
-        return jsonify({'profile': seeker_profile_payload(profile), 'user': {'name': current_user.name}})
+        return jsonify({'profile': seeker_profile_payload(profile, private=True), 'user': {'name': current_user.name}})
     except Exception:
         db.session.rollback()
         current_app.logger.exception('seeker profile save failed')
@@ -246,7 +290,7 @@ def save_seeker_profile():
 @main.route('/api/profile/recruiter', methods=['GET'])
 @login_required
 def get_recruiter_profile():
-    return jsonify({'profile': recruiter_profile_payload(current_user.recruiter_profile)})
+    return jsonify({'profile': recruiter_profile_payload(current_user.recruiter_profile, include_contact=True)})
 
 
 @main.route('/api/profile/recruiter', methods=['POST'])
@@ -278,7 +322,7 @@ def save_recruiter_profile():
 
         db.session.add(profile)
         db.session.commit()
-        return jsonify({'profile': recruiter_profile_payload(profile)})
+        return jsonify({'profile': recruiter_profile_payload(profile, include_contact=True)})
     except Exception:
         db.session.rollback()
         current_app.logger.exception('recruiter profile save failed')
@@ -291,8 +335,13 @@ def save_recruiter_profile():
 def view_profile(user_id):
     user = User.query.get_or_404(user_id)
 
+    is_owner = current_user.id == user.id
+    # Recruiters can still browse the talent feed, but phone/resume only
+    # unlock when an Application ties them to this seeker.
+    has_relationship = recruiter_can_view_seeker(current_user, user)
+
     # Security: only the owner or a recruiter may view a seeker profile
-    if current_user.id != user_id and current_user.role != 'recruiter':
+    if not is_owner and current_user.role != 'recruiter':
         return jsonify({'error': 'Unauthorized.'}), 403
 
     profile = user.seeker_profile
@@ -301,8 +350,8 @@ def view_profile(user_id):
 
     return jsonify({
         'user': {'id': user.id, 'name': user.name, 'role': user.role},
-        'profile': seeker_profile_payload(profile),
-        'is_own_profile': current_user.id == user.id,
+        'profile': seeker_profile_payload(profile, private=is_owner or has_relationship),
+        'is_own_profile': is_owner,
         'is_recruiter': current_user.role == 'recruiter',
         'parsed_edu': parse_education(profile.education_level if profile else None),
     })
@@ -315,10 +364,16 @@ def view_company(user_id):
     if current_user.id != user_id and current_user.role != 'seeker':
         return jsonify({'error': 'Unauthorized.'}), 403
 
+    is_owner = current_user.id == user_id
+    recruiter_user = User.query.get(user_id)
+    include_contact = is_owner or (
+        recruiter_user is not None and seeker_can_view_recruiter(current_user, recruiter_user)
+    )
+
     profile = RecruiterProfile.query.filter_by(user_id=user_id).first_or_404()
     jobs = JobPost.query.filter_by(recruiter_id=profile.id, is_active=True).all()
     return jsonify({
-        'profile': recruiter_profile_payload(profile),
+        'profile': recruiter_profile_payload(profile, include_contact=include_contact),
         'jobs': [
             {
                 'id': j.id, 'title': j.title, 'location': j.location,
@@ -330,6 +385,57 @@ def view_company(user_id):
         'is_owner': current_user.id == user_id,
         'total_applicants': sum(len(j.applications) for j in jobs),
     })
+
+
+# ─── 3b. AUTHENTICATED FILE DOWNLOADS (F1 fix) ──────────────────────────────
+# Uploads used to be served straight from /static/uploads with no auth at all.
+# They now live outside the static tree and are only reachable here.
+def _serve_upload(filename, download_name=None):
+    """Send a file from the private uploads dir (basename-only, no traversal)."""
+    from flask import send_from_directory
+
+    safe_name = os.path.basename(filename or '')
+    if not safe_name:
+        return jsonify({'error': 'File not found.'}), 404
+    folder = uploads_dir()
+    if not os.path.isfile(os.path.join(folder, safe_name)):
+        return jsonify({'error': 'File not found.'}), 404
+    return send_from_directory(
+        folder, safe_name, as_attachment=True,
+        download_name=download_name or safe_name,
+    )
+
+
+@main.route('/api/files/resume/<path:filename>', methods=['GET'])
+@login_required
+def download_resume(filename):
+    """Resume download: owner, OR a recruiter with an Application to the seeker."""
+    safe_name = os.path.basename(filename or '')
+    # Filenames are stored as '<user_id>_<hex>_<name>'; recover the owner id.
+    owner_id_str = safe_name.split('_', 1)[0]
+    owner_id = int(owner_id_str) if owner_id_str.isdigit() else None
+    if owner_id is None:
+        return jsonify({'error': 'File not found.'}), 404
+
+    if current_user.id == owner_id:
+        allowed = True
+    else:
+        owner = User.query.get(owner_id)
+        allowed = owner is not None and recruiter_can_view_seeker(current_user, owner)
+
+    if not allowed:
+        return jsonify({'error': 'Unauthorized.'}), 403
+    return _serve_upload(safe_name)
+
+
+@main.route('/api/files/pic/<path:filename>', methods=['GET'])
+@login_required
+def download_profile_pic(filename):
+    """Profile picture download: any logged-in user (public-ish avatar)."""
+    safe_name = os.path.basename(filename or '')
+    if not safe_name.startswith('pic_'):
+        return jsonify({'error': 'File not found.'}), 404
+    return _serve_upload(safe_name)
 
 
 # ─── 4. RECRUITER DASHBOARD (heap-ranked candidates, with emails) ───────────
@@ -430,22 +536,26 @@ def roadmap():
     if not current_skills or not target_role:
         return jsonify({'error': 'Current skills and target role are required.'}), 400
 
-    if not current_user.has_credits(1):
+    if not current_user.has_credits(ROADMAP_COST):
+        return jsonify({'error': 'Not enough credits. Please upgrade.', 'redirect': '/pricing'}), 402
+
+    # F2 fix: charge atomically BEFORE the (slow) AI call so N concurrent
+    # requests can never all pass the same pre-check and overdraw the balance.
+    # The credit is refunded if the generation fails or returns nothing.
+    if not current_user.deduct_credits(ROADMAP_COST):
         return jsonify({'error': 'Not enough credits. Please upgrade.', 'redirect': '/pricing'}), 402
 
     try:
         roadmap_data = generate_roadmap(current_skills, target_role)
     except Exception:
         current_app.logger.exception('roadmap generation failed')
+        current_user.refund_credits(ROADMAP_COST)
         return jsonify({'error': 'Roadmap generation failed. Please try again.'}), 502
 
-    # Bug fix: an empty/failed generation must NOT cost a credit.
+    # An empty/failed generation must NOT cost a credit.
     if not roadmap_data:
+        current_user.refund_credits(ROADMAP_COST)
         return jsonify({'error': 'The AI returned no roadmap. Please try again.'}), 502
-
-    # Deduct only after a successful generation.
-    if not current_user.deduct_credits(1):
-        return jsonify({'error': 'Not enough credits. Please upgrade.', 'redirect': '/pricing'}), 402
 
     session['latest_roadmap'] = roadmap_data
     session['target_role'] = target_role
@@ -456,6 +566,10 @@ def roadmap():
 # ─── 7. RESUME CHECKER ──────────────────────────────────────────────────────
 # Failure markers returned by analyze_resume that indicate no real analysis happened
 _FAILED_MARKERS = ('API Key Missing', 'Unreadable PDF', 'AI Analysis Failed')
+
+# Credit pricing (free tier grants 5 credits; a resume analysis costs 5)
+RESUME_CHECK_COST = 5
+ROADMAP_COST = 1
 
 
 @main.route('/api/tools/resume-check', methods=['POST'])
@@ -484,6 +598,7 @@ def resume_checker():
     folder = uploads_dir()
     save_path = None
     is_temp_file = False
+    charged = False  # tracks whether a credit was taken (so failures refund it)
 
     try:
         if use_existing:
@@ -510,24 +625,32 @@ def resume_checker():
         if not job_description or not str(job_description).strip():
             return jsonify({'error': 'A job description is required for analysis.'}), 400
 
-        if not current_user.has_credits(1):
+        # F2 fix: charge atomically BEFORE the (slow) AI call so parallel
+        # requests can't all pass a stale pre-check and overdraw the balance.
+        # The credit is refunded on any failure path below.
+        if not current_user.has_credits(RESUME_CHECK_COST):
             return jsonify({'error': 'Not enough credits. Please upgrade.', 'redirect': '/pricing'}), 402
+
+        if not current_user.deduct_credits(RESUME_CHECK_COST):
+            return jsonify({'error': 'Not enough credits. Please upgrade.', 'redirect': '/pricing'}), 402
+        charged = True
 
         results = analyze_resume(save_path, str(job_description))
         if 'match_score' not in results:
             results['match_score'] = 0
 
-        # Bug fix: never charge a credit when the AI run actually failed.
+        # Never charge a credit when the AI run actually failed.
         if any(m in (results.get('missing_required_skills') or []) for m in _FAILED_MARKERS):
+            current_user.refund_credits(RESUME_CHECK_COST)
+            charged = False
             return jsonify({'error': 'Analysis failed. You have not been charged.', 'results': results}), 502
-
-        if not current_user.deduct_credits(1):
-            return jsonify({'error': 'Not enough credits. Please upgrade.', 'redirect': '/pricing'}), 402
 
         return jsonify({'results': results, 'credits': current_user.credits})
 
     except Exception:
         current_app.logger.exception('resume check failed')
+        if charged:
+            current_user.refund_credits(RESUME_CHECK_COST)
         return jsonify({'error': 'An error occurred while processing the file. Please try again.'}), 500
     finally:
         if is_temp_file and save_path and os.path.exists(save_path):

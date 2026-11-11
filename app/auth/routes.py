@@ -3,6 +3,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 from flask import Blueprint, request, jsonify, session, redirect, url_for, current_app
 from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, login_manager, oauth, limiter
 from app.models import User
 
@@ -63,25 +64,45 @@ def register():
     if '@' not in email:
         return jsonify({'error': 'A valid email address is required.'}), 400
 
-    if User.query.filter_by(email=email).first():
-        return jsonify({'error': 'Email already registered. Please sign in instead.'}), 409
+    # F4 fix: hash BEFORE the existence check so a new registration and an
+    # already-registered email take the same wall-clock time, then return the
+    # SAME response for both — registration can no longer be used to
+    # enumerate which emails have accounts.
+    password_hash = generate_password_hash(password)
 
-    user = User(name=username, email=email, role=role)
-    user.set_password(password)
+    if not User.query.filter_by(email=email).first():
+        user = User(name=username, email=email, role=role, password_hash=password_hash)
 
-    db.session.add(user)
-    db.session.commit()
+        db.session.add(user)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            # Unique-constraint race: treat exactly like the duplicate case.
+            current_app.logger.info('register: duplicate email race for %s', email)
+            user = None
+    else:
+        user = None
 
     # Cleanup any pending OAuth session keys
     session.pop('oauth_email', None)
     session.pop('oauth_name', None)
     session.pop('pending_role', None)
 
-    login_user(user)
-    return jsonify({'user': _user_payload(user)}), 201
+    # No auto-login: the user must sign in, so the response is identical
+    # (status, body, timing) whether or not the account actually existed.
+    return jsonify({
+        'message': 'If this email is new, your account has been created. Please sign in to continue.'
+    }), 202
 
 
 # ─── 3. LOGIN ───────────────────────────────────────────────────────────────
+# Precomputed hash used to equalize login timing when the email doesn't exist
+# (otherwise "user missing" returns instantly while a real user pays the
+# bcrypt cost — a trivially measurable account-enumeration oracle).
+_DUMMY_HASH = generate_password_hash('timing-equalizer-not-a-real-password')
+
+
 @auth.route('/api/auth/login', methods=['POST'])
 @limiter.limit('10 per minute')
 def login():
@@ -96,8 +117,13 @@ def login():
         return jsonify({'error': 'Email and password are required.'}), 400
 
     user = User.query.filter_by(email=email).first()
-    if not user or not user.check_password(password):
-        # Bug fix: previously failed logins re-rendered silently with no message.
+    if user:
+        ok = user.check_password(password)
+    else:
+        check_password_hash(_DUMMY_HASH, password)  # constant work
+        ok = False
+    if not ok:
+        # Previously failed logins re-rendered silently with no message.
         return jsonify({'error': 'Invalid email or password.'}), 401
 
     login_user(user)

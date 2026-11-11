@@ -27,9 +27,10 @@ export function AuthProvider({ children }) {
   }, [])
 
   const register = useCallback(async ({ username, email, password, role }) => {
+    // F4: register no longer logs you in (and returns the same response whether
+    // or not the email already existed), so we just surface the message.
     const data = await post('/api/auth/register', { username, email, password, role })
-    setUser(data.user)
-    return data.user
+    return data.message || 'If this email is new, your account has been created. Please sign in to continue.'
   }, [])
 
   const logout = useCallback(async () => {

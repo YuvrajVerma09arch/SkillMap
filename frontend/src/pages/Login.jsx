@@ -21,6 +21,9 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(params.get('error') || '')
+  const [notice, setNotice] = useState(
+    params.get('registered') ? 'Registration received. Sign in to continue.' : ''
+  )
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -30,6 +33,7 @@ export default function Login() {
   const submit = async (e) => {
     e.preventDefault()
     setError('')
+    setNotice('')
     setLoading(true)
     try {
       const u = await login(email, password)
@@ -85,6 +89,12 @@ export default function Login() {
             New here?
             <Link to="/role-select" style={{ color: 'var(--signal)', textDecoration: 'none', marginLeft: 4 }}>Create an account →</Link>
           </p>
+
+          {notice && !error && (
+            <div className="flash-msg" style={{ marginBottom: 20, borderColor: 'var(--signal)' }}>
+              <p style={{ fontSize: 13, color: 'var(--chalk)' }}>{notice}</p>
+            </div>
+          )}
 
           {error && (
             <div className="flash-msg" style={{ marginBottom: 20 }}>

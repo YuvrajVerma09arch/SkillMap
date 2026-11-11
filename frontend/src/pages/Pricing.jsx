@@ -23,7 +23,7 @@ const PLANS = [
     price: 0,
     period: '/forever',
     features: [
-      { on: true, text: '3 AI Credits included' },
+      { on: true, text: '5 AI Credits included' },
       { on: true, text: 'Basic job search' },
       { on: true, text: 'Company Prep Packs (free)' },
       { on: false, text: 'Featured profile' },
@@ -184,7 +184,7 @@ export default function Pricing() {
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <i className="bi bi-info-circle" style={{ color: 'var(--signal)', fontSize: 16, marginTop: 1, flexShrink: 0 }}></i>
           <p style={{ fontSize: 13, color: 'var(--chalk-2)', lineHeight: 1.7 }}>
-            Credits are consumed per AI operation: 1 credit per resume analysis, 1 per roadmap generation. Company Prep Packs are free. Credits do not expire. Payments are processed securely via Razorpay.
+            Credits are consumed per AI operation: 5 credits per resume analysis, 1 per roadmap generation. Free accounts start with 5 credits. Company Prep Packs are free. Credits do not expire. Payments are processed securely via Razorpay.
           </p>
         </div>
       </div>

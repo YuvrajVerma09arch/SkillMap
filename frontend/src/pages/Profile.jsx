@@ -71,7 +71,7 @@ export default function Profile() {
               </button>
             </>
           ) : is_recruiter && profile?.resume_file ? (
-            <a href={apiUrl(`/static/uploads/${profile.resume_file}`)} download className="btn-signal" style={{ padding: '10px 16px', fontSize: 12, whiteSpace: 'nowrap', textDecoration: 'none', textAlign: 'center' }}>
+            <a href={apiUrl(`/api/files/resume/${profile.resume_file}`)} download className="btn-signal" style={{ padding: '10px 16px', fontSize: 12, whiteSpace: 'nowrap', textDecoration: 'none', textAlign: 'center' }}>
               Download Resume
             </a>
           ) : null}

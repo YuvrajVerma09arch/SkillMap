@@ -20,7 +20,7 @@ class User(UserMixin, db.Model):
 
     # --- NEW: SAAS FIELDS ---
     tier = db.Column(db.String(20), default='Free')  # 'Free', 'Pro', 'Enterprise'
-    credits = db.Column(db.Integer, default=3)       # Starts with 3 Free Credits
+    credits = db.Column(db.Integer, default=5)       # Starts with 5 Free Credits
     subscription_active_until = db.Column(db.DateTime, nullable=True) # For time-based access
     razorpay_customer_id = db.Column(db.String(100), nullable=True)   # Future-proofing
 
@@ -39,11 +39,36 @@ class User(UserMixin, db.Model):
         return self.credits >= cost
 
     def deduct_credits(self, cost=1):
-        if self.credits >= cost:
-            self.credits -= cost
-            db.session.commit()
+        """Atomically deduct credits (F2 fix).
+
+        The old read-modify-write (if self.credits >= cost: self.credits -= cost)
+        let concurrent requests all pass the check and then overwrite each other,
+        so parallel requests could overdraw the account. This issues a single
+        conditional UPDATE: the row is only decremented if the balance is still
+        >= cost, so a race can never overdraw.
+        """
+        if cost < 0:
+            return False
+        rows = (
+            User.query.filter(User.id == self.id, User.credits >= cost)
+            .update({User.credits: User.credits - cost}, synchronize_session=False)
+        )
+        db.session.commit()
+        if rows:
+            db.session.refresh(self)  # sync in-memory instance with DB value
             return True
         return False
+
+    def refund_credits(self, amount=1):
+        """Atomically add credits back (used when a charged operation fails)."""
+        if amount <= 0:
+            return True
+        User.query.filter(User.id == self.id).update(
+            {User.credits: User.credits + amount}, synchronize_session=False
+        )
+        db.session.commit()
+        db.session.refresh(self)
+        return True
 
 # 2. SEEKER PROFILES (Unchanged)
 class SeekerProfile(db.Model):

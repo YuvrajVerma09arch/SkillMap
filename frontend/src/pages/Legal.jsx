@@ -12,7 +12,7 @@ const SECTIONS = [
   {
     h: '3. Credits & Payments',
     p: ['Credits are purchased via Razorpay and consumed per AI operation. All payments are final. Credits do not expire and are non-transferable.'],
-    li: ['1 credit per resume analysis', '1 credit per roadmap generation', 'Company Prep Packs are free to use'],
+    li: ['5 credits per resume analysis', '1 credit per roadmap generation', '5 free credits on signup', 'Company Prep Packs are free to use'],
   },
   {
     h: '4. User Responsibilities',
