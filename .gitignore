@@ -9,3 +9,11 @@ node_modules/
 **/.DS_Store
 dist/
 *.log
+
+# local tooling noise — never commit
+.idea/
+.omo/
+.opencode/
+
+# pitch video — keep the doc, ignore downloaded/generated clips
+pitch/clips/
