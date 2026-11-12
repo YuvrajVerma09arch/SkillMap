@@ -15,5 +15,5 @@ dist/
 .omo/
 .opencode/
 
-# pitch video — keep the doc, ignore downloaded/generated clips
-pitch/clips/
+# pitch video — local-only working dir (doc, VO, clips, music, build outputs)
+pitch/

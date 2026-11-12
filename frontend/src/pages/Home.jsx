@@ -141,6 +141,33 @@ export default function Home() {
         </div>
       </section>
 
+      <section id="briefing" style={{ padding: '96px 24px', position: 'relative', zIndex: 1 }}>
+        <div className="max-w-screen-xl mx-auto">
+          <div className="section-label"><span className="label-signal">Briefing</span></div>
+          <h2 className="display" style={{ fontSize: 'clamp(28px,4vw,48px)', color: 'var(--chalk)', marginBottom: 16, maxWidth: 560 }}>
+            The whole story in 31 seconds.
+          </h2>
+          <p style={{ fontSize: 15, color: 'var(--chalk-3)', lineHeight: 1.7, marginBottom: 40, maxWidth: 480 }}>
+            Why resumes get rejected silently, what SkillMap reads instead, and how recruiters get evidence-backed shortlists.
+          </p>
+          <div style={{ border: '1px solid var(--wire-2)', background: 'var(--ink-2)', padding: 8, position: 'relative' }}>
+            <video
+              src="/static/media/skillmap-pitch-16x9.mp4"
+              poster="/static/media/skillmap-pitch-poster.jpg"
+              controls
+              playsInline
+              preload="metadata"
+              style={{ display: 'block', width: '100%', aspectRatio: '16 / 9', background: '#000' }}
+            >
+              Your browser does not support embedded video.
+            </video>
+          </div>
+          <p className="label" style={{ marginTop: 16, color: 'var(--chalk-3)' }}>
+            SKILLMAP · PRODUCT BRIEF · 00:31 · WITH NARRATION
+          </p>
+        </div>
+      </section>
+
       <section style={{ padding: '96px 24px', position: 'relative', zIndex: 1, overflow: 'hidden' }}>
         <div style={{ position: 'absolute', right: -200, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', opacity: 0.06 }}>
           <svg width="600" height="600" viewBox="0 0 600 600" fill="none">
