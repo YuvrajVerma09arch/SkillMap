@@ -1,0 +1,48 @@
+1
+00:00:00,100 --> 00:00:03,100
+Your resume gets six seconds of attention.
+
+2
+00:00:03,050 --> 00:00:04,237
+Then it's gone.
+
+3
+00:00:04,237 --> 00:00:07,425
+Every team says they hire skills, not resumes.
+
+4
+00:00:07,425 --> 00:00:09,375
+Then they scan for keywords.
+
+5
+00:00:09,375 --> 00:00:11,687
+SkillMap reads your real work.
+
+6
+00:00:11,687 --> 00:00:17,137
+Your code, your projects, your writeups, and turns it into a verified skill graph.
+
+7
+00:00:17,137 --> 00:00:18,487
+What you've proven.
+
+8
+00:00:18,487 --> 00:00:19,737
+Where you're strong.
+
+9
+00:00:19,737 --> 00:00:23,475
+Exactly what to learn next, matched to real job demand.
+
+10
+00:00:23,475 --> 00:00:27,712
+Recruiters get ranked shortlists backed by evidence, not keywords.
+
+11
+00:00:27,712 --> 00:00:28,887
+SkillMap.
+
+12
+00:00:28,887 --> 00:00:31,012
+Stop guessing who's qualified.
+
