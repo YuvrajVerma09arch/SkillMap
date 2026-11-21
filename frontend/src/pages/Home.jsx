@@ -153,7 +153,7 @@ export default function Home() {
           <div style={{ border: '1px solid var(--wire-2)', background: 'var(--ink-2)', padding: 8, position: 'relative' }}>
             <video
               src="/static/media/skillmap-pitch-16x9.mp4"
-              poster="/static/media/skillmap-pitch-poster.jpg"
+              poster="/static/media/skillmap-pitch-poster.webp"
               aria-label="SkillMap product briefing"
               controls
               playsInline
