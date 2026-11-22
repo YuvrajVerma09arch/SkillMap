@@ -64,6 +64,22 @@ def create_app(config_class=Config):
             return None
         return jsonify({'error': 'Origin not allowed.'}), 403
 
+    # Baseline security headers on every response. Deliberately conservative:
+    # no Content-Security-Policy, because the SPA relies on React inline
+    # `style=` attributes and inline `onload=` handlers for the async CSS
+    # (see frontend/index.html); a restrictive script/style-src would break
+    # rendering and payments (Razorpay's checkout.js is loaded externally).
+    # These four headers are pure defense-in-depth and cannot break the app.
+    @app.after_request
+    def _security_headers(response):
+        response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+        response.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')
+        response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+        response.headers.setdefault(
+            'Permissions-Policy', 'camera=(), microphone=(), geolocation=()'
+        )
+        return response
+
     # F1 fix: uploads live OUTSIDE static_folder so Flask never serves them
     # publicly at /static/uploads/<name>; they're only reachable via the
     # authenticated /api/files/... routes.
