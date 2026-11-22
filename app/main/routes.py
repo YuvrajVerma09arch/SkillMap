@@ -125,22 +125,32 @@ def recruiter_profile_payload(profile, include_contact=False):
 
 
 def recruiter_can_view_seeker(recruiter_user, seeker_user):
-    """True only when an Application ties this recruiter's job to this seeker."""
+    """True only when an Application ties this recruiter's job to this seeker.
+
+    SECURITY: Application.seeker_id is a FK to seeker_profiles.id, NOT users.id.
+    The two tables have independent sequences, so comparing against the user id
+    lets any recruiter unlock an unrelated seeker's PII whenever that seeker's
+    profile id collides with the victim's user id. Always resolve via the
+    seeker's own profile.
+    """
     if recruiter_user.role != 'recruiter' or not recruiter_user.recruiter_profile:
         return False
-    if seeker_user.role != 'seeker':
+    if seeker_user.role != 'seeker' or not seeker_user.seeker_profile:
         return False
     return Application.query.join(
         JobPost, Application.job_id == JobPost.id
     ).filter(
         JobPost.recruiter_id == recruiter_user.recruiter_profile.id,
-        Application.seeker_id == seeker_user.id,
+        Application.seeker_id == seeker_user.seeker_profile.id,
     ).count() > 0
 
 
 def seeker_can_view_recruiter(seeker_user, recruiter_user):
-    """True only when this seeker applied to one of that recruiter's jobs."""
-    if seeker_user.role != 'seeker':
+    """True only when this seeker applied to one of that recruiter's jobs.
+
+    SECURITY: see above — match the seeker's profile id, not their user id.
+    """
+    if seeker_user.role != 'seeker' or not seeker_user.seeker_profile:
         return False
     if recruiter_user.role != 'recruiter' or not recruiter_user.recruiter_profile:
         return False
@@ -148,7 +158,7 @@ def seeker_can_view_recruiter(seeker_user, recruiter_user):
         JobPost, Application.job_id == JobPost.id
     ).filter(
         JobPost.recruiter_id == recruiter_user.recruiter_profile.id,
-        Application.seeker_id == seeker_user.id,
+        Application.seeker_id == seeker_user.seeker_profile.id,
     ).count() > 0
 
 
@@ -194,6 +204,11 @@ def get_seeker_profile():
 @main.route('/api/profile/seeker', methods=['POST'])
 @login_required
 def save_seeker_profile():
+    # Authorization: only a seeker may create/edit a seeker profile. Without
+    # this, any logged-in recruiter could create one and pollute the
+    # has_*_profile flags and relationship data used by other checks.
+    if current_user.role != 'seeker':
+        return jsonify({'error': 'Unauthorized.'}), 403
     try:
         data = request.get_json(silent=True) or {}
         form = request.form
@@ -296,6 +311,9 @@ def get_recruiter_profile():
 @main.route('/api/profile/recruiter', methods=['POST'])
 @login_required
 def save_recruiter_profile():
+    # Authorization: only a recruiter may create/edit a recruiter profile.
+    if current_user.role != 'recruiter':
+        return jsonify({'error': 'Unauthorized.'}), 403
     try:
         data = request.get_json(silent=True) or {}
 
