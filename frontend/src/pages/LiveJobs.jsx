@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../context/ToastContext'
 import { get } from '../lib/api'
+import { safeExternalHref } from '../lib/safeHref'
 
 const TABS = [
   { id: 'remote', icon: 'bi-wifi', label: 'Remote Tech' },
@@ -91,7 +92,7 @@ export default function LiveJobs() {
               </p>
 
               <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                <a href={job.url} target="_blank" rel="noreferrer" className="btn-signal" style={{ flex: 1, padding: '10px 12px', fontSize: 12, textAlign: 'center', textDecoration: 'none', justifyContent: 'center' }}>
+                <a href={safeExternalHref(job.url)} target="_blank" rel="noopener noreferrer" className="btn-signal" style={{ flex: 1, padding: '10px 12px', fontSize: 12, textAlign: 'center', textDecoration: 'none', justifyContent: 'center' }}>
                   <i className="bi bi-box-arrow-up-right" style={{ marginRight: 4 }}></i>Apply
                 </a>
                 <button type="button" className="btn-ghost" style={{ flex: 1, padding: '10px 12px', fontSize: 12, justifyContent: 'center' }} onClick={() => analyzeFit(job)}>

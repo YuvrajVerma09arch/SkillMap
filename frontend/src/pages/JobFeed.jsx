@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useToast } from '../context/ToastContext'
 import { get, post } from '../lib/api'
+import { safeExternalHref } from '../lib/safeHref'
 
 const JOB_TYPES = ['', 'Full-time', 'Part-time', 'Contract', 'Internship', 'Remote']
 
@@ -125,11 +126,11 @@ export default function JobFeed() {
                     ))}
                     {skills.length > 3 && <span className="skill-badge">+{skills.length - 3}</span>}
                   </div>
-                  {job.external_link ? (
+                  {safeExternalHref(job.external_link) ? (
                     <a
-                      href={job.external_link}
+                      href={safeExternalHref(job.external_link)}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="btn-signal"
                       style={{ padding: '8px 16px', fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center', textDecoration: 'none', justifyContent: 'center' }}
                     >

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { safeExternalHref } from '../../lib/safeHref'
 
 const SALARY_LABELS = { in: 'India', us: 'United States' }
 
@@ -161,9 +162,9 @@ export default function PrepResult({ result, onReset }) {
                       q.source_url ? (
                         <a
                           className="prep-src prep-src-corpus"
-                          href={q.source_url}
+                          href={safeExternalHref(q.source_url)}
                           target="_blank"
-                          rel="noreferrer noopener"
+                          rel="noopener noreferrer"
                           title="Copied verbatim from the scraped corpus — opens the original source"
                         >
                           <i className="bi bi-patch-check-fill" aria-hidden="true" />

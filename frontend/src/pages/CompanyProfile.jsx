@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { get } from '../lib/api'
+import { safeExternalHref } from '../lib/safeHref'
 
 export default function CompanyProfile() {
   const { user } = useAuth()
@@ -55,8 +56,8 @@ export default function CompanyProfile() {
                 <span>{profile.company_size} employees</span>
               </div>
             )}
-            {profile.website && (
-              <a href={profile.website} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--signal)', textDecoration: 'none' }}>
+            {safeExternalHref(profile.website) && (
+              <a href={safeExternalHref(profile.website)} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--signal)', textDecoration: 'none' }}>
                 <i className="bi bi-globe"></i>
                 <span>Visit website</span>
               </a>
