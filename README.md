@@ -104,6 +104,38 @@ The app passed a full red-team + white-box pentest and all findings were remedia
 * **Environment:** everything in step 4 above, plus `COOKIE_SECURE=1` and `PYTHON_VERSION=3.13.0`.
 * **Monitoring:** UptimeRobot sends HEAD requests to `/api/health`.
 
+## 🔁 CI/CD
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and push
+to `main`. Two parallel jobs, no secrets required:
+
+| Job | Gates |
+|---|---|
+| **Backend** | IDOR regression (`tests/test_idor.py`), hardening regression (`tests/test_hardening.py`) — each uses its own temp SQLite DB |
+| **Frontend** | Frozen-lockfile install (`npm ci`), href-scheme regression (`tests/test_safe_href.mjs`), production build (`npm run build`), dependency audit at `critical` |
+
+The audit is gated at **critical** because the one high finding is a
+build-time-only Vite/esbuild issue, deferred with reasoning in `SECURITY.md`.
+Heavy ML packages are lazy-loaded and excluded from `requirements-ci.txt` so
+CI stays fast. Rerun the gates locally before pushing:
+
+```
+python3 tests/test_idor.py && python3 tests/test_hardening.py
+(cd frontend && node ../tests/test_safe_href.mjs && npm ci && npm run build && npm audit --audit-level=critical)
+```
+
+**Not wired yet (deliberate, not oversights):** lint/typecheck (no ESLint or
+TypeScript config exists — adding one is a separate change), and Playwright E2E
+(the smoke script needs a local Chromium path and a running server). To make
+failures block merges, enable branch protection on `main` requiring the
+`Backend tests` and `Frontend build & audit` checks — this is a repo setting,
+not something a workflow file can enforce.
+
+**Deploy/rollback:** Render auto-deploys `main`; UptimeRobot monitors 24/7. To
+roll back, revert the offending commit(s) on `main` and push — Render redeploys
+the previous state. See `PERF.md` and `SECURITY.md` for the perf/security
+attempt ledgers so already-triaged work isn't repeated.
+
 ## 📁 Project Structure
 
 ```
@@ -116,6 +148,9 @@ app/
 ├── payments/          # Plans, Razorpay create/verify
 └── utils/             # AI wrappers (resume, roadmap), email service
 frontend/              # React 19 + Vite SPA
+tests/                 # Security regression tests (IDOR, hardening, href)
+.github/workflows/     # CI pipeline
+requirements-ci.txt    # Pinned import-time deps for backend CI
 reports/               # Pentest findings & security reports
 ```
 
