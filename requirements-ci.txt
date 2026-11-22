@@ -1,0 +1,20 @@
+# Import-time dependencies needed to run the Python regression tests in CI.
+# These are pinned to the exact versions in requirements.txt (no drift).
+# The heavy ML packages (fastembed, onnxruntime, pypdfium2, pillow) are
+# LAZY-loaded inside request handlers and are intentionally excluded here so
+# CI stays fast — they are installed in production via requirements.txt.
+Flask==3.1.2
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-Migrate==4.1.0
+Flask-CORS==6.0.5
+Flask-Limiter==4.1.1
+Authlib==1.6.7
+SQLAlchemy==2.0.46
+python-dotenv==1.2.1
+requests==2.32.5
+razorpay==2.0.0
+beautifulsoup4==4.14.3
+PyPDF2==3.0.1
+groq==1.0.0
+Werkzeug==3.1.5

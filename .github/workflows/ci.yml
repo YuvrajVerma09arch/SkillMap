@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel superseded runs on the same ref (saves minutes on rapid pushes).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Backend: regression tests for the security fixes. Each test spins up its
+  # own temp SQLite DB — no external services, no secrets, fully hermetic.
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-ci.txt
+
+      - name: IDOR regression (PII gating on correct FK)
+        run: python tests/test_idor.py
+
+      - name: Hardening regression (role guards + security headers)
+        run: python tests/test_hardening.py
+
+  # Frontend: lockfile install, href-scheme regression, production build,
+  # and a dependency audit gated at "critical" (documented deferrals of the
+  # build-time-only high/moderate findings live in SECURITY.md).
+  frontend:
+    name: Frontend build & audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies (frozen lockfile)
+        run: npm ci
+
+      - name: href scheme allowlist regression
+        run: node ../tests/test_safe_href.mjs
+
+      - name: Production build
+        run: npm run build
+
+      - name: Security audit (critical gate)
+        run: npm audit --audit-level=critical
